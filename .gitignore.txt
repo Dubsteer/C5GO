@@ -1,30 +1,66 @@
-# Visual Studio cache and build
+# ===== Added rules for .NET / Visual Studio projects =====
+
+# Visual Studio cache and settings
 .vs/
-bin/
-obj/
-TestResults/
 *.user
 *.suo
 *.userosscache
 *.sln.docstates
 
-# Build output
-*.dll
-*.exe
-*.pdb
-*.cache
-*.log
+# Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Tt]est[Rr]esult*/
+[Rr]elease/
+[Dd]ebug/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
 
-# Publish artifacts
+# Publish folder
 publish/
-packages/
-*.nupkg
+wwwroot/lib/
+node_modules/
 
-# System
+# Visual Studio for Mac & Rider
+.idea/
+*.iml
+*.DS_Store
+
+# Backup and logs
+*.log
+*.bak
+*.orig
+*.tmp
+*.temp
+
+# NuGet
+*.nupkg
+*.snupkg
+project.lock.json
+artifacts/
+
+# Resharper
+_ReSharper*/
+*.DotSettings.user
+
+# User-specific files
+*.vscode/
+.vscode/
+
+# Database files
+*.mdf
+*.ldf
+*.sqlite
+*.db
+
+# OS junk files
 Thumbs.db
 ehthumbs.db
 desktop.ini
 
-# App configs
-appsettings.Development.json
-appsettings.Local.json
+# Sensitive configuration
+appsettings.json
+appsettings.*.json

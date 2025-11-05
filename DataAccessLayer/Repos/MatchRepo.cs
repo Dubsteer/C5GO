@@ -21,35 +21,33 @@ namespace DataLayer.Repos
         {
             var matches = new List<Match>();
 
-            // ✅ Updated query: uses match_date instead of datetime
-            // Adjust table/column names to exactly match your DB schema in DataGrip
             var cmd = new MySqlCommand(@"
-                SELECT 
-                    m.id AS match_id,
-                    m.tournamentId AS match_tournamentId,
-                    m.player1Score AS match_player1Score,
-                    m.player2Score AS match_player2Score,
-                    m.match_date AS match_date,
-                    m.status AS match_status,
-                    u1.id AS user1_id,
-                    u1.first_name AS user1_first_name,
-                    u1.last_name AS user1_last_name,
-                    u1.age AS user1_age,
-                    u1.username AS user1_username,
-                    u1.email AS user1_email,
-                    u1.is_admin AS user1_is_admin,
-                    u1.steam_id AS user1_steam_id,
-                    u2.id AS user2_id,
-                    u2.first_name AS user2_first_name,
-                    u2.last_name AS user2_last_name,
-                    u2.age AS user2_age,
-                    u2.username AS user2_username,
-                    u2.email AS user2_email,
-                    u2.is_admin AS user2_is_admin,
-                    u2.steam_id AS user2_steam_id
-                FROM matches m
-                JOIN user u1 ON m.user_id1 = u1.id
-                JOIN user u2 ON m.user_id2 = u2.id;",
+        SELECT 
+            m.id AS match_id,
+            m.tournamentId AS match_tournamentId,
+            m.player1Score AS match_player1Score,
+            m.player2Score AS match_player2Score,
+            m.datetime AS match_datetime,
+            m.status AS match_status,
+            u1.id AS user1_id,
+            u1.first_name AS user1_first_name,
+            u1.last_name AS user1_last_name,
+            u1.birthday AS user1_birthday,
+            u1.username AS user1_username,
+            u1.email AS user1_email,
+            u1.is_moderator AS user1_is_moderator,
+            u1.steam_id AS user1_steam_id,
+            u2.id AS user2_id,
+            u2.first_name AS user2_first_name,
+            u2.last_name AS user2_last_name,
+            u2.birthday AS user2_birthday,
+            u2.username AS user2_username,
+            u2.email AS user2_email,
+            u2.is_moderator AS user2_is_moderator,
+            u2.steam_id AS user2_steam_id
+        FROM `Match` m
+        LEFT JOIN user u1 ON m.user_id1 = u1.id
+        LEFT JOIN user u2 ON m.user_id2 = u2.id;",
                 conn.GetInnerConn());
 
             try
@@ -62,24 +60,25 @@ namespace DataLayer.Repos
                             reader.GetInt32("user1_id"),
                             reader.GetString("user1_first_name"),
                             reader.GetString("user1_last_name"),
-                            reader.GetInt32("user1_age"),
+                            // Convert birthday to age if needed
+                            DateTime.Now.Year - reader.GetDateTime("user1_birthday").Year,
                             reader.GetString("user1_username"),
                             reader.GetString("user1_email"),
-                            "0", // Password placeholder
+                            "0", // password placeholder
                             reader.IsDBNull("user1_steam_id") ? "" : reader.GetString("user1_steam_id"),
-                            reader.GetBoolean("user1_is_admin")
+                            reader.GetBoolean("user1_is_moderator")
                         );
 
                         var player2 = new Player(
                             reader.GetInt32("user2_id"),
                             reader.GetString("user2_first_name"),
                             reader.GetString("user2_last_name"),
-                            reader.GetInt32("user2_age"),
+                            DateTime.Now.Year - reader.GetDateTime("user2_birthday").Year,
                             reader.GetString("user2_username"),
                             reader.GetString("user2_email"),
                             "0",
                             reader.IsDBNull("user2_steam_id") ? "" : reader.GetString("user2_steam_id"),
-                            reader.GetBoolean("user2_is_admin")
+                            reader.GetBoolean("user2_is_moderator")
                         );
 
                         matches.Add(new Match(
@@ -89,7 +88,7 @@ namespace DataLayer.Repos
                             player2,
                             reader.GetInt32("match_player1Score"),
                             reader.GetInt32("match_player2Score"),
-                            reader.GetDateTime("match_date"),
+                            reader.GetDateTime("match_datetime"),
                             Enum.Parse<Status>(reader.GetString("match_status"))
                         ));
                     }
@@ -97,12 +96,13 @@ namespace DataLayer.Repos
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.Message);
-                throw new Exception("Something unexpected has occurred. Please try again.", ex);
+                Debug.WriteLine($"[GetAllMatches] {ex}");
+                throw new Exception("Error loading matches. Please check your database.", ex);
             }
 
             return matches;
         }
+
 
         public void AddMatch(Match match)
         {

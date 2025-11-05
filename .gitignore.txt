@@ -1,0 +1,30 @@
+# Visual Studio cache and build
+.vs/
+bin/
+obj/
+TestResults/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build output
+*.dll
+*.exe
+*.pdb
+*.cache
+*.log
+
+# Publish artifacts
+publish/
+packages/
+*.nupkg
+
+# System
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# App configs
+appsettings.Development.json
+appsettings.Local.json

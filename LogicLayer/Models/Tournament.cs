@@ -1,52 +1,34 @@
-﻿using LogicLayer.Models;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel;
-using LogicLayer.Enums;
+﻿using LogicLayer.Enums;
+using System.Collections.Generic;
 
 namespace LogicLayer.Models
 {
     public class Tournament
     {
-        [Display(Name = "Id")]
-        [DisplayName("Id")]
         public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
 
-        [Display(Name = "Name")]
-        [DisplayName("Name")]
-        public string Name { get; set; }
+        // Status ENUM (Open, InProgress, Closed)
+        public Status Status { get; set; }
 
-        [Display(Name = "Description")]
-        [DisplayName("Description")]
-        public string Description { get; set; }
+        // Players & Matches lists
+        public List<Player> Players { get; set; } = new();
+        public List<Match> Matches { get; set; } = new();
 
-        [Display(Name = "Closed")]
-        [DisplayName("Closed")]
-        public bool Closed { get; set; }
+        // Helper properties
+        public bool IsOpen => Status == Status.Open;
+        public bool IsClosed => Status == Status.Closed;
+        public bool IsInProgress => Status == Status.InProgress;
 
-        public List<Player> Players { get; set; }
-        public List<Match> Matches { get; set; }
+        public Tournament() { }
 
-        public Tournament(int id, string name, string description)
+        public Tournament(int id, string name, string description, Status status)
         {
             Id = id;
             Name = name;
             Description = description;
-
-        }
-
-        public Tournament(int id, string name, string description, bool closed)
-        {
-            Id = id;
-            Name = name;
-            Description = description;
-            Closed = closed;
-        }
-
-        public Tournament(object value, string name, string description)
-        {
-            Name = name;
-            Description = description;
-            Closed = true;  
+            Status = status;
         }
     }
 }

@@ -4,23 +4,20 @@ using LogicLayer.Managers;
 using LogicLayer.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.Diagnostics;
-using System.ComponentModel.DataAnnotations;
 
 namespace Website.Pages
 {
-    [Authorize] // ensures only logged-in users can access this page
+    [Authorize]
     public class ViewProfileModel : PageModel
     {
+        // ✔ Public values koje koristi .cshtml
         public User PageUser { get; set; }
         public List<Match> Matches { get; set; } = new();
 
+        // ✔ Injectovani menadžeri
         private readonly UserManager _userManager;
         private readonly PlayerManager _playerManager;
         private readonly MatchManager _matchManager;
-
-        [BindProperty]
-        [MaxLength(11)]
-        public string SteamId { get; set; }
 
         public ViewProfileModel(UserManager userManager, PlayerManager playerManager, MatchManager matchManager)
         {
@@ -29,25 +26,9 @@ namespace Website.Pages
             _matchManager = matchManager;
         }
 
-        // ✅ Restored to match .cshtml usage
-        public bool checkPlayer()
-        {
-            var userId = GetCurrentUserId();
-            if (userId == null)
-                return false;
-
-            try
-            {
-                var players = _playerManager.GetAllPlayers();
-                return players.Any(p => p.Id == userId.Value);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine("Error checking player: " + ex.Message);
-                return false;
-            }
-        }
-
+        // ----------------------------
+        // ✔ Utičemo ID logged-in usera
+        // ----------------------------
         private int? GetCurrentUserId()
         {
             try
@@ -64,6 +45,9 @@ namespace Website.Pages
             }
         }
 
+        // ----------------------------
+        // ✔ GET: Učitavanje profila
+        // ----------------------------
         public IActionResult OnGet()
         {
             var userId = GetCurrentUserId();
@@ -72,7 +56,10 @@ namespace Website.Pages
 
             try
             {
+                // Učitaj User info (iz tabele user)
                 PageUser = _userManager.GetUserById(userId.Value);
+
+                // Učitaj istoriju mečeva (prema tvom Match modelu)
                 Matches = _matchManager.GetPastMatches(PageUser);
             }
             catch (Exception ex)
@@ -83,6 +70,12 @@ namespace Website.Pages
 
             return Page();
         }
+
+        // ----------------------------
+        // ✔ POST: Update Steam ID
+        // ----------------------------
+        [BindProperty]
+        public string SteamId { get; set; }
 
         public IActionResult OnPost()
         {
@@ -96,6 +89,7 @@ namespace Website.Pages
 
                 if (ModelState.IsValid)
                 {
+                    // Pretvori User u Player model
                     var newPlayer = new Player(
                         PageUser.Id ?? 0,
                         PageUser.Firstname,
@@ -108,6 +102,7 @@ namespace Website.Pages
                         PageUser.IsAdmin
                     );
 
+                    // Dodaj ili update Player u tabeli players
                     _playerManager.InitializeRole(newPlayer);
                 }
             }
@@ -117,7 +112,7 @@ namespace Website.Pages
                 return Content($"Error updating profile: {ex.Message}\n\n{ex.StackTrace}");
             }
 
-            return Page();
+            return RedirectToPage();
         }
     }
 }

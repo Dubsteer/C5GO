@@ -2,7 +2,9 @@
 using DataLayer.Repos;
 using LogicLayer.Managers;
 using LogicLayer.Models;
-using System.Diagnostics;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace DesktopApp.UserControls
@@ -37,8 +39,8 @@ namespace DesktopApp.UserControls
 
             if (!DesignMode)
             {
-                VisibleChanged += new EventHandler(ViewListOfTournaments_VisibleChanged);
-                btnCreateTournament.Click += new EventHandler(btnCreateTournament_Click);
+                VisibleChanged += ViewListOfTournaments_VisibleChanged;
+                btnCreateTournament.Click += btnCreateTournament_Click;
             }
         }
 
@@ -60,39 +62,34 @@ namespace DesktopApp.UserControls
             TabPage currentTab = parentControls.OfType<TabControl>().First().SelectedTab;
             var addTournament = (AddTournament)currentTab.Controls["addTournament"];
 
-
             addTournament.Visible = true;
             this.Hide();
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            if (dgvTournaments.SelectedRows.Count == 0)
-            {
-                MessageBox.Show("Please select a tournament you want to delete.",
-                   "Delete tournament",
-                   MessageBoxButtons.OK,
-                   MessageBoxIcon.Warning);
+            if(dgvTournaments.SelectedRows.Count == 0)
+    {
+                MessageBox.Show("Please select a tournament.");
                 return;
             }
 
-            var tournament = (Tournament)dgvTournaments.CurrentRow.DataBoundItem;
+            var t = (Tournament)dgvTournaments.CurrentRow.DataBoundItem;
 
-            tournamentManager.RemoveTournament(tournament);
+            tournamentManager.RemoveTournament(t);
 
-            MessageBox.Show("Selected category deleted.",
-                   "Delete tournament",
-                   MessageBoxButtons.OK,
-                   MessageBoxIcon.Information);
-
+            MessageBox.Show("Tournament deleted.");
             dgvTournaments.DataSource = tournamentManager.GetAllTournaments();
         }
 
         private void dgvTournaments_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             DataGridViewRow selectedRow = dgvTournaments.Rows[e.RowIndex];
-            Form tournament = new TournamentDetails(connection, tournamentManager.GetTournamentById(Convert.ToInt32(selectedRow.Cells["id"].Value.ToString())));
-            tournament.Show();
+
+            int id = Convert.ToInt32(selectedRow.Cells["Id"].Value);
+
+            Form tournamentDetails = new TournamentDetails(connection, tournamentManager.GetTournamentById(id));
+            tournamentDetails.Show();
         }
     }
 }

@@ -1,108 +1,67 @@
-/*.wrapper {
-    display: grid;
-    grid-template-columns: 350px auto 350px;
-    grid-template-rows: 50px auto 50px;
-    grid-column-gap: 0px;
-    grid-row-gap: 0px;
+/* =============================
+   TOURNAMENT CARDS FIX
+============================= */
+
+/* Pozadina kartice */
+.tournament-card {
+    background-color: #1e3d3d !important;
+    color: #ffffff !important;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+    /* Naslovi */
+    .tournament-card h2,
+    .tournament-card h3,
+    .tournament-card h4 {
+        color: #ffffff !important;
     }
-    
-    .header { grid-area: 1 / 1 / 2 / 4; }
-    .lsidebar { grid-area: 2 / 1 / 3 / 2; }
-    .content { grid-area: 2 / 2 / 3 / 3; }
-    .rsidebar { grid-area: 2 / 3 / 3 / 4; }
-    .footer { grid-area: 3 / 1 / 4 / 4; }
 
-.header{
-    background-color: blue;
-}
-.login{
-    float: right;
-    margin-right: 20px;
-}
-.logo {
-    display: flex;
-    height: 7em;
-    min-width: 15em;
-}
-.logo img {
-    margin-top: 0;
-    margin-bottom: 0;
-    width: 50px;
-    height: 50px;
-    float: left;
-}
-.footer {
-    background-color: darkslategrey;
-    bottom: 0 !important;
-}
-.footer a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.pics {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.footer div{
-    justify-content: center
-   text-align: center
-}
-.footer img{
-	width: 30px;
-	height:30px;
-}
-.footer p {
-    text-align:center;
-    margin-bottom:0px
-}
-.lsidebar{
-
-}
-.rsidebar{
-
-}
-.content{
-    padding: 10px;
-    background-color: white;
-}
-ul {
-    color: black;
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    text-align: center;
-    padding-top: 10px;
-  }
-li {
-display: inline;
-margin-right: 10px;
-font-size: larger;
-color: inherit;
-}
-li .login{
-    float: right;
-}
-ul :hover{
-    text-decoration: underline;
-    border-radius: 5px;
-}
-.leftpartnavbar{
-    float: right;
-}
-.contenttext{
-    text-align: center;
-}
-.parent {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); U ZAGRADI NPR 250px, auto, 250px (LEVI< SREDNJI< DESNI)
-grid-template-rows: auto;
-    grid-column-gap: 0px;
-    grid-row-gap: 0px;
+    /* Opis */
+    .tournament-card p {
+        color: #d7e3e3 !important;
     }
-    
-    .div1 { grid-area: 1 / 1 / 2 / 2; }
-    .div2 { grid-area: 1 / 2 / 2 / 3; }
-    .div3 { grid-area: 1 / 3 / 2 / 4; }
-*/
+
+    /* Tekst malih labela */
+    .tournament-card span,
+    .tournament-card small {
+        color: #cfecec !important;
+    }
+
+/* Status badge */
+.badge-open {
+    background-color: #28a745 !important;
+    color: white !important;
+}
+
+.badge-closed {
+    background-color: #dc3545 !important;
+    color: white !important;
+}
+
+.badge-progress {
+    background-color: #ffc107 !important;
+    color: black !important;
+}
+
+/* Dugmad u kartici */
+.tournament-card .btn {
+    font-weight: 500;
+}
+
+.tournament-card .btn-danger {
+    background-color: #c9302c !important;
+    border-color: #c9302c !important;
+}
+
+.tournament-card .btn-success {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+}
+
+.tournament-card .btn-warning {
+    background-color: #ffc107 !important;
+    border-color: #ffc107 !important;
+    color: black !important;
+}

@@ -4,82 +4,96 @@
     ViewData["Title"] = "Profile";
 }
 
-<h2>User Profile</h2>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
 
-@if (Model.PageUser != null)
-{
-    <div class="profile-info">
-        <p><b>First Name:</b> @Model.PageUser.Firstname</p>
-        <p><b>Last Name:</b> @Model.PageUser.Lastname</p>
-        <p><b>Username:</b> @Model.PageUser.Username</p>
-        <p><b>Email:</b> @Model.PageUser.Gmail</p>
-        <p><b>Age:</b> @Model.PageUser.Age</p>
+<style>
+    body {
+        background-color: #0f2626;
+        color: white;
+        font-family: "Segoe UI", Roboto, sans-serif;
+    }
+
+    .profile-container {
+        max-width: 900px;
+        background: #ffffff;
+        color: #222;
+        margin: 60px auto;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.35);
+    }
+
+    .section-title {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: #111;
+    }
+
+    .profile-row strong {
+        width: 150px;
+        display: inline-block;
+        color: #333;
+    }
+
+    .match-history-title {
+        margin-top: 40px;
+        font-size: 24px;
+        font-weight: 600;
+        color: #222;
+    }
+
+    .no-matches {
+        color: #777;
+        margin-top: 10px;
+    }
+
+    hr {
+        margin-top: 25px;
+        margin-bottom: 25px;
+        border-color: #ddd;
+    }
+</style>
+
+<div class="profile-container">
+    <h1 class="section-title">👤 User Profile</h1>
+
+    <div class="profile-row">
+        <p><strong>First Name:</strong> @Model.PageUser.Firstname</p>
+        <p><strong>Last Name:</strong> @Model.PageUser.Lastname</p>
+        <p><strong>Username:</strong> @Model.PageUser.Username</p>
+        <p><strong>Email:</strong> @Model.PageUser.Gmail</p>
+        <p><strong>Age:</strong> @Model.PageUser.Age</p>
     </div>
-}
-else
-{
-    <p>Could not load profile information.</p>
-}
 
-<hr />
+    <hr />
 
-@if (!Model.checkPlayer())
-{
-    <h3>Register as a Player</h3>
+    <h2 class="match-history-title">🎮 Your Match History</h2>
 
-    <form method="post">
-        <div class="form-group">
-            <label for="SteamId">Steam ID (optional):</label>
-            <input asp-for="SteamId" class="form-control" />
-            <span asp-validation-for="SteamId" class="text-danger"></span>
-        </div>
-        <button type="submit" class="btn btn-primary mt-2">Register as Player</button>
-    </form>
-}
-else
-{
-    <h3>Your Match History</h3>
-
-    @if (Model.Matches != null && Model.Matches.Count > 0)
+    @if (!Model.Matches.Any())
     {
-        <table class="table table-bordered">
+        <p class="no-matches">No matches played yet.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>Opponent</th>
-                    <th>Your Score</th>
-                    <th>Opponent Score</th>
+                    <th>Tournament</th>
                     <th>Date</th>
-                    <th>Status</th>
+                    <th>Score</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var match in Model.Matches)
+                @foreach (var m in Model.Matches)
                 {
-                    var opponentName = match.User1.Username == Model.PageUser.Username
-                    ? match.User2.Username
-                    : match.User1.Username;
-
-                    var yourScore = match.User1.Username == Model.PageUser.Username
-                    ? match.Player1Score
-                    : match.Player2Score;
-
-                    var opponentScore = match.User1.Username == Model.PageUser.Username
-                    ? match.Player2Score
-                    : match.Player1Score;
-
                     <tr>
-                        <td>@opponentName</td>
-                        <td>@yourScore</td>
-                        <td>@opponentScore</td>
-                        <td>@match.MatchDate.ToString("g")</td>
-                        <td>@match.Status</td>
+                        <td>@m.TournamentName</td>
+                        <td>@m.Date.ToShortDateString()</td>
+                        <td>@m.PlayerScore</td>
                     </tr>
                 }
             </tbody>
         </table>
     }
-    else
-    {
-        <p>No matches played yet.</p>
-    }
-}
+</div>

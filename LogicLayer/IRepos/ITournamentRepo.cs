@@ -4,11 +4,14 @@ namespace LogicLayer.IRepos
 {
     public interface ITournamentRepo
     {
-        public List<Tournament> GetAllTournaments();
-        public void AddTournament(Tournament tournament);
-        public void AddTournamentApp(Player player, Tournament tournament);
-        public void RemoveTournament(Tournament tournament);
-        public void UpdateTournament(Tournament tournament);
-        public List<Player> GetAllPlayersInTournament(int tournamentId);
+        List<Tournament> GetAllTournaments();
+        void AddTournament(Tournament tournament);
+        void UpdateTournament(Tournament tournament);
+        void RemoveTournament(Tournament tournament);
+        void AddTournamentApp(Player player, Tournament tournament);
+        List<Player> GetAllPlayersInTournament(int tournamentId);
+
+        // ⬇️ OVO DODAJ
+        void RemovePlayerFromTournament(Player player, Tournament tournament);
     }
 }

@@ -21,8 +21,9 @@
     <div class="form-group">
         <label>Age:</label>
         <br />
-        <input asp-for="FullUserFormModel.Age">
-        <span asp-validation-for="FullUserFormModel.Age"></span>
+        <input asp-for="FullUserFormModel.Age" type="number" min="14" max="106" class="form-control" />
+        <span asp-validation-for="FullUserFormModel.Age" class="text-danger"></span>
+
     </div>
 
     <div class="form-group">

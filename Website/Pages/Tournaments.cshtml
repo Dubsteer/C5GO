@@ -1,132 +1,140 @@
 ﻿@page
-@using LogicLayer.Models;
-@model TournamentsModel
+@model Website.Pages.TournamentsModel
+@{
+    ViewData["Title"] = "Tournaments";
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
 
 <style>
-    .container {
-        text-align: center;
+    body {
+        background-color: #121212;
+        color: white;
     }
 
-    h1 {
-        color: #fff;
-        font-family: '5';
-        margin-top: 20px;
+    .tournament-card {
+        background-color: #1e1e1e;
+        border-radius: 10px;
+        padding: 20px;
+        border: 1px solid #333;
+        transition: 0.2s;
+        color: #fff !important; /* <<<<<< OVDE JE GLAVNI FIX ZA VIDLJIV TEKST */
     }
 
-    hr {
-        border-color: #fff;
-        margin-top: 10px;
-        margin-bottom: 10px;
-    }
-
-    p, td {
-        color: #fff;
-    }
-
-    .apply-button {
-        margin-top: 10px;
-    }
-
-        .apply-button button {
-            background-color: greenyellow;
-            color: #black;
-            border: none;
-            padding: 8px 16px;
-            font-size: 14px;
-            cursor: pointer;
+        .tournament-card h3,
+        .tournament-card p,
+        .tournament-card span,
+        .tournament-card strong {
+            color: #fff !important; /* Osigurano da SVE ostane belo */
         }
 
-    .disabled-button {
-        margin-top: 10px;
-        color: #ccc;
+        .tournament-card:hover {
+            border-color: #6f42c1;
+            transform: scale(1.01);
+        }
+
+    .badge-open {
+        background-color: #28a745;
     }
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        color: #fff;
+    .badge-progress {
+        background-color: #ffc107;
+        color: black;
     }
 
-    th, td {
-        border: 1px solid #ddd;
-        padding: 15px;
-        text-align: left;
-    }
-
-    th {
-        background-color: #4CAF50;
-        color: white;
+    .badge-closed {
+        background-color: #dc3545;
     }
 </style>
 
-<div class="container">
-    @foreach (var tournament in Model.Tournaments)
+<div class="container mt-5">
+
+    <h1 class="mb-4 text-center">🏆 Tournaments</h1>
+
+    @if (Model.Tournaments == null || Model.Tournaments.Count == 0)
     {
-        <h1>
-            @tournament.Name
-        </h1>
-        <hr />
-
-        <table>
-            <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Players</th>
-                <th>Matches</th>
-            </tr>
-            <tr>
-                <td>@tournament.Name</td>
-                <td>@tournament.Description</td>
-                <td>
-                    @if (tournament.Players == null || tournament.Players.Count == 0)
-                    {
-                        <p>There are no players registered yet.</p>
-                    }
-                    else
-                    {
-                        foreach (var player in tournament.Players)
-                        {
-                            <p>@player.Username</p>
-                        }
-                    }
-                </td>
-                <td>
-                    @if (tournament.Matches == null || tournament.Matches.Count == 0)
-                    {
-                        <p>There are no matches yet.</p>
-                    }
-                    else
-                    {
-                        foreach (var match in tournament.Matches)
-                        {
-                            <div class="match-divider">
-                                <p>Match: @match.Id between @match.User1 and @match.User2, <span class="score">Score: @match.Player1Score - @match.Player2Score</span></p>
-                            </div>
-                        }
-                    }
-                </td>
-            </tr>
-        </table>
-
-        @if (!tournament.Closed && (tournament.Players != null && tournament.Players.Count < 10))
-        {
-            if (!Model.checkIfPlayerInTournament(tournament.Id))
+        <p class="text-center text-muted">No tournaments available.</p>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var t in Model.Tournaments)
             {
-                <div class="apply-button">
-                    <form method="post" asp-page-handler="Apply" asp-route-id="@tournament.Id">
-                        <button type="submit">Apply</button>
-                    </form>
+                <div class="col-md-4">
+                    <div class="tournament-card">
+
+                        <h3>@t.Name</h3>
+                        <p>@t.Description</p>
+
+                        <!-- STATUS -->
+                        @switch (t.Status)
+                        {
+                            case LogicLayer.Enums.Status.Open:
+                                <span class="badge badge-open">OPEN</span>
+                                break;
+
+                            case LogicLayer.Enums.Status.InProgress:
+                                <span class="badge badge-progress">IN PROGRESS</span>
+                                break;
+
+                            case LogicLayer.Enums.Status.Closed:
+                                <span class="badge badge-closed">CLOSED</span>
+                                break;
+                        }
+
+                        <hr />
+
+                        <p><strong>Players:</strong> @t.Players.Count</p>
+                        <p><strong>Matches:</strong> @t.Matches.Count</p>
+
+                        <hr />
+
+                        <!-- USER ACTIONS -->
+                        <div class="d-flex flex-wrap gap-2">
+
+                            @* JOIN *@
+                            @if (!t.Players.Any(p => p.Id == Model.CurrentPlayer.Id) &&
+                                                t.Status == LogicLayer.Enums.Status.Open)
+                            {
+                                <form method="post" asp-page-handler="Apply">
+                                    <input type="hidden" name="id" value="@t.Id" />
+                                    <button class="btn btn-success btn-sm">Join</button>
+                                </form>
+                            }
+
+                            @* LEAVE *@
+                            @if (t.Players.Any(p => p.Id == Model.CurrentPlayer.Id))
+                            {
+                                <form method="post" asp-page-handler="Leave">
+                                    <input type="hidden" name="id" value="@t.Id" />
+                                    <button class="btn btn-warning btn-sm">Leave</button>
+                                </form>
+                            }
+
+                            @* ADMIN ONLY *@
+                            @if (Model.CurrentPlayer.IsAdmin)
+                            {
+                                @* CLOSE *@
+                                @if (t.Status != LogicLayer.Enums.Status.Closed)
+                                {
+                                    <form method="post" asp-page-handler="Close">
+                                        <input type="hidden" name="id" value="@t.Id" />
+                                        <button class="btn btn-danger btn-sm">Close</button>
+                                    </form>
+                                }
+
+                                @* DELETE *@
+                                <form method="post" asp-page-handler="Delete">
+                                    <input type="hidden" name="id" value="@t.Id" />
+                                    <button class="btn btn-outline-danger btn-sm">Delete</button>
+                                </form>
+                            }
+
+                        </div>
+
+                    </div>
                 </div>
             }
-            else
-            {
-                <p class="disabled-button">You can't apply for this tournament.</p>
-            }
-        }
-        else
-        {
-            <p class="disabled-button">You can't apply for this tournament.</p>
-        }
+        </div>
     }
-    <div style="height: 80px; width: 2px"></div>
 </div>

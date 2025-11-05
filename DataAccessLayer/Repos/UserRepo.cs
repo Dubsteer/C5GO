@@ -17,18 +17,20 @@ namespace DataLayer.Repos
 
         public void CreateUser(User user)
         {
-            var cmd = new MySqlCommand(
-                "INSERT INTO user (first_name, last_name, age, username, email, password, is_moderator, steam_id) " +
-                "VALUES (@FIRST_NAME, @LAST_NAME, @AGE, @USERNAME, @EMAIL, @PASSWORD, @IS_MODERATOR, 0)",
-                conn.GetInnerConn());
+                    var cmd = new MySqlCommand(
+            "INSERT INTO user (first_name, last_name, age, username, email, password, is_moderator, steam_id) " +
+            "VALUES (@FIRST_NAME, @LAST_NAME, @AGE, @USERNAME, @EMAIL, @PASSWORD, @IS_MODERATOR, @STEAM_ID)",
+            conn.GetInnerConn());
 
-            cmd.Parameters.AddWithValue("FIRST_NAME", user.Firstname);
-            cmd.Parameters.AddWithValue("LAST_NAME", user.Lastname);
-            cmd.Parameters.AddWithValue("AGE", user.Age);
-            cmd.Parameters.AddWithValue("USERNAME", user.Username);
-            cmd.Parameters.AddWithValue("EMAIL", user.Gmail);
-            cmd.Parameters.AddWithValue("PASSWORD", user.Password);
-            cmd.Parameters.AddWithValue("IS_MODERATOR", user.IsAdmin); // reuse IsAdmin property
+            cmd.Parameters.AddWithValue("@FIRST_NAME", user.Firstname);
+            cmd.Parameters.AddWithValue("@LAST_NAME", user.Lastname);
+            cmd.Parameters.AddWithValue("@AGE", user.Age);
+            cmd.Parameters.AddWithValue("@USERNAME", user.Username);
+            cmd.Parameters.AddWithValue("@EMAIL", user.Gmail);
+            cmd.Parameters.AddWithValue("@PASSWORD", user.Password);
+            cmd.Parameters.AddWithValue("@IS_MODERATOR", user.IsAdmin);
+            cmd.Parameters.AddWithValue("@STEAM_ID", user.SteamId ?? "0");
+
 
             try
             {

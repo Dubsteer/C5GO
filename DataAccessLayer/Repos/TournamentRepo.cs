@@ -1,8 +1,9 @@
 ﻿using LogicLayer;
-using LogicLayer.Models;
+using LogicLayer.Enums;
 using LogicLayer.IRepos;
+using LogicLayer.Models;
 using MySql.Data.MySqlClient;
-using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace DataLayer.Repos
 {
@@ -15,170 +16,145 @@ namespace DataLayer.Repos
             this.conn = conn;
         }
 
-        public List<Tournament> GetAllTournaments()
+        private void EnsureConnection()
         {
-            // ✅ use 'status' instead of 'closed'
-            var cmd = new MySqlCommand(
-                "SELECT id, name, description, status FROM tournament",
-                conn.GetInnerConn());
-
-            var tournaments = new List<Tournament>();
-
-            try
-            {
-                using (var reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        tournaments.Add(
-                            new Tournament(
-                                reader.GetInt32("id"),
-                                reader.GetString("name"),
-                                reader.GetString("description"),
-                                reader.GetBoolean("status")
-                            ));
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                throw new Exception("Something unexpected has occurred. Please try again.", ex);
-            }
-
-            return tournaments;
+            if (conn.GetInnerConn().State != System.Data.ConnectionState.Open)
+                conn.Open();
         }
 
-        public void AddTournament(Tournament tournament)
+        public List<Tournament> GetAllTournaments()
         {
-            // ✅ use 'status' column instead of 'closed'
+            EnsureConnection();
+
             var cmd = new MySqlCommand(
-                "INSERT INTO tournament(name, description, status) VALUES(@NAME, @DESCRIPTION, false)",
+                "SELECT id, name, description, status_int FROM tournament",
                 conn.GetInnerConn());
 
-            cmd.Parameters.AddWithValue("@NAME", tournament.Name);
-            cmd.Parameters.AddWithValue("@DESCRIPTION", tournament.Description);
+            var list = new List<Tournament>();
 
-            try
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
             {
-                cmd.ExecuteNonQuery();
+                list.Add(new Tournament(
+                    reader.GetInt32("id"),
+                    reader.GetString("name"),
+                    reader.GetString("description"),
+                    (Status)reader.GetInt32("status_int")
+                ));
             }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                throw new Exception("Something unexpected has occurred. Please try again.", ex);
-            }
+
+            return list;
+        }
+
+        public void AddTournament(Tournament t)
+        {
+            EnsureConnection();
+
+            var cmd = new MySqlCommand(
+                "INSERT INTO tournament (name, description, status_int) VALUES (@n, @d, @s)",
+                conn.GetInnerConn());
+
+            cmd.Parameters.AddWithValue("@n", t.Name);
+            cmd.Parameters.AddWithValue("@d", t.Description);
+            cmd.Parameters.AddWithValue("@s", (int)t.Status);
+
+            cmd.ExecuteNonQuery();
+        }
+
+        public void UpdateTournament(Tournament t)
+        {
+            EnsureConnection();
+
+            var cmd = new MySqlCommand(
+                "UPDATE tournament SET name=@n, description=@d, status_int=@s WHERE id=@id",
+                conn.GetInnerConn());
+
+            cmd.Parameters.AddWithValue("@n", t.Name);
+            cmd.Parameters.AddWithValue("@d", t.Description);
+            cmd.Parameters.AddWithValue("@s", (int)t.Status);
+            cmd.Parameters.AddWithValue("@id", t.Id);
+
+            cmd.ExecuteNonQuery();
+        }
+
+        public void RemoveTournament(Tournament t)
+        {
+            EnsureConnection();
+
+            var deleteMatches = new MySqlCommand(
+                "DELETE FROM matches WHERE tournamentId=@id",
+                conn.GetInnerConn());
+            deleteMatches.Parameters.AddWithValue("@id", t.Id);
+            deleteMatches.ExecuteNonQuery();
+
+            var deleteApps = new MySqlCommand(
+                "DELETE FROM applications WHERE tournamentId=@id",
+                conn.GetInnerConn());
+            deleteApps.Parameters.AddWithValue("@id", t.Id);
+            deleteApps.ExecuteNonQuery();
+
+            var deleteTournament = new MySqlCommand(
+                "DELETE FROM tournament WHERE id=@id",
+                conn.GetInnerConn());
+            deleteTournament.Parameters.AddWithValue("@id", t.Id);
+            deleteTournament.ExecuteNonQuery();
         }
 
         public void AddTournamentApp(Player player, Tournament tournament)
         {
+            EnsureConnection();
+
             var cmd = new MySqlCommand(
-                "INSERT INTO applications (tournamentId, playerId) VALUES(@tournamentId, @playerId)",
+                "INSERT INTO applications (tournamentId, playerId) VALUES(@tid, @pid)",
                 conn.GetInnerConn());
 
-            cmd.Parameters.AddWithValue("@playerId", player.Id);
-            cmd.Parameters.AddWithValue("@tournamentId", tournament.Id);
+            cmd.Parameters.AddWithValue("@tid", tournament.Id);
+            cmd.Parameters.AddWithValue("@pid", player.Id);
 
-            try
-            {
-                cmd.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                throw new Exception("Something unexpected has occurred. Please try again.", ex);
-            }
+            cmd.ExecuteNonQuery();
         }
 
-        public void RemoveTournament(Tournament tournament)
+        public void RemovePlayerFromTournament(Player player, Tournament tournament)
         {
-            try
-            {
-                var deleteMatchesCmd = new MySqlCommand(
-                    "DELETE FROM matches WHERE tournamentId = @TournamentId",
-                    conn.GetInnerConn());
-                deleteMatchesCmd.Parameters.AddWithValue("@TournamentId", tournament.Id);
-                deleteMatchesCmd.ExecuteNonQuery();
+            EnsureConnection();
 
-                var deleteApplicationsCmd = new MySqlCommand(
-                    "DELETE FROM applications WHERE tournamentId = @TournamentId",
-                    conn.GetInnerConn());
-                deleteApplicationsCmd.Parameters.AddWithValue("@TournamentId", tournament.Id);
-                deleteApplicationsCmd.ExecuteNonQuery();
-
-                var deleteTournamentCmd = new MySqlCommand(
-                    "DELETE FROM tournament WHERE id = @ID",
-                    conn.GetInnerConn());
-                deleteTournamentCmd.Parameters.AddWithValue("@ID", tournament.Id);
-                deleteTournamentCmd.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                throw new Exception("Something unexpected has occurred. Please try again.", ex);
-            }
-        }
-
-        public void UpdateTournament(Tournament tournament)
-        {
-            // ✅ update correct column 'status'
             var cmd = new MySqlCommand(
-                "UPDATE tournament SET name = @NAME, description = @DESCRIPTION, status = @STATUS WHERE id = @ID",
+                "DELETE FROM applications WHERE playerId=@pid AND tournamentId=@tid",
                 conn.GetInnerConn());
 
-            cmd.Parameters.AddWithValue("@ID", tournament.Id);
-            cmd.Parameters.AddWithValue("@NAME", tournament.Name);
-            cmd.Parameters.AddWithValue("@DESCRIPTION", tournament.Description);
-            cmd.Parameters.AddWithValue("@STATUS", tournament.Closed); // maps to bool Closed in your C# model
+            cmd.Parameters.AddWithValue("@pid", player.Id);
+            cmd.Parameters.AddWithValue("@tid", tournament.Id);
 
-            try
-            {
-                cmd.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                throw new Exception("Something unexpected has occurred. Please try again.", ex);
-            }
+            cmd.ExecuteNonQuery();
         }
 
         public List<Player> GetAllPlayersInTournament(int tournamentId)
         {
+            EnsureConnection();
+
             var players = new List<Player>();
 
-            var cmd = new MySqlCommand(
-                "SELECT user.* FROM user JOIN applications ON user.id = applications.playerid WHERE applications.tournamentId = @tournamentId",
-                conn.GetInnerConn());
+            var cmd = new MySqlCommand(@"
+                SELECT * FROM user
+                JOIN applications ON user.id = applications.playerId
+                WHERE applications.tournamentId = @id", conn.GetInnerConn());
 
-            cmd.Parameters.AddWithValue("@tournamentId", tournamentId);
+            cmd.Parameters.AddWithValue("@id", tournamentId);
 
-            try
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
             {
-                using (var reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        var player = new Player
-                        (
-                            reader.GetInt32("id"),
-                            reader.GetString("first_name"),
-                            reader.GetString("last_name"),
-                            reader.GetInt32("age"),
-                            reader.GetString("username"),
-                            reader.GetString("email"),
-                            reader.GetString("password"),
-                            reader.GetString("steam_id"),
-                            reader.GetBoolean("is_admin")
-                        );
-
-                        players.Add(player);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                throw new Exception("Something unexpected has occurred. Please try again.", ex);
+                players.Add(new Player(
+                    reader.GetInt32("id"),
+                    reader.GetString("first_name"),
+                    reader.GetString("last_name"),
+                    reader.GetInt32("age"),
+                    reader.GetString("username"),
+                    reader.GetString("email"),
+                    reader.GetString("password"),
+                    reader.GetString("steam_id"),
+                    reader.GetBoolean("is_moderator")
+                ));
             }
 
             return players;

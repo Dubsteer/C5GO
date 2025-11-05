@@ -3,10 +3,11 @@ using DataLayer.Repos;
 using LogicLayer.Managers;
 using LogicLayer.IRepos;
 using LogicLayer.Models;
-using LogicLayer.Exceptions;
-using LogicLayer.FormModels;
-using System.ComponentModel.DataAnnotations;
-using System.Net.Http.Headers;
+using LogicLayer.Enums;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace DesktopApp.UserControls
 {
@@ -40,60 +41,55 @@ namespace DesktopApp.UserControls
 
             if (!DesignMode)
             {
-                VisibleChanged += new EventHandler(AddTournament_VisibleChanged);
-                btnCreate.Click += new EventHandler(btnCreate_Click);
-                btnBack.Click += new EventHandler(btnBack_Click);
+                VisibleChanged += AddTournament_VisibleChanged;
+                btnCreate.Click += btnCreate_Click;
+                btnBack.Click += btnBack_Click;
             }
         }
+
         public void AddTournament_VisibleChanged(object sender, EventArgs e)
         {
             if (Visible && !Disposing && !DesignMode)
             {
                 tbName.Clear();
                 tbDescription.Clear();
-
             }
         }
 
         private void btnCreate_Click(object sender, EventArgs e)
         {
-            var name = tbName.Text.Trim();
-            var description = tbDescription.Text.Trim();
+            string name = tbName.Text.Trim();
+            string description = tbDescription.Text.Trim();
 
-            var tournament = new Tournament(null, name, description);
-
-            var context = new ValidationContext(tournament, null, null);
-            var errors = new List<ValidationResult>();
-
-            if (!Validator.TryValidateObject(tournament, context, errors))
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(description))
             {
-                if (errors.Count > 0)
-                {
-                    MessageBox.Show(
-                        errors[0].ErrorMessage,
-                        "Incorrect data",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
-                    return;
-                }
+                MessageBox.Show("Name and description must not be empty.",
+                    "Invalid input",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
             }
+
+            // 👑 KREIRAJ TURNIR – status je Open
+            Tournament tournament = new Tournament
+            {
+                Name = name,
+                Description = description,
+                Status = Status.Open
+            };
 
             try
             {
-                tournamentManager.AddTournament(
-                    new Tournament(
-                        null,
-                        name,
-                        description
-                        ));
-            }
-            catch (TournamentNotFoundException ex)
-            {
-                MessageBox.Show(ex.Message,
+                tournamentManager.AddTournament(tournament);
+                MessageBox.Show("Tournament created successfully.",
                     "Create tournament",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-                return;
+                    MessageBoxIcon.Information);
+
+                // 🔄 REFRESH VIEW LIST
+                var currentTab = parentControls.OfType<TabControl>().First().SelectedTab;
+                var viewList = (ViewListOfTournaments)currentTab.Controls["viewListOfTournaments1"];
+                viewList.RefreshTournaments();
             }
             catch (Exception ex)
             {
@@ -101,25 +97,15 @@ namespace DesktopApp.UserControls
                     "Create tournament",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
-                return;
             }
-
-            MessageBox.Show("Tournament created successfully.",
-                    "Create tournament",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
-
-
-            var currentTab = parentControls.OfType<TabControl>().First().SelectedTab;
-            var addTournament = (AddTournament)currentTab.Controls["addTournamet"];
         }
 
         private void btnBack_Click(object sender, EventArgs e)
         {
-            var currentTab = parentControls.OfType<TabControl>().FirstOrDefault().SelectedTab;
-            var viewListOfTournaments1 = (ViewListOfTournaments)currentTab.Controls["viewListOfTournaments1"];
+            var currentTab = parentControls.OfType<TabControl>().First().SelectedTab;
+            var viewList = (ViewListOfTournaments)currentTab.Controls["viewListOfTournaments1"];
 
-            viewListOfTournaments1.Visible = true;
+            viewList.Visible = true;
             this.Hide();
         }
     }

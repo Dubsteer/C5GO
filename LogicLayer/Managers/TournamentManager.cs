@@ -1,121 +1,112 @@
-﻿using LogicLayer.Models;
+﻿using LogicLayer.Enums;
 using LogicLayer.IRepos;
-using LogicLayer.Exceptions;
-using LogicLayer.Enums;
-using System.Linq;
-using System.Collections.Generic;
+using LogicLayer.Models;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace LogicLayer.Managers
 {
     public class TournamentManager
     {
-        private readonly ITournamentRepo tournamentrepo;
-        private MatchManager MatchManager;
+        private readonly ITournamentRepo repo;
+        private readonly MatchManager matchManager;
 
-        public TournamentManager(ITournamentRepo tournamentrepo, MatchManager matchManager)
+        public TournamentManager(ITournamentRepo repo, MatchManager matchManager)
         {
-            this.tournamentrepo = tournamentrepo;
-            MatchManager = matchManager;
+            this.repo = repo;
+            this.matchManager = matchManager;
+        }
+
+        // --------------------------
+        // BASIC CRUD
+        // --------------------------
+        public List<Tournament> GetAllTournaments()
+        {
+            return repo.GetAllTournaments();
         }
 
         public Tournament GetTournamentById(int id)
         {
-            var tournament = GetAllTournaments().FirstOrDefault(t => t.Id == id);
-            if (tournament == null)
-            {
-                throw new TournamentNotFoundException("Tournament not found");
-            }
-            return tournament;
+            return repo.GetAllTournaments().FirstOrDefault(t => t.Id == id)
+                ?? throw new Exception("Tournament not found");
         }
 
-        public List<Tournament> GetAllTournaments()
+        public void AddTournament(Tournament t)
         {
-            var tournaments = tournamentrepo.GetAllTournaments();
-            foreach (Tournament t in tournaments)
-            {
-                t.Players = GetAllPlayersInTournament(t);
-            }
-            return tournaments;
+            repo.AddTournament(t);
         }
 
-        public void AddTournament(Tournament tournament)
+        public void UpdateTournament(Tournament t)
         {
-            tournamentrepo.AddTournament(tournament);
+            repo.UpdateTournament(t);
         }
 
-        public void CloseTournament(Tournament tournament)
+        public void RemoveTournament(Tournament t)
         {
-            tournament.Closed = true;
-            tournamentrepo.UpdateTournament(tournament);
+            repo.RemoveTournament(t);
         }
 
-        public void AddTournamentApp(Player player, Tournament tournament)
+        // --------------------------
+        // PLAYERS
+        // --------------------------
+        public List<Player> GetAllPlayersInTournament(Tournament t)
         {
-            if (tournament.Closed)
-            {
-                throw new TournamentClosedException("This tournament is not accepting new players");
-            }
-
-            tournamentrepo.AddTournamentApp(player, tournament);
+            return repo.GetAllPlayersInTournament(t.Id);
         }
 
-        public void RemoveTournament(Tournament tournament)
+        public void AddTournamentApp(Player p, Tournament t)
         {
-            foreach (Tournament tournaments in GetAllTournaments())
-            {
-                if (tournament.Id == tournament.Id)
-                {
-                    tournamentrepo.RemoveTournament(tournament);
-                    return;
-                }
-            }
+            var players = GetAllPlayersInTournament(t);
+
+            if (players.Any(x => x.Id == p.Id))
+                throw new Exception("Player already in this tournament");
+
+            repo.AddTournamentApp(p, t);
         }
 
-        public void UpdateTournament(Tournament tournament)
+        public void RemovePlayerFromTournament(Player p, Tournament t)
         {
-            foreach (Tournament tournaments in GetAllTournaments())
-            {
-                if (tournaments.Id == tournament.Id)
-                {
-                    tournamentrepo.UpdateTournament(tournament);
-                    return;
-                }
-            }
+            repo.RemovePlayerFromTournament(p, t);
         }
 
-        public List<Player> GetAllPlayersInTournament(Tournament tournament)
+        // --------------------------
+        // MATCHES
+        // --------------------------
+        public List<Match> GetAllMatchesInTournament(Tournament t)
         {
-            return tournamentrepo.GetAllPlayersInTournament(tournament.Id);
+            return matchManager.GetMatchesByTournamentId(t.Id);
         }
 
-        public List<Match> GetAllMatchesInTournament(Tournament tournament)
+        // --------------------------
+        // STATUS
+        // --------------------------
+        public void SetStatus(Tournament t, Status status)
         {
-            return MatchManager.GetAllMatches().Where(m => m.TournamentId == tournament.Id).ToList();
+            t.Status = status;
+            repo.UpdateTournament(t);
         }
 
-        public void TournamentLogic(List<Player> players, Tournament tournament, DateTime startTime, int interval)
+        public void OpenTournament(Tournament t) => SetStatus(t, Status.Open);
+        public void CloseTournament(Tournament t) => SetStatus(t, Status.Closed);
+        public void SetInProgress(Tournament t) => SetStatus(t, Status.InProgress);
+
+        // --------------------------
+        // DESKTOP APP – RUN TOURNAMENT
+        // --------------------------
+        public void TournamentLogic(List<Player> players, Tournament t, DateTime startDate, int rounds)
         {
-            int numberOfPlayers = players.Count;
+            if (players.Count < 2)
+                throw new Exception("Not enough players");
 
-            if (numberOfPlayers != 4 && numberOfPlayers != 6 && numberOfPlayers != 8 && numberOfPlayers != 10)
-            {
-                throw new ArgumentException("A tournament requires 4, 6, 8, or 10 players");
-            }
+            // set status → InProgress
+            SetInProgress(t);
 
-            DateTime StartTime = startTime;
+            // GENERATE MATCHES
+            matchManager.GenerateMatches(players, t.Id, startDate, rounds);
 
-            int matchId = 1;
-            for (int i = 0; i < numberOfPlayers - 1; i++)
-            {
-                for (int j = i + 1; j < numberOfPlayers; j++)
-                {
-                    var match = new Match(matchId, tournament.Id, players[i], players[j], 0, 0, StartTime, Status.InProgress);
-                    MatchManager.AddMatch(match);
-                    StartTime = StartTime.AddMinutes(interval);
-                    matchId++;
-                }
-            }
+            // finish → Closed
+            CloseTournament(t);
         }
     }
 }

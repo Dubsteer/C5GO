@@ -1,48 +1,80 @@
-﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
-for details on configuring this project to bundle and minify static web assets. */
+﻿/* GLOBAL LAYOUT STYLE (applies to all pages using _Layout.cshtml) */
 
-/*a.navbar-brand {
-  white-space: normal;
-  text-align: center;
-  word-break: break-all;
+body {
+    background-color: #2f4f4f;
+    color: #f8f9fa;
+    font-family: "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
-a {
-  color: #0077cc;
+.navbar {
+    background-color: #1e3d3d !important;
+}
+
+.navbar-brand,
+.nav-link {
+    color: #f8f9fa !important;
+    transition: color 0.3s ease;
+}
+
+    .navbar-brand:hover,
+    .nav-link:hover {
+        color: #00bfa6 !important;
+    }
+
+main {
+    flex: 1;
+    padding: 3rem 0;
+}
+
+.content-box {
+    background-color: #fff;
+    color: #212529;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* FOOTER */
+footer {
+    background-color: #1e3d3d;
+    color: #f8f9fa;
+    text-align: center;
+    padding: 1rem 0;
+}
+
+    footer .pics img {
+        width: 25px;
+        height: 25px;
+        margin: 0 8px;
+        filter: brightness(0) invert(1);
+        transition: 0.3s;
+    }
+
+        footer .pics img:hover {
+            filter: invert(55%) sepia(65%) saturate(580%) hue-rotate(120deg);
+        }
+
+    footer p {
+        margin-top: 8px;
+        font-size: 13px;
+    }
+
+/* CARDS & BUTTONS */
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
 }
 
 .btn-primary {
-  color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
+    background-color: #00bfa6;
+    border-color: #00bfa6;
 }
 
-.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
-  color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
-}
-
-.border-top {
-  border-top: 1px solid #e5e5e5;
-}
-.border-bottom {
-  border-bottom: 1px solid #e5e5e5;
-}
-
-.box-shadow {
-  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
-}
-
-button.accept-policy {
-  font-size: 1rem;
-  line-height: inherit;
-}
-
-.footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  white-space: nowrap;
-  line-height: 60px;
-}*/
+    .btn-primary:hover {
+        background-color: #009e8c;
+        border-color: #009e8c;
+    }

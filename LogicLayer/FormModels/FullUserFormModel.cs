@@ -17,6 +17,7 @@ namespace LogicLayer.FormModels
 
         [Required]
         [DisplayName("Age")]
+        [Range(14, 106, ErrorMessage = "Age must be between 14 and 106.")]
         public int Age { get; set; }
 
 

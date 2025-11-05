@@ -1,28 +1,22 @@
 using LogicLayer.Models;
 using LogicLayer.Managers;
-using LogicLayer.IRepos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Diagnostics;
-using LogicLayer.FormModels;
 using Microsoft.AspNetCore.Authorization;
-using LogicLayer.Enums;
-using Microsoft.AspNetCore.Identity;
 
 namespace Website.Pages
 {
     [Authorize]
     public class TournamentsModel : PageModel
     {
-        [BindProperty]
-        public TournamentFormModel FormModel { get; set; }
         public List<Tournament> Tournaments { get; set; }
+        public Player CurrentPlayer { get; set; }
 
         private readonly UserManager userManager;
         private readonly TournamentManager tournamentmanager;
         private readonly PlayerManager playerManager;
 
-        public Player steamaccountId { get; set; }
         public TournamentsModel(TournamentManager tournamentmanager, PlayerManager playerManager, UserManager userManager)
         {
             this.tournamentmanager = tournamentmanager;
@@ -30,47 +24,22 @@ namespace Website.Pages
             this.userManager = userManager;
         }
 
-        public bool checkPlayer()
+        private void LoadCurrentPlayer()
         {
-            var currentUser = userManager.GetUserById(Convert.ToInt32(User.FindFirst("id").Value));
-            var playerCheck = new Player((int)currentUser.Id, currentUser.Firstname, currentUser.Lastname, currentUser.Age, currentUser.Username, currentUser.Gmail, currentUser.Password, "0", currentUser.IsAdmin);
-
-            foreach (var p in playerManager.GetAllPlayers())
-            {
-                if (p.Id == currentUser.Id)
-                    return true;
-            }
-            return false;
-        }
-
-        public bool checkIfPlayerInTournament(int id)
-        {
-            var currentPlayer = playerManager.GetPlayer(userManager.GetUserById(Convert.ToInt32(User.FindFirst("id").Value)));
-            Tournament currentTournament = tournamentmanager.GetTournamentById(id);
-            foreach (Player p in currentTournament.Players)
-            {
-                if (p.Id == currentPlayer.Id)
-                    return true;
-            }
-            return false;
+            var u = userManager.GetUserById(Convert.ToInt32(User.FindFirst("id").Value));
+            CurrentPlayer = playerManager.GetPlayer(u);
         }
 
         public IActionResult OnGet()
         {
-            try
-            {
-                Tournaments = tournamentmanager.GetAllTournaments();
+            LoadCurrentPlayer();
 
-                foreach (var tournament in Tournaments)
-                {
-                    tournament.Matches = tournamentmanager.GetAllMatchesInTournament(tournament);
-                }
-            }
-            catch (Exception ex)
+            Tournaments = tournamentmanager.GetAllTournaments();
+
+            foreach (var t in Tournaments)
             {
-                Debug.WriteLine(ex.Message);
-                // internal server error
-                return StatusCode(500);
+                t.Players = tournamentmanager.GetAllPlayersInTournament(t);
+                t.Matches = tournamentmanager.GetAllMatchesInTournament(t);
             }
 
             return Page();
@@ -80,26 +49,72 @@ namespace Website.Pages
         {
             try
             {
-                var currentPlayer = playerManager.GetPlayer(userManager.GetUserById(Convert.ToInt32(User.FindFirst("id").Value)));
-                Tournament currentTournament = tournamentmanager.GetTournamentById(id);
-                if (currentTournament.Closed)
+                LoadCurrentPlayer();
+
+                var t = tournamentmanager.GetTournamentById(id);
+                t.Players = tournamentmanager.GetAllPlayersInTournament(t);
+
+                if (!t.IsClosed && !t.Players.Any(p => p.Id == CurrentPlayer.Id))
                 {
-                    throw new Exception("This tournament is closed and not accepting new players");
-                }
-                if (!checkIfPlayerInTournament(id))
-                {
-                    tournamentmanager.AddTournamentApp(currentPlayer, currentTournament);
-                }
-                else
-                {
-                    throw new Exception("You are already in this tournament");
+                    tournamentmanager.AddTournamentApp(CurrentPlayer, t);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Debug.WriteLine(ex.Message);
-                // internal server error
-                return StatusCode(500);
+            }
+
+            return Redirect("/Tournaments");
+        }
+
+        public IActionResult OnPostLeave(int id)
+        {
+            try
+            {
+                LoadCurrentPlayer();
+
+                var t = tournamentmanager.GetTournamentById(id);
+                tournamentmanager.RemovePlayerFromTournament(CurrentPlayer, t);
+            }
+            catch (Exception)
+            {
+            }
+
+            return Redirect("/Tournaments");
+        }
+
+        public IActionResult OnPostClose(int id)
+        {
+            try
+            {
+                LoadCurrentPlayer();
+
+                if (!CurrentPlayer.IsAdmin)
+                    return Unauthorized();
+
+                var t = tournamentmanager.GetTournamentById(id);
+                tournamentmanager.CloseTournament(t);
+            }
+            catch (Exception)
+            {
+            }
+
+            return Redirect("/Tournaments");
+        }
+
+        public IActionResult OnPostDelete(int id)
+        {
+            LoadCurrentPlayer();
+
+            if (!CurrentPlayer.IsAdmin)
+                return Unauthorized();
+
+            try
+            {
+                var t = tournamentmanager.GetTournamentById(id);
+                tournamentmanager.RemoveTournament(t);
+            }
+            catch (Exception)
+            {
             }
 
             return Redirect("/Tournaments");

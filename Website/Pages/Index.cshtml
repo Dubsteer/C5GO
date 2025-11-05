@@ -5,19 +5,23 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="row row-cols-3 row-cols-md g-4">
-    @foreach (Post post in Model.Posts)
-    {
-        <div class="col">
-            <div class="card">
-                <div class="card-body">
-                    <a href="/posts?id=@post.Id">
-                        <h5 class="card-title text-dark">@Model.TruncateString(post.Content, 50)</h5>
-                    </a>
-                    <hr>
-                    <p class="text-dark"></p>
+<div class="content-box">
+    <h2 class="text-center mb-4 text-dark">Latest Posts</h2>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (Post post in Model.Posts)
+        {
+            <div class="col">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <a href="/posts?id=@post.Id">
+                            <h5 class="card-title">@Model.TruncateString(post.Content, 50)</h5>
+                        </a>
+                        <hr>
+                        <p class="card-text text-secondary">@Model.TruncateString(post.Content, 120)</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    }
+        }
+    </div>
 </div>

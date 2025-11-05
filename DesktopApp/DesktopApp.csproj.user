@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Compile Update="AdminPanel.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="ListOfMatches.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Login.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="TournamentDetails.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="UserControls\AddTournament.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="UserControls\CreatePost.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="UserControls\UpdatePost.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="UserControls\ViewListOfTournaments.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="UserControls\ViewPosts.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="UserControls\ViewUsers.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+  </ItemGroup>
+</Project>

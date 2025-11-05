@@ -1,0 +1,83 @@
+# ===== .NET / Visual Studio Projects =====
+
+# Visual Studio cache and settings
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Tt]est[Rr]esult*/
+[Rr]elease/
+[Dd]ebug/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+
+# Publish folders
+publish/
+wwwroot/lib/
+node_modules/
+
+# Visual Studio for Mac & Rider
+.idea/
+*.iml
+*.DS_Store
+
+# Backup and logs
+*.log
+*.bak
+*.orig
+*.tmp
+*.temp
+
+# NuGet
+*.nupkg
+*.snupkg
+project.lock.json
+artifacts/
+project.nuget.cache
+project.assets.json
+
+# Resharper / Rider
+_ReSharper*/
+*.DotSettings.user
+
+# User-specific files
+.vscode/
+*.vscode/
+*.code-workspace
+
+# Database files
+*.mdf
+*.ldf
+*.sqlite
+*.db
+
+# OS junk files
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# Sensitive configuration (do NOT upload local DB credentials)
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.json
+!appsettings.Production.json  # Only allow safe config
+.env
+*.env
+
+# Test coverage and profiler data
+coverage/
+*.coverage
+*.coveragexml
+
+# Miscellaneous
+*.pidb
+*.svclog
+*.scc

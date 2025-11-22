@@ -42,26 +42,27 @@ namespace DataLayer.Repos
                     (Status)reader.GetInt32("status_int")
                 ));
             }
+            }
 
             return list;
         }
-
         public void AddTournament(Tournament t)
-        {
+        public void AddTournament(Tournament tournament)
             EnsureConnection();
 
-            var cmd = new MySqlCommand(
+            // ✅ use 'status' column instead of 'closed'
                 "INSERT INTO tournament (name, description, status_int) VALUES (@n, @d, @s)",
+                "INSERT INTO tournament(name, description, status) VALUES(@NAME, @DESCRIPTION, false)",
                 conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@n", t.Name);
             cmd.Parameters.AddWithValue("@d", t.Description);
             cmd.Parameters.AddWithValue("@s", (int)t.Status);
-
             cmd.ExecuteNonQuery();
         }
-
+        }
         public void UpdateTournament(Tournament t)
+        public void AddTournamentApp(Player player, Tournament tournament)
         {
             EnsureConnection();
 
@@ -73,11 +74,11 @@ namespace DataLayer.Repos
             cmd.Parameters.AddWithValue("@d", t.Description);
             cmd.Parameters.AddWithValue("@s", (int)t.Status);
             cmd.Parameters.AddWithValue("@id", t.Id);
-
             cmd.ExecuteNonQuery();
         }
-
+        }
         public void RemoveTournament(Tournament t)
+        public void RemoveTournament(Tournament tournament)
         {
             EnsureConnection();
 
@@ -92,25 +93,24 @@ namespace DataLayer.Repos
                 conn.GetInnerConn());
             deleteApps.Parameters.AddWithValue("@id", t.Id);
             deleteApps.ExecuteNonQuery();
-
             var deleteTournament = new MySqlCommand(
                 "DELETE FROM tournament WHERE id=@id",
                 conn.GetInnerConn());
             deleteTournament.Parameters.AddWithValue("@id", t.Id);
             deleteTournament.ExecuteNonQuery();
+            }
         }
-
         public void AddTournamentApp(Player player, Tournament tournament)
-        {
+        public void UpdateTournament(Tournament tournament)
             EnsureConnection();
 
+            // ✅ update correct column 'status'
             var cmd = new MySqlCommand(
                 "INSERT INTO applications (tournamentId, playerId) VALUES(@tid, @pid)",
                 conn.GetInnerConn());
-
             cmd.Parameters.AddWithValue("@tid", tournament.Id);
             cmd.Parameters.AddWithValue("@pid", player.Id);
-
+            cmd.Parameters.AddWithValue("@STATUS", tournament.Closed); // maps to bool Closed in your C# model
             cmd.ExecuteNonQuery();
         }
 
@@ -126,21 +126,22 @@ namespace DataLayer.Repos
             cmd.Parameters.AddWithValue("@tid", tournament.Id);
 
             cmd.ExecuteNonQuery();
+            }
         }
 
+        // ✅ Get all players inside one tournament
         public List<Player> GetAllPlayersInTournament(int tournamentId)
         {
             EnsureConnection();
 
             var players = new List<Player>();
-
             var cmd = new MySqlCommand(@"
                 SELECT * FROM user
                 JOIN applications ON user.id = applications.playerId
                 WHERE applications.tournamentId = @id", conn.GetInnerConn());
+                conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@id", tournamentId);
-
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
@@ -155,6 +156,8 @@ namespace DataLayer.Repos
                     reader.GetString("steam_id"),
                     reader.GetBoolean("is_moderator")
                 ));
+                Debug.WriteLine(ex.Message);
+                throw new Exception("Something unexpected has occurred. Please try again.", ex);
             }
 
             return players;

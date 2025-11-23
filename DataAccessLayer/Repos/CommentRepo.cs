@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using LogicLayer;
+﻿using LogicLayer;
 using LogicLayer.IRepos;
 using LogicLayer.Models;
 using MySql.Data.MySqlClient;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics;
 
 namespace DataLayer.Repos
 {
@@ -17,316 +18,285 @@ namespace DataLayer.Repos
             this.conn = conn;
         }
 
-        // 🧩 Add Comment
+        // --------------------------------------------------
+        // ADD COMMENT
+        // --------------------------------------------------
         public void AddComment(Comment comment)
         {
-            var cmd = new MySqlCommand(
-                "INSERT INTO comment (authorid, content, posted_on, post_id) " +
-                "VALUES (@authorid, @content, @posted_on, @post_id)",
+            var cmd = new MySqlCommand(@"
+                INSERT INTO comment (authorid, content, posted_on, post_id)
+                VALUES (@a, @c, @p, @pid)",
                 conn.GetInnerConn());
 
-            cmd.Parameters.AddWithValue("@authorid", comment.User.Id);
-            cmd.Parameters.AddWithValue("@content", comment.Content);
-            cmd.Parameters.AddWithValue("@posted_on", comment.Posted_on);
-            cmd.Parameters.AddWithValue("@post_id", comment.PostId);
+            cmd.Parameters.AddWithValue("@a", comment.User.Id);
+            cmd.Parameters.AddWithValue("@c", comment.Content);
+            cmd.Parameters.AddWithValue("@p", comment.Posted_on);
+            cmd.Parameters.AddWithValue("@pid", comment.PostId);
 
-            try
-            {
-                cmd.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                throw new Exception("Something unexpected has occurred. Please try again.", ex);
-            }
+            cmd.ExecuteNonQuery();
         }
 
-        // 🧩 Get all comments for one post
+        // --------------------------------------------------
+        // GET ALL COMMENTS FOR POST — FIXED VERSION
+        // --------------------------------------------------
         public List<Comment> GetAllCommentsByPostId(int id)
         {
-            var cmd = new MySqlCommand(@"
-                SELECT comment.*, user.*
-                FROM comment
-                JOIN user ON comment.authorid = user.id
-                WHERE post_id = @post_id
-                ORDER BY posted_on DESC;", conn.GetInnerConn());
-
-            cmd.Parameters.AddWithValue("@post_id", id);
-
             var comments = new List<Comment>();
 
-            try
+            var cmd = new MySqlCommand(@"
+                SELECT 
+                    c.id AS comment_id,
+                    c.authorid AS comment_authorid,
+                    c.content AS comment_content,
+                    c.posted_on AS comment_posted_on,
+                    c.post_id AS comment_post_id,
+
+                    u.id AS user_id,
+                    u.first_name,
+                    u.last_name,
+                    u.age,
+                    u.username,
+                    u.email,
+                    u.password,
+                    u.is_moderator,
+                    u.steam_id
+
+                FROM comment c
+                JOIN user u ON c.authorid = u.id
+                WHERE c.post_id = @pid
+                ORDER BY c.posted_on DESC;
+            ", conn.GetInnerConn());
+
+            cmd.Parameters.AddWithValue("@pid", id);
+
+            using (var r = cmd.ExecuteReader())
             {
-                using (var reader = cmd.ExecuteReader())
+                while (r.Read())
                 {
-                    while (reader.Read())
-                    {
-                        int commentId = reader.GetInt32("id");
-                        int authorId = reader.GetInt32("authorid");
-                        string content = reader.GetString("content");
-                        DateTime postedOn = reader.GetDateTime("posted_on");
-                        int postId = reader.GetInt32("post_id");
+                    var user = new User(
+                        r.GetInt32("user_id"),
+                        r.GetString("first_name"),
+                        r.GetString("last_name"),
+                        r.IsDBNull("age") ? 0 : r.GetInt32("age"),
+                        r.GetString("username"),
+                        r.GetString("email"),
+                        r.GetString("password"),
+                        r.GetBoolean("is_moderator"),
+                        r.IsDBNull("steam_id") ? "0" : r.GetString("steam_id")
+                    );
 
-                        string firstName = reader.GetString("first_name");
-                        string lastName = reader.GetString("last_name");
-                        int age = reader.IsDBNull(reader.GetOrdinal("age")) ? 0 : reader.GetInt32("age");
-                        string username = reader.GetString("username");
-                        string email = reader.GetString("email");
-                        string password = reader.GetString("password");
-                        bool isModerator = reader.GetBoolean("is_moderator");
-                        string steamId = reader.IsDBNull(reader.GetOrdinal("steam_id")) ? "0" : reader.GetString("steam_id");
+                    var comment = new Comment(
+                        r.GetInt32("comment_id"),
+                        user,
+                        r.GetString("comment_content"),
+                        r.GetDateTime("comment_posted_on"),
+                        r.GetInt32("comment_post_id")
+                    );
 
-                        User author = new User(authorId, firstName, lastName, age, username, email, password, isModerator, steamId);
-                        Comment comment = new Comment(commentId, author, content, postedOn, postId);
-                        comments.Add(comment);
-                    }
+                    comments.Add(comment);
                 }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                throw new Exception("Error loading comments. Please try again.", ex);
             }
 
             return comments;
         }
 
-        // 🧩 Get one comment by user id
+        // --------------------------------------------------
+        // GET COMMENT BY USER ID
+        // --------------------------------------------------
         public Comment GetCommentByUserId(int id)
         {
             var cmd = new MySqlCommand(@"
-                SELECT comment.*, user.*
-                FROM comment
-                JOIN user ON comment.authorid = user.id
-                WHERE comment.id = @comment_id", conn.GetInnerConn());
+                SELECT 
+                    c.id AS comment_id,
+                    c.authorid AS comment_authorid,
+                    c.content AS comment_content,
+                    c.posted_on AS comment_posted_on,
+                    c.post_id AS comment_post_id,
 
-            cmd.Parameters.AddWithValue("@comment_id", id);
+                    u.id AS user_id,
+                    u.first_name,
+                    u.last_name,
+                    u.age,
+                    u.username,
+                    u.email,
+                    u.password,
+                    u.is_moderator,
+                    u.steam_id
 
-            Comment comment = null;
+                FROM comment c
+                JOIN user u ON c.authorid = u.id
+                WHERE c.id = @cid;
+            ", conn.GetInnerConn());
 
-            try
-            {
-                using (MySqlDataReader reader = cmd.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        string content = reader.GetString("content");
-                        DateTime postedOn = reader.GetDateTime("posted_on");
-                        int post_id = reader.GetInt32("post_id");
-                        int authorId = reader.GetInt32("authorid");
-                        string firstName = reader.GetString("first_name");
-                        string lastName = reader.GetString("last_name");
-                        int age = reader.IsDBNull(reader.GetOrdinal("age")) ? 0 : reader.GetInt32("age");
-                        string username = reader.GetString("username");
-                        string email = reader.GetString("email");
-                        string password = reader.GetString("password");
-                        bool isModerator = reader.GetBoolean("is_moderator");
-                        string steamId = reader.IsDBNull(reader.GetOrdinal("steam_id")) ? "0" : reader.GetString("steam_id");
+            cmd.Parameters.AddWithValue("@cid", id);
 
-                        User author = new User(authorId, firstName, lastName, age, username, email, password, isModerator, steamId);
-                        comment = new Comment(id, author, content, postedOn, post_id);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                throw new Exception("Error loading comment by user.", ex);
-            }
+            using var r = cmd.ExecuteReader();
+            if (!r.Read()) return null;
 
-            return comment;
+            var user = new User(
+                r.GetInt32("user_id"),
+                r.GetString("first_name"),
+                r.GetString("last_name"),
+                r.IsDBNull("age") ? 0 : r.GetInt32("age"),
+                r.GetString("username"),
+                r.GetString("email"),
+                r.GetString("password"),
+                r.GetBoolean("is_moderator"),
+                r.IsDBNull("steam_id") ? "0" : r.GetString("steam_id")
+            );
+
+            return new Comment(
+                r.GetInt32("comment_id"),
+                user,
+                r.GetString("comment_content"),
+                r.GetDateTime("comment_posted_on"),
+                r.GetInt32("comment_post_id")
+            );
         }
 
-        // 🧩 Update comment
+        // --------------------------------------------------
+        // UPDATE
+        // --------------------------------------------------
         public void UpdateComment(Comment comment)
         {
-            var cmd = new MySqlCommand(
-                "UPDATE comment SET authorid = @authorid, content = @content, " +
-                "posted_on = @posted_on, post_id = @post_id WHERE id = @id",
-                conn.GetInnerConn());
+            var cmd = new MySqlCommand(@"
+                UPDATE comment
+                SET content = @c
+                WHERE id = @id;
+            ", conn.GetInnerConn());
 
+            cmd.Parameters.AddWithValue("@c", comment.Content);
             cmd.Parameters.AddWithValue("@id", comment.Id);
-            cmd.Parameters.AddWithValue("@authorid", comment.User.Id);
-            cmd.Parameters.AddWithValue("@content", comment.Content);
-            cmd.Parameters.AddWithValue("@posted_on", comment.Posted_on);
-            cmd.Parameters.AddWithValue("@post_id", comment.PostId);
 
-            try
-            {
-                cmd.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                throw new Exception("Error updating comment.", ex);
-            }
+            cmd.ExecuteNonQuery();
         }
 
-        // 🧩 Delete comment
+        // --------------------------------------------------
+        // DELETE
+        // --------------------------------------------------
         public void DeleteComment(Comment comment)
         {
-            var cmd = new MySqlCommand(
-                "DELETE FROM comment WHERE id = @id", conn.GetInnerConn());
+            var cmd = new MySqlCommand(@"
+                DELETE FROM comment WHERE id = @id;
+            ", conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@id", comment.Id);
 
-            try
-            {
-                cmd.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                throw new Exception("Error deleting comment.", ex);
-            }
+            cmd.ExecuteNonQuery();
         }
 
-        // 🧩 Get comment by ID
+        // --------------------------------------------------
+        // GET BY ID
+        // --------------------------------------------------
         public Comment GetCommentById(int id)
         {
-            var cmd = new MySqlCommand(
-                "SELECT * FROM comment WHERE id = @id",
-                conn.GetInnerConn());
+            var cmd = new MySqlCommand(@"
+                SELECT 
+                    c.id AS comment_id,
+                    c.authorid AS comment_authorid,
+                    c.content AS comment_content,
+                    c.posted_on AS comment_posted_on,
+                    c.post_id AS comment_post_id
+                FROM comment c
+                WHERE c.id = @id;
+            ", conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@id", id);
 
-            Comment comment = null;
+            using var r = cmd.ExecuteReader();
+            if (!r.Read()) return null;
 
-            try
-            {
-                using (MySqlDataReader reader = cmd.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        int commentId = reader.GetInt32("id");
-                        int authorId = reader.GetInt32("authorid");
-                        string content = reader.GetString("content");
-                        DateTime postedOn = reader.GetDateTime("posted_on");
-                        int postId = reader.GetInt32("post_id");
-
-                        comment = new Comment(commentId, new User(authorId), content, postedOn, postId);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                throw new Exception("Error loading comment by ID.", ex);
-            }
-
-            return comment;
+            return new Comment(
+                r.GetInt32("comment_id"),
+                new User(r.GetInt32("comment_authorid")),
+                r.GetString("comment_content"),
+                r.GetDateTime("comment_posted_on"),
+                r.GetInt32("comment_post_id")
+            );
         }
 
-        // 🧩 Get all comments
+        // --------------------------------------------------
+        // GET ALL COMMENTS — MINIMAL
+        // --------------------------------------------------
         public List<Comment> GetAllComments()
         {
-            var cmd = new MySqlCommand(
-                "SELECT id, authorid, content, posted_on, post_id FROM comment",
-                conn.GetInnerConn());
+            var list = new List<Comment>();
 
-            var comments = new List<Comment>();
+            var cmd = new MySqlCommand(@"
+                SELECT id, authorid, content, posted_on, post_id
+                FROM comment;
+            ", conn.GetInnerConn());
 
-            try
+            using var r = cmd.ExecuteReader();
+
+            while (r.Read())
             {
-                using (var reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        int commentId = reader.GetInt32("id");
-                        int authorId = reader.GetInt32("authorid");
-                        string content = reader.GetString("content");
-                        DateTime postedOn = reader.GetDateTime("posted_on");
-                        int postId = reader.GetInt32("post_id");
-
-                        Comment comment = new Comment(commentId, new User(authorId), content, postedOn, postId);
-                        comments.Add(comment);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                throw new Exception("Error loading all comments.", ex);
+                list.Add(new Comment(
+                    r.GetInt32("id"),
+                    new User(r.GetInt32("authorid")),
+                    r.GetString("content"),
+                    r.GetDateTime("posted_on"),
+                    r.GetInt32("post_id")
+                ));
             }
 
-            return comments;
+            return list;
         }
 
-        // 🧩 Add reply to a comment
+        // --------------------------------------------------
+        // REPLIES
+        // --------------------------------------------------
         public void AddReply(CommentReply reply)
         {
-            var cmd = new MySqlCommand(
-                "INSERT INTO commentreply (content, posted_on, comment_id) VALUES (@content, @posted_on, @comment_id)",
-                conn.GetInnerConn());
+            var cmd = new MySqlCommand(@"
+                INSERT INTO commentreply (content, posted_on, comment_id)
+                VALUES (@c, @p, @cid);
+            ", conn.GetInnerConn());
 
-            cmd.Parameters.AddWithValue("@content", reply.Content);
-            cmd.Parameters.AddWithValue("@posted_on", DateTime.Now);
-            cmd.Parameters.AddWithValue("@comment_id", reply.CommentId);
+            cmd.Parameters.AddWithValue("@c", reply.Content);
+            cmd.Parameters.AddWithValue("@p", reply.PostedOn);
+            cmd.Parameters.AddWithValue("@cid", reply.CommentId);
 
-            try
-            {
-                cmd.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                throw new Exception("Error adding reply.", ex);
-            }
+            cmd.ExecuteNonQuery();
         }
 
-        // 🧩 Get all replies for a comment
         public List<CommentReply> GetAllRepliesByCommentId(int commentId)
         {
-            var cmd = new MySqlCommand(
-                "SELECT * FROM commentreply WHERE comment_id = @comment_id ORDER BY posted_on DESC",
-                conn.GetInnerConn());
+            var list = new List<CommentReply>();
 
-            cmd.Parameters.AddWithValue("@comment_id", commentId);
+            var cmd = new MySqlCommand(@"
+                SELECT id, content, posted_on, comment_id
+                FROM commentreply
+                WHERE comment_id = @cid
+                ORDER BY posted_on DESC;
+            ", conn.GetInnerConn());
 
-            var replies = new List<CommentReply>();
+            cmd.Parameters.AddWithValue("@cid", commentId);
 
-            try
+            using var r = cmd.ExecuteReader();
+
+            while (r.Read())
             {
-                using (var reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        int replyId = reader.GetInt32("id");
-                        string content = reader.GetString("content");
-                        DateTime postedOn = reader.GetDateTime("posted_on");
-                        int _commentId = reader.GetInt32("comment_id");
-
-                        replies.Add(new CommentReply(replyId, content, postedOn, _commentId));
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                throw new Exception("Error loading replies.", ex);
+                list.Add(new CommentReply(
+                    r.GetInt32("id"),
+                    r.GetString("content"),
+                    r.GetDateTime("posted_on"),
+                    r.GetInt32("comment_id")
+                ));
             }
 
-            return replies;
+            return list;
         }
 
-        // 🧩 Check if comment text already exists
         public bool CheckIfCommentExists(string comment)
         {
-            var cmd = new MySqlCommand(
-                "SELECT EXISTS (SELECT * FROM comment WHERE content = @comment)",
-                conn.GetInnerConn());
+            var cmd = new MySqlCommand(@"
+                SELECT EXISTS(SELECT 1 FROM comment WHERE content = @c);
+            ", conn.GetInnerConn());
 
-            cmd.Parameters.AddWithValue("@comment", comment);
+            cmd.Parameters.AddWithValue("@c", comment);
 
-            try
-            {
-                return Convert.ToInt32(cmd.ExecuteScalar()) == 1;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                throw new Exception("Error checking comment existence.", ex);
-            }
+            return Convert.ToInt32(cmd.ExecuteScalar()) == 1;
         }
     }
 }

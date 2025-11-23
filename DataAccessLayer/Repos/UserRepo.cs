@@ -15,12 +15,20 @@ namespace DataLayer.Repos
             this.conn = conn;
         }
 
+        private void EnsureConnection()
+        {
+            if (conn.GetInnerConn().State != System.Data.ConnectionState.Open)
+                conn.Open();
+        }
+
         public void CreateUser(User user)
         {
-                    var cmd = new MySqlCommand(
-            "INSERT INTO user (first_name, last_name, age, username, email, password, is_moderator, steam_id) " +
-            "VALUES (@FIRST_NAME, @LAST_NAME, @AGE, @USERNAME, @EMAIL, @PASSWORD, @IS_MODERATOR, @STEAM_ID)",
-            conn.GetInnerConn());
+            EnsureConnection();
+
+            var cmd = new MySqlCommand(
+                "INSERT INTO user (first_name, last_name, age, username, email, password, is_moderator, steam_id) " +
+                "VALUES (@FIRST_NAME, @LAST_NAME, @AGE, @USERNAME, @EMAIL, @PASSWORD, @IS_MODERATOR, @STEAM_ID)",
+                conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@FIRST_NAME", user.Firstname);
             cmd.Parameters.AddWithValue("@LAST_NAME", user.Lastname);
@@ -30,7 +38,6 @@ namespace DataLayer.Repos
             cmd.Parameters.AddWithValue("@PASSWORD", user.Password);
             cmd.Parameters.AddWithValue("@IS_MODERATOR", user.IsAdmin);
             cmd.Parameters.AddWithValue("@STEAM_ID", user.SteamId ?? "0");
-
 
             try
             {
@@ -45,11 +52,14 @@ namespace DataLayer.Repos
 
         public List<User> GetAllUsers()
         {
+            EnsureConnection();
+
             var cmd = new MySqlCommand(
               "SELECT id, first_name, last_name, age, username, email, password, is_moderator FROM user",
               conn.GetInnerConn());
 
             var users = new List<User>();
+
             try
             {
                 using (var reader = cmd.ExecuteReader())
@@ -81,6 +91,8 @@ namespace DataLayer.Repos
 
         public void UpdateUser(User user)
         {
+            EnsureConnection();
+
             var cmd = new MySqlCommand(
                 "UPDATE user SET first_name = @FIRST_NAME, last_name = @LAST_NAME, age = @AGE, " +
                 "username = @USERNAME, email = @EMAIL, password = @PASSWORD, is_moderator = @IS_MODERATOR " +
@@ -109,8 +121,30 @@ namespace DataLayer.Repos
 
         public void DeleteUser(User user)
         {
-            var cmd = new MySqlCommand("DELETE FROM user WHERE id = @ID", conn.GetInnerConn());
-            cmd.Parameters.AddWithValue("ID", user.Id.Value);
+            EnsureConnection();
+
+            // 1) Delete comments
+            var deleteComments = new MySqlCommand(
+                "DELETE FROM comment WHERE authorid=@ID",
+                conn.GetInnerConn());
+
+            deleteComments.Parameters.AddWithValue("@ID", user.Id.Value);
+            deleteComments.ExecuteNonQuery();
+
+            // 2) Delete tournament applications
+            var deleteFromApplications = new MySqlCommand(
+                "DELETE FROM applications WHERE playerId=@ID",
+                conn.GetInnerConn());
+
+            deleteFromApplications.Parameters.AddWithValue("@ID", user.Id.Value);
+            deleteFromApplications.ExecuteNonQuery();
+
+            // 3) Delete user
+            var cmd = new MySqlCommand(
+                "DELETE FROM user WHERE id = @ID",
+                conn.GetInnerConn());
+
+            cmd.Parameters.AddWithValue("@ID", user.Id.Value);
 
             try
             {
@@ -125,36 +159,38 @@ namespace DataLayer.Repos
 
         public bool CheckIfUsernameExists(string username, int selfId)
         {
-            var cmd = new MySqlCommand("SELECT EXISTS(SELECT * FROM user WHERE username = BINARY @USERNAME AND id != @ID)", conn.GetInnerConn());
+            EnsureConnection();
+
+            var cmd = new MySqlCommand(
+                "SELECT EXISTS(SELECT * FROM user WHERE username = BINARY @USERNAME AND id != @ID)",
+                conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("USERNAME", username);
             cmd.Parameters.AddWithValue("ID", selfId);
 
-            bool result;
-
             try
             {
-                result = Convert.ToInt32(cmd.ExecuteScalar()) == 1;
+                return Convert.ToInt32(cmd.ExecuteScalar()) == 1;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
                 throw new Exception("Something unexpected has occurred. Please try again.", ex);
             }
-
-            return result;
         }
 
         public List<User> SearchUser(string term)
         {
+            EnsureConnection();
+
             var cmd = new MySqlCommand(
-                "SELECT id, first_name, last_name, age, username, email, password, is_moderator FROM user " +
-                "WHERE username LIKE CONCAT('%', @term, '%')",
+                "SELECT id, first_name, last_name, age, username, email, password, is_moderator " +
+                "FROM user WHERE username LIKE CONCAT('%', @term, '%')",
                 conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@term", term);
 
-            List<User> users = new List<User>();
+            var users = new List<User>();
 
             try
             {

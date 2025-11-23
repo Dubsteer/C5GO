@@ -1,45 +1,54 @@
-using LogicLayer.Models;
 using LogicLayer.Managers;
+using LogicLayer.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Diagnostics;
-using Microsoft.AspNetCore.Authorization;
 
 namespace Website.Pages
 {
     [Authorize]
     public class TournamentsModel : PageModel
     {
-        public List<Tournament> Tournaments { get; set; }
+        public List<Tournament> Tournaments { get; set; } = new();
         public Player CurrentPlayer { get; set; }
+        public bool IsPlayer => CurrentPlayer != null;
 
         private readonly UserManager userManager;
-        private readonly TournamentManager tournamentmanager;
+        private readonly TournamentManager tournamentManager;
         private readonly PlayerManager playerManager;
 
-        public TournamentsModel(TournamentManager tournamentmanager, PlayerManager playerManager, UserManager userManager)
+        public TournamentsModel(TournamentManager tournamentManager, PlayerManager playerManager, UserManager userManager)
         {
-            this.tournamentmanager = tournamentmanager;
+            this.tournamentManager = tournamentManager;
             this.playerManager = playerManager;
             this.userManager = userManager;
         }
 
         private void LoadCurrentPlayer()
         {
-            var u = userManager.GetUserById(Convert.ToInt32(User.FindFirst("id").Value));
-            CurrentPlayer = playerManager.GetPlayer(u);
+            try
+            {
+                var userId = Convert.ToInt32(User.FindFirst("id").Value);
+                var user = userManager.GetUserById(userId);
+                CurrentPlayer = playerManager.GetPlayer(user); // null ako nije player
+            }
+            catch
+            {
+                CurrentPlayer = null;
+            }
         }
 
         public IActionResult OnGet()
         {
             LoadCurrentPlayer();
 
-            Tournaments = tournamentmanager.GetAllTournaments();
+            Tournaments = tournamentManager.GetAllTournaments();
 
             foreach (var t in Tournaments)
             {
-                t.Players = tournamentmanager.GetAllPlayersInTournament(t);
-                t.Matches = tournamentmanager.GetAllMatchesInTournament(t);
+                t.Players = tournamentManager.GetAllPlayersInTournament(t);
+                t.Matches = tournamentManager.GetAllMatchesInTournament(t);
             }
 
             return Page();
@@ -47,20 +56,22 @@ namespace Website.Pages
 
         public IActionResult OnPostApply(int id)
         {
+            LoadCurrentPlayer();
+
+            if (CurrentPlayer == null)
+                return Redirect("/Profile");
+
             try
             {
-                LoadCurrentPlayer();
+                var t = tournamentManager.GetTournamentById(id);
+                t.Players = tournamentManager.GetAllPlayersInTournament(t);
 
-                var t = tournamentmanager.GetTournamentById(id);
-                t.Players = tournamentmanager.GetAllPlayersInTournament(t);
-
-                if (!t.IsClosed && !t.Players.Any(p => p.Id == CurrentPlayer.Id))
-                {
-                    tournamentmanager.AddTournamentApp(CurrentPlayer, t);
-                }
+                if (!t.Players.Any(p => p.Id == CurrentPlayer.Id))
+                    tournamentManager.AddTournamentApp(CurrentPlayer, t);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Debug.WriteLine("JoinError: " + ex.Message);
             }
 
             return Redirect("/Tournaments");
@@ -68,15 +79,19 @@ namespace Website.Pages
 
         public IActionResult OnPostLeave(int id)
         {
+            LoadCurrentPlayer();
+
+            if (CurrentPlayer == null)
+                return Redirect("/Profile");
+
             try
             {
-                LoadCurrentPlayer();
-
-                var t = tournamentmanager.GetTournamentById(id);
-                tournamentmanager.RemovePlayerFromTournament(CurrentPlayer, t);
+                var t = tournamentManager.GetTournamentById(id);
+                tournamentManager.RemovePlayerFromTournament(CurrentPlayer, t);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Debug.WriteLine("LeaveError: " + ex.Message);
             }
 
             return Redirect("/Tournaments");
@@ -84,18 +99,20 @@ namespace Website.Pages
 
         public IActionResult OnPostClose(int id)
         {
+            LoadCurrentPlayer();
+
+            if (CurrentPlayer == null || !CurrentPlayer.IsAdmin)
+                return Unauthorized();
+
             try
             {
-                LoadCurrentPlayer();
-
-                if (!CurrentPlayer.IsAdmin)
-                    return Unauthorized();
-
-                var t = tournamentmanager.GetTournamentById(id);
-                tournamentmanager.CloseTournament(t);
+                var t = tournamentManager.GetTournamentById(id);
+                t.Status = LogicLayer.Enums.Status.Closed;
+                tournamentManager.UpdateTournament(t);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Debug.WriteLine("CloseError: " + ex.Message);
             }
 
             return Redirect("/Tournaments");
@@ -105,16 +122,17 @@ namespace Website.Pages
         {
             LoadCurrentPlayer();
 
-            if (!CurrentPlayer.IsAdmin)
+            if (CurrentPlayer == null || !CurrentPlayer.IsAdmin)
                 return Unauthorized();
 
             try
             {
-                var t = tournamentmanager.GetTournamentById(id);
-                tournamentmanager.RemoveTournament(t);
+                var t = tournamentManager.GetTournamentById(id);
+                tournamentManager.RemoveTournament(t);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Debug.WriteLine("DeleteError: " + ex.Message);
             }
 
             return Redirect("/Tournaments");

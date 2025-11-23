@@ -68,6 +68,27 @@
 
     <hr />
 
+    <h2 class="match-history-title">🎮 Player Setup</h2>
+
+    @if (Model.Player == null)
+    {
+        <form method="post">
+            <label><strong>Steam ID:</strong></label>
+            <input asp-for="SteamId" class="form-control" style="max-width:300px;" placeholder="Enter your Steam ID" />
+            <span asp-validation-for="SteamId" class="text-danger"></span>
+
+            <br />
+            <button type="submit" class="btn btn-success">Save & Become Player</button>
+        </form>
+    }
+    else
+    {
+        <p><strong>Steam ID:</strong> @Model.Player.SteamId</p>
+        <p style="color:green;font-weight:bold;">You are already a Player ✔</p>
+    }
+
+    <hr />
+
     <h2 class="match-history-title">🎮 Your Match History</h2>
 
     @if (!Model.Matches.Any())
@@ -79,18 +100,38 @@
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>Tournament</th>
+                    <th>Tournament ID</th>
                     <th>Date</th>
-                    <th>Score</th>
+                    <th>Your Score</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var m in Model.Matches)
                 {
                     <tr>
-                        <td>@m.TournamentName</td>
-                        <td>@m.Date.ToShortDateString()</td>
-                        <td>@m.PlayerScore</td>
+                        <td>@m.TournamentId</td>
+                        <td>@m.MatchDate.ToShortDateString()</td>
+
+                        <td>
+                            @{
+                                var username = Model.PageUser.Username;
+
+                                if (m.User1 != null && m.User1.Username == username)
+                                {
+                                    @m.Player1Score
+                                    ;
+                                }
+                                else if (m.User2 != null && m.User2.Username == username)
+                                {
+                                    @m.Player2Score
+                                    ;
+                                }
+                                else
+                                {
+                                    @:"-"
+                                }
+                            }
+                        </td>
                     </tr>
                 }
             </tbody>

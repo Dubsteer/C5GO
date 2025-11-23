@@ -137,23 +137,20 @@ namespace Website.Pages.Posts
         public IActionResult OnPostDeleteComment(int id)
         {
             if (!User.Identity.IsAuthenticated)
-            {
                 return Unauthorized();
-            }
 
-            currentUser = userManager.GetUserById(Convert.ToInt32(User.FindFirst("id").Value));
+            currentUser = userManager.GetUserById(
+                Convert.ToInt32(User.FindFirst("id").Value)
+            );
+
             var comment = commentManager.GetCommentById(id);
+            if (comment == null)
+                return NotFound();
+
             post = postManager.GetPostById(comment.PostId);
 
-           
-
-            if(comment.User.CommentAuthorId == currentUser.Id)
-            {
-                commentManager.DeleteComment(comment);
-                return RedirectToPage("Index", new { id = post.Id });
-            }
-
-            if (currentUser.IsAdmin)
+            // ? user who wrote comment OR admin can delete
+            if (comment.User.Id == currentUser.Id || currentUser.IsAdmin)
             {
                 commentManager.DeleteComment(comment);
                 return RedirectToPage("Index", new { id = post.Id });

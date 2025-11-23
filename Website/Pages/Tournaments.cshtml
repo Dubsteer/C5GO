@@ -8,133 +8,191 @@
 
 <style>
     body {
-        background-color: #121212;
-        color: white;
+        background-color: #0d1117;
+        color: #f0f0f0;
+        font-family: "Segoe UI", Roboto, sans-serif;
     }
 
-    .tournament-card {
-        background-color: #1e1e1e;
-        border-radius: 10px;
-        padding: 20px;
-        border: 1px solid #333;
-        transition: 0.2s;
-        color: #fff !important; /* <<<<<< OVDE JE GLAVNI FIX ZA VIDLJIV TEKST */
+    h1 {
+        color: #ffffff;
+        font-weight: 700;
+        margin-bottom: 25px;
     }
 
-        .tournament-card h3,
-        .tournament-card p,
-        .tournament-card span,
-        .tournament-card strong {
-            color: #fff !important; /* Osigurano da SVE ostane belo */
+    /* ----- ALERT ----- */
+    .custom-alert {
+        background-color: #fbe8b2;
+        border: 1px solid #f1d488;
+        color: #7a5600;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 17px;
+    }
+
+        .custom-alert a {
+            color: #be7d00;
+            font-weight: 600;
+            text-decoration: underline;
         }
+
+    /* ----- CARD ----- */
+    .tournament-card {
+        background: #161b22;
+        border-radius: 12px;
+        padding: 22px;
+        border: 1px solid #2d333b;
+        transition: transform .20s ease, box-shadow .20s ease;
+        min-height: 260px;
+    }
 
         .tournament-card:hover {
-            border-color: #6f42c1;
-            transform: scale(1.01);
+            transform: scale(1.03);
+            box-shadow: 0px 0px 10px rgba(99, 102, 241, 0.4);
+            border-color: #6366f1;
         }
 
+        .tournament-card h3 {
+            color: #ffffff;
+            margin-bottom: 12px;
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .tournament-card p {
+            color: #d0d0d0;
+            margin-bottom: 12px;
+        }
+
+    /* ----- BADGES ----- */
     .badge-open {
-        background-color: #28a745;
+        background-color: #22c55e !important;
+        font-size: 14px;
+        padding: 6px 10px;
+        border-radius: 8px;
     }
 
     .badge-progress {
-        background-color: #ffc107;
-        color: black;
+        background-color: #facc15 !important;
+        color: #000;
+        font-size: 14px;
+        padding: 6px 10px;
+        border-radius: 8px;
     }
 
     .badge-closed {
-        background-color: #dc3545;
+        background-color: #ef4444 !important;
+        font-size: 14px;
+        padding: 6px 10px;
+        border-radius: 8px;
     }
+
+    /* ----- BUTTONS ----- */
+    .btn-sm {
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .btn-outline-danger {
+        color: #ff9999;
+        border-color: #ff9999;
+    }
+
+        .btn-outline-danger:hover {
+            background-color: #ff9999;
+            color: #000;
+        }
+
 </style>
 
 <div class="container mt-5">
 
-    <h1 class="mb-4 text-center">🏆 Tournaments</h1>
+    <h1 class="text-center">🏆 Tournaments</h1>
 
-    @if (Model.Tournaments == null || Model.Tournaments.Count == 0)
+    @if (!Model.IsPlayer)
     {
-        <p class="text-center text-muted">No tournaments available.</p>
-    }
-    else
-    {
-        <div class="row g-4">
-            @foreach (var t in Model.Tournaments)
-            {
-                <div class="col-md-4">
-                    <div class="tournament-card">
-
-                        <h3>@t.Name</h3>
-                        <p>@t.Description</p>
-
-                        <!-- STATUS -->
-                        @switch (t.Status)
-                        {
-                            case LogicLayer.Enums.Status.Open:
-                                <span class="badge badge-open">OPEN</span>
-                                break;
-
-                            case LogicLayer.Enums.Status.InProgress:
-                                <span class="badge badge-progress">IN PROGRESS</span>
-                                break;
-
-                            case LogicLayer.Enums.Status.Closed:
-                                <span class="badge badge-closed">CLOSED</span>
-                                break;
-                        }
-
-                        <hr />
-
-                        <p><strong>Players:</strong> @t.Players.Count</p>
-                        <p><strong>Matches:</strong> @t.Matches.Count</p>
-
-                        <hr />
-
-                        <!-- USER ACTIONS -->
-                        <div class="d-flex flex-wrap gap-2">
-
-                            @* JOIN *@
-                            @if (!t.Players.Any(p => p.Id == Model.CurrentPlayer.Id) &&
-                                                t.Status == LogicLayer.Enums.Status.Open)
-                            {
-                                <form method="post" asp-page-handler="Apply">
-                                    <input type="hidden" name="id" value="@t.Id" />
-                                    <button class="btn btn-success btn-sm">Join</button>
-                                </form>
-                            }
-
-                            @* LEAVE *@
-                            @if (t.Players.Any(p => p.Id == Model.CurrentPlayer.Id))
-                            {
-                                <form method="post" asp-page-handler="Leave">
-                                    <input type="hidden" name="id" value="@t.Id" />
-                                    <button class="btn btn-warning btn-sm">Leave</button>
-                                </form>
-                            }
-
-                            @* ADMIN ONLY *@
-                            @if (Model.CurrentPlayer.IsAdmin)
-                            {
-                                @* CLOSE *@
-                                @if (t.Status != LogicLayer.Enums.Status.Closed)
-                                {
-                                    <form method="post" asp-page-handler="Close">
-                                        <input type="hidden" name="id" value="@t.Id" />
-                                        <button class="btn btn-danger btn-sm">Close</button>
-                                    </form>
-                                }
-
-                                @* DELETE *@
-                                <form method="post" asp-page-handler="Delete">
-                                    <input type="hidden" name="id" value="@t.Id" />
-                                    <button class="btn btn-outline-danger btn-sm">Delete</button>
-                                </form>
-                            }
-
-                        </div>
-
-                    </div>
-                </div>
-            }
+        <div class="custom-alert text-center mb-4">
+            Add your SteamID in your
+            <a asp-page="/ViewProfile">Profile</a>
+            to join tournaments.
         </div>
     }
+
+    <div class="row g-4">
+        @foreach (var t in Model.Tournaments)
+        {
+            <div class="col-md-4">
+                <div class="tournament-card">
+
+                    <h3>@t.Name</h3>
+                    <p>@t.Description</p>
+
+                    @switch (t.Status)
+                    {
+                        case LogicLayer.Enums.Status.Open:
+                            <span class="badge badge-open">OPEN</span>
+                            break;
+
+                        case LogicLayer.Enums.Status.InProgress:
+                            <span class="badge badge-progress">IN PROGRESS</span>
+                            break;
+
+                        case LogicLayer.Enums.Status.Closed:
+                            <span class="badge badge-closed">CLOSED</span>
+                            break;
+                    }
+
+                    <hr />
+
+                    <p><strong>Players:</strong> @t.Players.Count</p>
+                    <p><strong>Matches:</strong> @t.Matches.Count</p>
+
+                    <hr />
+
+                    <div class="d-flex flex-wrap gap-2">
+
+                        <!-- JOIN -->
+                        @if (Model.IsPlayer
+                                            && t.Status == LogicLayer.Enums.Status.Open
+                                            && !t.Players.Any(p => p.Id == Model.CurrentPlayer.Id))
+                        {
+                            <form method="post" asp-page-handler="Apply">
+                                <input type="hidden" name="id" value="@t.Id" />
+                                <button class="btn btn-success btn-sm">Join</button>
+                            </form>
+                        }
+
+                        <!-- LEAVE -->
+                        @if (Model.IsPlayer
+                                            && t.Players.Any(p => p.Id == Model.CurrentPlayer.Id))
+                        {
+                            <form method="post" asp-page-handler="Leave">
+                                <input type="hidden" name="id" value="@t.Id" />
+                                <button class="btn btn-warning btn-sm">Leave</button>
+                            </form>
+                        }
+
+                        <!-- ADMIN -->
+                        @if (Model.IsPlayer && Model.CurrentPlayer.IsAdmin)
+                        {
+                            @if (t.Status != LogicLayer.Enums.Status.Closed)
+                            {
+                                <form method="post" asp-page-handler="Close">
+                                    <input type="hidden" name="id" value="@t.Id" />
+                                    <button class="btn btn-danger btn-sm">Close</button>
+                                </form>
+                            }
+
+                            <form method="post" asp-page-handler="Delete">
+                                <input type="hidden" name="id" value="@t.Id" />
+                                <button class="btn btn-outline-danger btn-sm">Delete</button>
+                            </form>
+                        }
+
+                    </div>
+
+                </div>
+            </div>
+        }
+    </div>
 </div>

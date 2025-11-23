@@ -1,43 +1,21 @@
-﻿using LogicLayer.Models;
-using LogicLayer.IRepos;
-using LogicLayer.Exceptions;
+﻿using LogicLayer.IRepos;
+using LogicLayer.Models;
 
 namespace LogicLayer.Managers
 {
     public class PlayerManager
     {
-        private readonly IPlayerRepo playerRepo;
+        private readonly IPlayerRepo repo;
 
-        public PlayerManager(IPlayerRepo playerRepo)
+        public PlayerManager(IPlayerRepo repo)
         {
-            this.playerRepo = playerRepo;
+            this.repo = repo;
         }
-        public void InitializeRole(Player player)
-        {
-            playerRepo.InitializeRole(player);
-        }
-        public void AddPlayerToTournament(Player player, Tournament tournament)
-        {
-            playerRepo.AddPlayerToTournament(player, tournament);
-        }
-        public void DeletePlayerRole(Player player)
-        {
-            playerRepo.DeletePlayerRole(player);
-        }
-        public List<Player> GetAllPlayers() 
-        {
-            var allUsers = playerRepo.GetAllPlayers();
-            var allPlayers = new List<Player>();
-            foreach ( var p in allUsers )
-            {
-                if(p.Steamaccountid != "0" && !string.IsNullOrEmpty(p.Steamaccountid))
-                    allPlayers.Add(p);
-            }
-            return allPlayers;
-        }
-        public Player GetPlayer(User user)
-        {
-            return playerRepo.GetPlayer(user);
-        }
+
+        public void InitializeRole(Player p) => repo.InitializeRole(p);
+
+        public Player GetPlayer(User u) => repo.GetPlayer(u);
+
+        public List<Player> GetAllPlayers() => repo.GetAllPlayers();
     }
 }

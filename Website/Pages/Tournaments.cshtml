@@ -107,7 +107,9 @@
 
 <div class="container mt-5">
 
-    <h1 class="text-center">🏆 Tournaments</h1>
+    <h1 class="text-center mb-4" style="color:#000; font-weight:900; font-size:36px;">
+         Tournaments
+    </h1>
 
     @if (!Model.IsPlayer)
     {
@@ -145,6 +147,27 @@
                     <hr />
 
                     <p><strong>Players:</strong> @t.Players.Count</p>
+                    <button class="btn btn-secondary btn-sm" type="button"
+                            onclick="document.getElementById('pl_@t.Id').classList.toggle('d-none')">
+                        Show players
+                    </button>
+
+                    <div id="pl_@t.Id" class="d-none mt-2">
+                        @if (t.Players.Count > 0)
+                        {
+                            <ul style="color:white; margin-left:10px;">
+                                @foreach (var p in t.Players)
+                                {
+                                    <li>@p.Username</li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p style="color:gray; font-style:italic;">No players yet.</p>
+                        }
+                    </div>
+
                     <p><strong>Matches:</strong> @t.Matches.Count</p>
 
                     <hr />

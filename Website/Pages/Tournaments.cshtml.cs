@@ -25,13 +25,18 @@ namespace Website.Pages
             this.userManager = userManager;
         }
 
+        // ----------------------------------------------------
+        // LOAD CURRENT PLAYER
+        // ----------------------------------------------------
         private void LoadCurrentPlayer()
         {
             try
             {
                 var userId = Convert.ToInt32(User.FindFirst("id").Value);
                 var user = userManager.GetUserById(userId);
-                CurrentPlayer = playerManager.GetPlayer(user); // null ako nije player
+
+                // If user has no SteamID ? player = null
+                CurrentPlayer = playerManager.GetPlayer(user);
             }
             catch
             {
@@ -39,6 +44,9 @@ namespace Website.Pages
             }
         }
 
+        // ----------------------------------------------------
+        // GET ALL TOURNAMENTS
+        // ----------------------------------------------------
         public IActionResult OnGet()
         {
             LoadCurrentPlayer();
@@ -54,6 +62,9 @@ namespace Website.Pages
             return Page();
         }
 
+        // ----------------------------------------------------
+        // JOIN TOURNAMENT
+        // ----------------------------------------------------
         public IActionResult OnPostApply(int id)
         {
             LoadCurrentPlayer();
@@ -77,6 +88,9 @@ namespace Website.Pages
             return Redirect("/Tournaments");
         }
 
+        // ----------------------------------------------------
+        // LEAVE TOURNAMENT
+        // ----------------------------------------------------
         public IActionResult OnPostLeave(int id)
         {
             LoadCurrentPlayer();
@@ -97,6 +111,9 @@ namespace Website.Pages
             return Redirect("/Tournaments");
         }
 
+        // ----------------------------------------------------
+        // ADMIN: CLOSE TOURNAMENT
+        // ----------------------------------------------------
         public IActionResult OnPostClose(int id)
         {
             LoadCurrentPlayer();
@@ -118,6 +135,9 @@ namespace Website.Pages
             return Redirect("/Tournaments");
         }
 
+        // ----------------------------------------------------
+        // ADMIN: DELETE TOURNAMENT
+        // ----------------------------------------------------
         public IActionResult OnPostDelete(int id)
         {
             LoadCurrentPlayer();

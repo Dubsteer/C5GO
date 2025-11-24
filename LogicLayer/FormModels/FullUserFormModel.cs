@@ -23,8 +23,8 @@ namespace LogicLayer.FormModels
         [Required]
         [EmailAddress]
         [DisplayName("Email")]
-        [StringLength(255, ErrorMessage = "Gmail length must not exceed {1} characters.")]
-        [RegularExpression(@"^[^@\s]+@gmail\.com$", ErrorMessage = "Email must end with @gmail.com.")]
+        [RegularExpression(@"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$",
+            ErrorMessage = "Invalid email format.")]
         public string Gmail { get; set; }
 
         public FullUserFormModel() { }

@@ -25,6 +25,12 @@ namespace Website.Pages.Tournaments
 
                 if (Tournament == null)
                     return NotFound();
+
+                // ?? LOAD PLAYERS
+                Tournament.Players = tournamentManager.GetAllPlayersInTournament(Tournament);
+
+                // ?? LOAD MATCHES (ako nema Matches property, izbriši ovu liniju)
+                Tournament.Matches = tournamentManager.GetAllMatchesInTournament(Tournament);
             }
             catch (Exception ex)
             {

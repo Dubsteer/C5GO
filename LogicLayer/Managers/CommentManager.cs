@@ -1,73 +1,111 @@
 ﻿using LogicLayer.IRepos;
 using LogicLayer.Models;
 using LogicLayer.Exceptions;
+using System;
+using System.Collections.Generic;
 
 namespace LogicLayer.Managers
 {
     public class CommentManager
     {
-        private readonly ICommentRepo commentRepo;
-        private readonly Comment commentId;
-        private readonly int replyId;
-        private readonly object updatedReply;
-        private readonly object comment;
+        private readonly ICommentRepo _commentRepo;
 
         public CommentManager(ICommentRepo commentRepo)
         {
-            this.commentRepo = commentRepo;
+            _commentRepo = commentRepo;
         }
 
+        // ---------------------------------------------------------------
+        // ADD COMMENT
+        // ---------------------------------------------------------------
         public void AddComment(Comment comment)
         {
-            
-            commentRepo.AddComment(comment);
+            if (string.IsNullOrWhiteSpace(comment.Content))
+                throw new Exception("Comment cannot be empty.");
+
+            // Optional: Prevent duplicate spam
+            if (_commentRepo.CheckIfCommentExists(comment.Content))
+                throw new CommentAlreadyInUserExpetion("You already posted this comment.");
+
+            _commentRepo.AddComment(comment);
         }
 
-        public List<Comment> GetAllCommentsByPostId( int id)
+        // ---------------------------------------------------------------
+        // GET ALL COMMENTS FOR A POST
+        // ---------------------------------------------------------------
+        public List<Comment> GetAllCommentsByPostId(int id)
         {
-            var comments = commentRepo.GetAllCommentsByPostId(id);
-            foreach (var comment in comments)
+            var comments = _commentRepo.GetAllCommentsByPostId(id);
+
+            // Load replies for each comment
+            foreach (var c in comments)
             {
-                var commentReplies = GetAllRepliesByCommentId((int)comment.Id);
-                comment.Replies = commentReplies;
+                c.Replies = _commentRepo.GetAllRepliesByCommentId(c.Id.Value);
             }
+
             return comments;
         }
 
-        public Comment GetCommentByUserId(int id)
+        // ---------------------------------------------------------------
+        // GET COMMENT BY USER ID (legacy)
+        // ---------------------------------------------------------------
+        public Comment GetCommentByUserId(int userId)
         {
-            return commentRepo.GetCommentByUserId(id);
+            return _commentRepo.GetCommentByUserId(userId);
         }
 
-        public void UpdateComment(Comment comment)
-        {
-            commentRepo.UpdateComment(comment);
-        }
-
-        public void DeleteComment(Comment comment)
-        {
-            commentRepo.DeleteComment(comment);
-        }
-
+        // ---------------------------------------------------------------
+        // GET ONE COMMENT
+        // ---------------------------------------------------------------
         public Comment GetCommentById(int id)
         {
-            return commentRepo.GetCommentById(id);
+            return _commentRepo.GetCommentById(id);
         }
 
-        public List<Comment> GetAllComments()
+        // ---------------------------------------------------------------
+        // UPDATE COMMENT
+        // ---------------------------------------------------------------
+        public void UpdateComment(Comment comment)
         {
-            return commentRepo.GetAllComments();
+            if (string.IsNullOrWhiteSpace(comment.Content))
+                throw new Exception("Comment cannot be empty.");
+
+            _commentRepo.UpdateComment(comment);
         }
 
+        // ---------------------------------------------------------------
+        // DELETE COMMENT
+        // ---------------------------------------------------------------
+        public void DeleteComment(Comment comment)
+        {
+            if (comment == null || comment.Id == null)
+                throw new Exception("Comment does not exist.");
+
+            _commentRepo.DeleteComment(comment);
+        }
+
+        // ---------------------------------------------------------------
+        // ADD REPLY
+        // ---------------------------------------------------------------
         public void AddReply(CommentReply reply)
         {
-            commentRepo.AddReply(reply);
+            if (string.IsNullOrWhiteSpace(reply.Content))
+                throw new Exception("Reply cannot be empty.");
+
+            _commentRepo.AddReply(reply);
+        }
+
+        // ---------------------------------------------------------------
+        // GET ALL
+        // ---------------------------------------------------------------
+        public List<Comment> GetAllComments()
+        {
+            return _commentRepo.GetAllComments();
         }
 
         public List<CommentReply> GetAllRepliesByCommentId(int commentId)
         {
-            return commentRepo.GetAllRepliesByCommentId(commentId);
+            return _commentRepo.GetAllRepliesByCommentId(commentId);
         }
     }
 }
-

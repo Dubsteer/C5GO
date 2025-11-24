@@ -4,22 +4,24 @@ namespace LogicLayer.IRepos
 {
     public interface ICommentRepo
     {
-        public void AddComment(Comment comment);
+        void AddComment(Comment comment);
 
-        public List<Comment> GetAllCommentsByPostId( int id);
+        List<Comment> GetAllCommentsByPostId(int id);
 
-        public Comment GetCommentByUserId(int id);
+        Comment GetCommentByUserId(int id);
 
-        public void UpdateComment(Comment comment);
+        void UpdateComment(Comment comment);
 
-        public void DeleteComment(Comment comment);
+        void DeleteComment(Comment comment);
 
-        public List<Comment> GetAllComments();
+        List<Comment> GetAllComments();
 
-        public Comment GetCommentById(int id);
+        Comment GetCommentById(int id);
 
-        public void AddReply(CommentReply reply);
-        public List<CommentReply> GetAllRepliesByCommentId(int commentId);
-        public bool CheckIfCommentExists(string comment);
+        void AddReply(CommentReply reply);
+
+        List<CommentReply> GetAllRepliesByCommentId(int commentId);
+
+        bool CheckIfCommentExists(string comment);
     }
 }

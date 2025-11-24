@@ -21,6 +21,10 @@ namespace DesktopApp.UserControls
         {
             InitializeComponent();
         }
+        public void RefreshPosts()
+        {
+            dgvPosts.DataSource = postManager.GetAllPosts();
+        }
 
         public void Setup(IConnection connection, List<Control> parentControls)
         {

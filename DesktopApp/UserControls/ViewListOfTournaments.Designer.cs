@@ -84,7 +84,8 @@
             btnDelete.TabIndex = 3;
             btnDelete.Text = "Delete Tournament";
             btnDelete.UseVisualStyleBackColor = true;
-            btnDelete.Click += btnDelete_Click;
+            btnDelete.Click += btnDeleteTournament_Click;
+
             // 
             // ViewListOfTournaments
             // 

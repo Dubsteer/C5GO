@@ -48,6 +48,24 @@
         margin-top: 10px;
     }
 
+    .edit-btn {
+        background-color: #6c4cff;
+        border: none;
+        padding: 10px 22px;
+        border-radius: 10px;
+        font-size: 16px;
+        color: white;
+        font-weight: 600;
+        transition: 0.2s;
+        float: right;
+        margin-top: -10px;
+    }
+
+        .edit-btn:hover {
+            background-color: #593ce0;
+            transform: scale(1.03);
+        }
+
     hr {
         margin-top: 25px;
         margin-bottom: 25px;
@@ -56,7 +74,12 @@
 </style>
 
 <div class="profile-container">
+
     <h1 class="section-title">👤 User Profile</h1>
+
+    <!-- ⭐ EDIT PROFILE BUTTON ⭐ -->
+    <a href="/EditProfile" class="edit-btn">Edit Profile ✏️</a>
+    <div style="clear: both;"></div>
 
     <div class="profile-row">
         <p><strong>First Name:</strong> @Model.PageUser.Firstname</p>
@@ -128,7 +151,7 @@
                                 }
                                 else
                                 {
-                                    @:"-"
+                                    @:"-";
                                 }
                             }
                         </td>

@@ -60,18 +60,15 @@ namespace LogicLayer.Managers
 
         public void UpdateUser(User user)
         {
-            var users = userRepo.GetAllUsers();
+            var all = userRepo.GetAllUsers();
 
-            foreach (var u in users)
-            {
-                if (u.Username == user.Username && u.Id != user.Id)
-                {
-                    throw new Exception("Username already exists!");
-                }
-            }
+            // Check username uniqueness
+            if (all.Any(u => u.Username == user.Username && u.Id != user.Id))
+                throw new Exception("Username already exists!");
 
             userRepo.UpdateUser(user);
         }
+
 
         public void DeleteUser(User user)
         {

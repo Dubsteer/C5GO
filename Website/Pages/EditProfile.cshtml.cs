@@ -3,27 +3,30 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using LogicLayer.FormModels;
 using LogicLayer.Managers;
 using Microsoft.AspNetCore.Authorization;
-using LogicLayer.Exceptions;
 using LogicLayer.Models;
+using LogicLayer.Exceptions;
 using System.Diagnostics;
+using BCrypt.Net;
 
 namespace Website.Pages
 {
+    [Authorize]
     public class EditProfileModel : PageModel
     {
         [BindProperty]
         public FullUserFormModel FullUserFormModel { get; set; }
 
-        private readonly UserManager userManager;
+        private readonly UserManager _userManager;
 
         public EditProfileModel(UserManager userManager)
         {
-            this.userManager = userManager;
+            _userManager = userManager;
         }
 
         public IActionResult OnGet()
         {
-            var user = userManager.GetUserById(Convert.ToInt32(User.FindFirst("id").Value));
+            int userId = int.Parse(User.FindFirst("id").Value);
+            var user = _userManager.GetUserById(userId);
 
             FullUserFormModel = new FullUserFormModel(
                 user.Firstname,
@@ -31,42 +34,49 @@ namespace Website.Pages
                 user.Age,
                 user.Username,
                 user.Gmail,
-                ""
-                );
+                "" // password empty
+            );
 
             return Page();
         }
 
         public IActionResult OnPost()
         {
-            if(!ModelState.IsValid) 
+            if (!ModelState.IsValid)
                 return Page();
 
-            var oldUser = userManager.GetUserById(Convert.ToInt32(User.FindFirst("id").Value));
+            int userId = int.Parse(User.FindFirst("id").Value);
+            var oldUser = _userManager.GetUserById(userId);
 
-            var newUser = new User(
+            // Ako je lozinka ostavljena prazna ? ?uvamo staru lozinku
+            string finalPassword = string.IsNullOrWhiteSpace(FullUserFormModel.Password)
+                ? oldUser.Password
+                : BCrypt.Net.BCrypt.HashPassword(FullUserFormModel.Password);
+
+            var updated = new User(
                 oldUser.Id,
                 FullUserFormModel.Firstname,
                 FullUserFormModel.Lastname,
                 FullUserFormModel.Age,
                 FullUserFormModel.Username,
                 FullUserFormModel.Gmail,
-                FullUserFormModel.Password,
-                oldUser.IsAdmin
-                );
+                finalPassword,
+                oldUser.IsAdmin,
+                oldUser.SteamId
+            );
 
             try
             {
-                userManager.UpdateUser(newUser);
+                _userManager.UpdateUser(updated);
             }
-            catch (UsernameAlreadyInUseException ex)
+            catch (Exception ex)
             {
                 ViewData["Error"] = ex.Message;
                 Debug.WriteLine(ex.Message);
                 return Page();
             }
 
-            return new RedirectToPageResult("ViewProfile");
+            return RedirectToPage("ViewProfile");
         }
     }
 }

@@ -1,53 +1,62 @@
 ﻿@page
 @model Website.Pages.EditProfileModel
 @{
-    ViewData["Title"] = "Edit profile";
+    ViewData["Title"] = "Edit Profile";
 }
 
-<h2 class="card-title">Register</h2>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
 
-<form method="post">
-    <div class="form-group">
-        <label>First name:</label>
-        <br />
-        <input asp-for="FullUserFormModel.Firstname">
-        <span asp-validation-for="FullUserFormModel.Firstname"></span>
-    </div>
-    <div class="form-group">
-        <label>Last name:</label>
-        <br />
-        <input asp-for="FullUserFormModel.Lastname">
-        <span asp-validation-for="FullUserFormModel.Lastname"></span>
-    </div>
-    <div class="form-group">
-        <label>Address:</label>
-        <br />
-        <input asp-for="FullUserFormModel.Age">
-        <span asp-validation-for="FullUserFormModel.Age"></span>
-    </div>
-    <div class="form-group">
-        <label>Username:</label>
-        <br />
-        <input asp-for="FullUserFormModel.Username">
-        <span asp-validation-for="FullUserFormModel.Username"></span>
-    </div>
-    <div class="form-group">
-        <label>Email:</label>
-        <br />
-        <input asp-for="FullUserFormModel.Gmail">
-        <span asp-validation-for="FullUserFormModel.Gmail"></span>
-    </div>
-    <div class="form-group">
-        <label>Password:</label>
-        <br />
-        <input type="password" asp-for="FullUserFormModel.Password">
-        <span asp-validation-for="FullUserFormModel.Password"></span>
-    </div>
+<div class="container mt-5">
+    <div class="card shadow p-4" style="max-width:700px; margin:auto;">
+        <h2 class="mb-4 text-center">Edit Profile</h2>
 
-    <br />
-    <input type="submit" value="Edit profile" />
-</form>
+        @if (ViewData["Error"] != null)
+        {
+            <div class="alert alert-danger">@ViewData["Error"]</div>
+        }
 
-@section scripts{
+        <form method="post">
+            <div class="mb-3">
+                <label class="form-label">First Name</label>
+                <input asp-for="FullUserFormModel.Firstname" class="form-control" />
+                <span asp-validation-for="FullUserFormModel.Firstname" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Last Name</label>
+                <input asp-for="FullUserFormModel.Lastname" class="form-control" />
+                <span asp-validation-for="FullUserFormModel.Lastname" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Age</label>
+                <input asp-for="FullUserFormModel.Age" class="form-control" />
+                <span asp-validation-for="FullUserFormModel.Age" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input asp-for="FullUserFormModel.Username" class="form-control" />
+                <span asp-validation-for="FullUserFormModel.Username" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input asp-for="FullUserFormModel.Gmail" class="form-control" />
+                <span asp-validation-for="FullUserFormModel.Gmail" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">New Password (optional)</label>
+                <input type="password" asp-for="FullUserFormModel.Password" class="form-control" placeholder="Leave empty to keep current password" />
+                <span asp-validation-for="FullUserFormModel.Password" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-success w-100">Save Changes</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }

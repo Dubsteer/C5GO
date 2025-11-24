@@ -21,9 +21,9 @@ namespace Website.Pages
         {
             this.userManager = userManager;
         }
+
         public IActionResult OnGet()
         {
-            // allow only anonymus users
             if (User.Identity.IsAuthenticated)
                 return new RedirectToPageResult("Index");
 
@@ -44,7 +44,6 @@ namespace Website.Pages
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
-                // internal server error
                 return StatusCode(500);
             }
 
@@ -53,19 +52,21 @@ namespace Website.Pages
                 ViewData["Error"] = "No user found with provided credentials.";
                 LoginFormModel = new LoginFormModel();
                 ModelState.Clear();
-
                 return Page();
             }
-            // enter here if login succeeds
+
+            // SUCCESS ? add all claims
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Username),
+                new Claim("username", user.Username),   // ?? NEOPHODNO ZA NAVBAR
                 new Claim("id", user.Id.Value.ToString()),
                 new Claim("isAdmin", user.IsAdmin.ToString())
             };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             HttpContext.SignInAsync(new ClaimsPrincipal(claimsIdentity));
+
             return new RedirectToPageResult("Index");
         }
     }

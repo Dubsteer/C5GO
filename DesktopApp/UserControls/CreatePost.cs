@@ -14,39 +14,35 @@ namespace DesktopApp.UserControls
         private IConnection connection;
         private PostRepo postRepo;
         private PostManager postManager;
+        private User currentUser;
         private List<Control> parentControls;
-        public User currentUser;
 
         public CreatePost()
         {
             InitializeComponent();
-
-            this.connection = null;
-            this.postRepo = null;
-            this.postManager = null;
-            this.parentControls = new List<Control>();
+            parentControls = new List<Control>();
         }
 
         public void Setup(IConnection connection, List<Control> parentControls, User currentUser)
         {
-            this.currentUser = currentUser;
-
             this.connection = connection;
             this.parentControls = parentControls;
-            this.postRepo = new PostRepo(connection);
-            this.postManager = new PostManager(postRepo);
+            this.currentUser = currentUser;
+
+            postRepo = new PostRepo(connection);
+            postManager = new PostManager(postRepo);
 
             if (!DesignMode)
             {
-                VisibleChanged += new EventHandler(createPost_VisibleChanged);
-                BtnCreate.Click += new EventHandler(BtnCreate_Click);
-                btnBack.Click += new EventHandler(BtnBack_Click);
+                BtnCreate.Click += BtnCreate_Click;
+                btnBack.Click += BtnBack_Click;
+                VisibleChanged += CreatePost_VisibleChanged;
             }
         }
 
-        public void createPost_VisibleChanged(object sender, EventArgs e)
+        private void CreatePost_VisibleChanged(object sender, EventArgs e)
         {
-            if (Visible && !Disposing && !DesignMode)
+            if (Visible && !DesignMode)
             {
                 tbPost.Clear();
                 dgvPost.DataSource = postManager.GetAllPosts();
@@ -58,69 +54,50 @@ namespace DesktopApp.UserControls
             var content = tbPost.Text.Trim();
 
             var postFormModel = new PostFormModel(content);
-
-            var context = new ValidationContext(postFormModel, null, null);
+            var context = new ValidationContext(postFormModel);
             var errors = new List<ValidationResult>();
 
             if (!Validator.TryValidateObject(postFormModel, context, errors, true))
             {
-                if (errors.Count > 0)
-                {
-                    MessageBox.Show(
-                        errors[0].ErrorMessage,
-                        "Incorrect data",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
-                    return;
-                }
+                MessageBox.Show(errors[0].ErrorMessage, "Incorrect data",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
 
             try
             {
                 postManager.AddPost(
-                     new Post(
-                         0,
-                         this.currentUser,
-                         "Post",        // dodaj title — obavezan parametar
-                         content,
-                         DateTime.Now
-                     )
-                 );
-                            }
-            catch (PostNameAlreadyInUseExepction ex)
-            {
-                MessageBox.Show(ex.Message,
-                    "Create post",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-                return;
+                    new Post(
+                        0,
+                        currentUser,
+                        "Post",
+                        content,
+                        DateTime.Now
+                    )
+                );
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message,
-                    "Create post",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                MessageBox.Show(ex.Message, "Create post",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
-            MessageBox.Show("Post created successfully.",
-                    "Create post",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+            MessageBox.Show("Post created successfully!", "Create post",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
 
+            // 👉 Vrati se na listu postova
             var currentTab = parentControls.OfType<TabControl>().First().SelectedTab;
-            var createPost = (CreatePost)currentTab.Controls["createPost"];
-            if (createPost != null)
-            {
-                createPost.Visible = true;
-                this.Hide();
-            }
+            var viewPosts = (ViewPosts)currentTab.Controls["viewPosts"];
+
+            viewPosts.Visible = true;
+            viewPosts.RefreshPosts();
+            this.Hide();
         }
 
-        public void BtnBack_Click(object sender, EventArgs e)
+        private void BtnBack_Click(object sender, EventArgs e)
         {
-            var currentTab = parentControls.OfType<TabControl>().FirstOrDefault().SelectedTab;
+            var currentTab = parentControls.OfType<TabControl>().First().SelectedTab;
             var viewPosts = (ViewPosts)currentTab.Controls["viewPosts"];
 
             viewPosts.Visible = true;

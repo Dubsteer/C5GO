@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace LogicLayer.FormModels
 {
-    public class FullUserFormModel: LoginFormModel
+    public class FullUserFormModel : LoginFormModel
     {
         [Required]
         [DisplayName("First name")]
@@ -20,20 +20,18 @@ namespace LogicLayer.FormModels
         [Range(14, 106, ErrorMessage = "Age must be between 14 and 106.")]
         public int Age { get; set; }
 
-
         [Required]
         [EmailAddress]
         [DisplayName("Email")]
         [StringLength(255, ErrorMessage = "Gmail length must not exceed {1} characters.")]
+        [RegularExpression(@"^[^@\s]+@gmail\.com$", ErrorMessage = "Email must end with @gmail.com.")]
         public string Gmail { get; set; }
-
-       
 
         public FullUserFormModel() { }
 
-        public FullUserFormModel(string firstname, string lastname, int age, string username, string gmail, string password) : base(username, password)
+        public FullUserFormModel(string firstname, string lastname, int age, string username, string gmail, string password)
+            : base(username, password)
         {
-
             Firstname = firstname;
             Lastname = lastname;
             Age = age;

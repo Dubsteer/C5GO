@@ -25,36 +25,16 @@ namespace DesktopApp
         {
             InitializeComponent();
 
-            this.connection = connection;
-            this.currentUser = currentUser;
-
-            // === REPOS ===
-            var userRepo = new UserRepo(connection);
-            var postRepo = new PostRepo(connection);
-            var commentRepo = new CommentRepo(connection);
-            var tournamentRepo = new TournamentRepo(connection);
-            var matchRepo = new MatchRepo(connection);
-            var playerRepo = new PlayerRepo(connection);
-
-            // === MANAGERS ===
-            userManager = new UserManager(userRepo);
-            postManager = new PostManager(postRepo);
-            commentManager = new CommentManager(commentRepo);
-            matchManager = new MatchManager(matchRepo);
-            tournamentManager = new TournamentManager(tournamentRepo, matchManager);
-            playerManager = new PlayerManager(playerRepo);
-
-            // === SETUP USER CONTROLS ===
             var controls = this.Controls.Cast<Control>().ToList();
 
             viewUsers.Setup(connection, controls);
             viewPosts.Setup(connection, controls);
-            viewListOfTournaments1.Setup(connection, controls);
-            addTournament.Setup(connection, controls);
             createPost.Setup(connection, controls, currentUser);
             updatePost.Setup(connection, controls, currentUser);
 
-            // Default tab = Users
+            addTournament.Setup(connection);
+            viewListOfTournaments1.Setup(connection);
+
             tabControl1.SelectedIndex = 0;
         }
 

@@ -6,38 +6,42 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Website.Pages.Posts
 {
-    public class IndexModel : PageModel
+    public class PostModel : PageModel
     {
         private readonly PostManager postManager;
         private readonly UserManager userManager;
         private readonly CommentManager commentManager;
 
+        [BindProperty(SupportsGet = true)]
+        public int Id { get; set; }
+
         public Post Post { get; set; }
         public List<Comment> Comments { get; set; }
         public User CurrentUser { get; set; }
 
-        public bool ShowAllComments { get; set; }
-        public HashSet<int> ExpandedReplies { get; set; } = new();
-
         [BindProperty] public CommentModel NewComment { get; set; }
         [BindProperty] public ReplyModel NewReply { get; set; }
 
-        public IndexModel(PostManager postManager, UserManager userManager, CommentManager commentManager)
+        public bool ShowAllComments { get; set; }
+        public HashSet<int> ExpandedReplies { get; set; } = new();
+
+        public PostModel(PostManager postManager, UserManager userManager, CommentManager commentManager)
         {
             this.postManager = postManager;
             this.userManager = userManager;
             this.commentManager = commentManager;
         }
 
-        private bool Load(int id)
+        // Central loader
+        private bool LoadPostData()
         {
-            Post = postManager.GetPostById(id);
+            Post = postManager.GetPostById(Id);
             if (Post == null)
                 return false;
 
-            Comments = commentManager.GetAllCommentsWithReplies(id);
+            Comments = commentManager.GetAllCommentsWithReplies(Id);
 
-            if (User.Identity.IsAuthenticated)
+            if (User.Identity?.IsAuthenticated == true)
             {
                 int uid = int.Parse(User.FindFirst("id").Value);
                 CurrentUser = userManager.GetUserById(uid);
@@ -46,24 +50,27 @@ namespace Website.Pages.Posts
             return true;
         }
 
-        public IActionResult OnGet(int id)
+        // GET
+        public IActionResult OnGet()
         {
-            if (!Load(id))
+            if (!LoadPostData())
                 return RedirectToPage("/Error");
 
             return Page();
         }
 
-        public IActionResult OnPostToggleComments(int id)
+        // Toggle all comments
+        public IActionResult OnPostToggleComments()
         {
-            Load(id);
+            LoadPostData();
             ShowAllComments = !ShowAllComments;
             return Page();
         }
 
-        public IActionResult OnPostToggleReplies(int id, int commentId)
+        // Toggle replies
+        public IActionResult OnPostToggleReplies(int commentId)
         {
-            Load(id);
+            LoadPostData();
 
             if (ExpandedReplies.Contains(commentId))
                 ExpandedReplies.Remove(commentId);
@@ -73,62 +80,63 @@ namespace Website.Pages.Posts
             return Page();
         }
 
-        public IActionResult OnPostSubmitComment(int id)
+        // Add comment
+        public IActionResult OnPostSubmitComment()
         {
-            Load(id);
+            LoadPostData();
 
             if (CurrentUser == null)
                 return Unauthorized();
 
-            var c = new Comment(
+            var comment = new Comment(
                 0,
                 CurrentUser,
                 NewComment.CommentText,
                 DateTime.Now,
-                id
+                Id
             );
 
-            commentManager.AddComment(c);
+            commentManager.AddComment(comment);
 
-            return RedirectToPage("Index", new { id });
+            return RedirectToPage("Post", new { Id });
         }
 
-        public IActionResult OnPostSubmitReply(int id)
+        // Add reply
+        public IActionResult OnPostSubmitReply()
         {
-            Load(id);
+            LoadPostData();
 
             if (CurrentUser == null)
                 return Unauthorized();
 
-            // ? OVDE JE FIX – šaljemo ceo User objekat
             var reply = new CommentReply(
                 0,
                 NewReply.ReplyText,
                 DateTime.Now,
                 NewReply.replyCommentId,
-                CurrentUser     // ??? PRE JESTE BIO SAMO USERNAME
+                CurrentUser
             );
 
             commentManager.AddReply(reply);
 
-            // opcija: odmah otvori replye nakon dodavanja
             ExpandedReplies.Add(NewReply.replyCommentId);
 
-            return RedirectToPage("Index", new { id });
+            return RedirectToPage("Post", new { Id });
         }
 
-        public IActionResult OnPostDeleteComment(int id, int cid)
+        // Delete comment
+        public IActionResult OnPostDeleteComment(int cid)
         {
-            Load(id);
-            var comment = commentManager.GetCommentById(cid);
+            LoadPostData();
 
+            var comment = commentManager.GetCommentById(cid);
             if (comment == null)
-                return RedirectToPage("Index", new { id });
+                return RedirectToPage("Post", new { Id });
 
             if (CurrentUser.IsAdmin || CurrentUser.Id == comment.User.Id)
                 commentManager.DeleteComment(comment);
 
-            return RedirectToPage("Index", new { id });
+            return RedirectToPage("Post", new { Id });
         }
     }
 }

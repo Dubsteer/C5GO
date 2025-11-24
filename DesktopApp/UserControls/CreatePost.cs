@@ -16,7 +16,6 @@ namespace DesktopApp.UserControls
         private PostManager postManager;
         private List<Control> parentControls;
         public User currentUser;
-        
 
         public CreatePost()
         {
@@ -78,14 +77,16 @@ namespace DesktopApp.UserControls
 
             try
             {
-                postManager.CreatePost(
-                    new Post(
-                         null, 
+                postManager.AddPost(
+                     new Post(
+                         0,
                          this.currentUser,
+                         "Post",        // dodaj title — obavezan parametar
                          content,
                          DateTime.Now
-                         ));
-            }
+                     )
+                 );
+                            }
             catch (PostNameAlreadyInUseExepction ex)
             {
                 MessageBox.Show(ex.Message,
@@ -124,7 +125,6 @@ namespace DesktopApp.UserControls
 
             viewPosts.Visible = true;
             this.Hide();
-
         }
     }
 }

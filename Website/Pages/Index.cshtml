@@ -43,18 +43,22 @@
         margin-top: 12px;
         font-size: 16px;
     }
-
 </style>
 
 <div class="container mt-5">
-    <h1 class="text-center mb-5 text-light">📝 Latest Posts</h1>
+    <h1 class="text-center mb-5" style="color: #000;">ANNOUNCEMENTS</h1>
 
     <div class="row row-cols-1 row-cols-md-3 g-4">
         @foreach (Post post in Model.Posts)
         {
             <div class="col">
                 <div class="post-card">
-                    <a class="post-link" href="/posts?id=@post.Id">@Model.TruncateString(post.Content, 45)</a>
+                    <a class="post-link"
+                       asp-page="/Posts/Index"
+                       asp-route-id="@post.Id">
+                        @Model.TruncateString(post.Content, 45)
+                    </a>
+
                     <p class="post-snippet">@Model.TruncateString(post.Content, 110)</p>
                 </div>
             </div>

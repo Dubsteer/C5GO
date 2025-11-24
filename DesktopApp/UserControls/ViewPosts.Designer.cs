@@ -45,38 +45,43 @@
             dgvPosts.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
             dgvPosts.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
             dgvPosts.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvPosts.Location = new Point(14, 54);
+            dgvPosts.Location = new Point(16, 72);
+            dgvPosts.Margin = new Padding(3, 4, 3, 4);
             dgvPosts.MultiSelect = false;
             dgvPosts.Name = "dgvPosts";
             dgvPosts.ReadOnly = true;
+            dgvPosts.RowHeadersWidth = 51;
             dgvPosts.RowTemplate.Height = 25;
             dgvPosts.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvPosts.Size = new Size(746, 335);
+            dgvPosts.Size = new Size(925, 447);
             dgvPosts.TabIndex = 0;
             // 
             // BtnCreate
             // 
-            BtnCreate.Location = new Point(151, 407);
+            BtnCreate.Location = new Point(173, 543);
+            BtnCreate.Margin = new Padding(3, 4, 3, 4);
             BtnCreate.Name = "BtnCreate";
-            BtnCreate.Size = new Size(85, 37);
+            BtnCreate.Size = new Size(97, 49);
             BtnCreate.TabIndex = 1;
             BtnCreate.Text = "Create";
             BtnCreate.UseVisualStyleBackColor = true;
             // 
             // btnUpdate
             // 
-            btnUpdate.Location = new Point(300, 407);
+            btnUpdate.Location = new Point(343, 543);
+            btnUpdate.Margin = new Padding(3, 4, 3, 4);
             btnUpdate.Name = "btnUpdate";
-            btnUpdate.Size = new Size(85, 42);
+            btnUpdate.Size = new Size(97, 56);
             btnUpdate.TabIndex = 2;
             btnUpdate.Text = "Update";
             btnUpdate.UseVisualStyleBackColor = true;
             // 
             // btnDelete
             // 
-            btnDelete.Location = new Point(445, 404);
+            btnDelete.Location = new Point(509, 539);
+            btnDelete.Margin = new Padding(3, 4, 3, 4);
             btnDelete.Name = "btnDelete";
-            btnDelete.Size = new Size(88, 42);
+            btnDelete.Size = new Size(101, 56);
             btnDelete.TabIndex = 3;
             btnDelete.Text = "Delete";
             btnDelete.UseVisualStyleBackColor = true;
@@ -85,23 +90,24 @@
             // 
             label1.AutoSize = true;
             label1.Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point);
-            label1.Location = new Point(300, 9);
+            label1.Location = new Point(343, 12);
             label1.Name = "label1";
-            label1.Size = new Size(136, 32);
+            label1.Size = new Size(168, 41);
             label1.TabIndex = 4;
             label1.Text = "View Posts";
             // 
             // ViewPosts
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             Controls.Add(label1);
             Controls.Add(btnDelete);
             Controls.Add(btnUpdate);
             Controls.Add(BtnCreate);
             Controls.Add(dgvPosts);
+            Margin = new Padding(3, 4, 3, 4);
             Name = "ViewPosts";
-            Size = new Size(774, 465);
+            Size = new Size(1295, 711);
             ((System.ComponentModel.ISupportInitialize)dgvPosts).EndInit();
             ResumeLayout(false);
             PerformLayout();

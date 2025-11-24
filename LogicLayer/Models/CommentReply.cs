@@ -9,15 +9,33 @@ namespace LogicLayer.Models
         public DateTime PostedOn { get; set; }
         public int CommentId { get; set; }
 
-        // prikaz username autora (nije foreign key—puni se iz repo-a)
-        public string AuthorUsername { get; set; }
+        // Username prikaz – koristi se na UI-ju
+        public string Username { get; set; }
 
-        public CommentReply(int id, string content, DateTime postedOn, int commentId)
+        // Pravi korisnik koji je napisao reply
+        public User User { get; set; }
+
+        public CommentReply() { }
+
+        // Konstruktor za kreiranje reply-a sa pravim korisnikom
+        public CommentReply(int id, string content, DateTime postedOn, int commentId, User user)
         {
             Id = id;
             Content = content;
             PostedOn = postedOn;
             CommentId = commentId;
+            User = user;
+            Username = user?.Username; // automatski upisujemo username
+        }
+
+        // Konstruktor za SELECT iz baze gde vraćamo samo username
+        public CommentReply(int id, string content, DateTime postedOn, int commentId, string username)
+        {
+            Id = id;
+            Content = content;
+            PostedOn = postedOn;
+            CommentId = commentId;
+            Username = username;
         }
     }
 }

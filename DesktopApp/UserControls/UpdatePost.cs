@@ -55,7 +55,7 @@ namespace DesktopApp.UserControls
             {
                 if (editingPost is not null)
                 {
-                    post = postManager.GetPostById(editingPost.Id.Value);
+                    post = postManager.GetPostById(editingPost.Id);
                     tbUpdatePost.Text = editingPost.Content;
                 }
             }

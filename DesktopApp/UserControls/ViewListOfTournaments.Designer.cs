@@ -44,20 +44,23 @@
             dgvTournaments.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
             dgvTournaments.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
             dgvTournaments.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvTournaments.Location = new Point(53, 118);
+            dgvTournaments.Location = new Point(61, 157);
+            dgvTournaments.Margin = new Padding(3, 4, 3, 4);
             dgvTournaments.Name = "dgvTournaments";
             dgvTournaments.ReadOnly = true;
+            dgvTournaments.RowHeadersWidth = 51;
             dgvTournaments.RowTemplate.Height = 25;
             dgvTournaments.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvTournaments.Size = new Size(788, 473);
+            dgvTournaments.Size = new Size(1085, 631);
             dgvTournaments.TabIndex = 0;
             dgvTournaments.CellDoubleClick += dgvTournaments_CellDoubleClick;
             // 
             // btnCreateTournament
             // 
-            btnCreateTournament.Location = new Point(880, 240);
+            btnCreateTournament.Location = new Point(1178, 308);
+            btnCreateTournament.Margin = new Padding(3, 4, 3, 4);
             btnCreateTournament.Name = "btnCreateTournament";
-            btnCreateTournament.Size = new Size(163, 80);
+            btnCreateTournament.Size = new Size(186, 107);
             btnCreateTournament.TabIndex = 1;
             btnCreateTournament.Text = "Create Tournament";
             btnCreateTournament.UseVisualStyleBackColor = true;
@@ -66,17 +69,18 @@
             // 
             label1.AutoSize = true;
             label1.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point);
-            label1.Location = new Point(85, 52);
+            label1.Location = new Point(97, 69);
             label1.Name = "label1";
-            label1.Size = new Size(174, 25);
+            label1.Size = new Size(221, 32);
             label1.TabIndex = 2;
             label1.Text = "List of tournaments";
             // 
             // btnDelete
             // 
-            btnDelete.Location = new Point(880, 342);
+            btnDelete.Location = new Point(1178, 453);
+            btnDelete.Margin = new Padding(3, 4, 3, 4);
             btnDelete.Name = "btnDelete";
-            btnDelete.Size = new Size(163, 72);
+            btnDelete.Size = new Size(186, 96);
             btnDelete.TabIndex = 3;
             btnDelete.Text = "Delete Tournament";
             btnDelete.UseVisualStyleBackColor = true;
@@ -84,14 +88,15 @@
             // 
             // ViewListOfTournaments
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             Controls.Add(btnDelete);
             Controls.Add(label1);
             Controls.Add(btnCreateTournament);
             Controls.Add(dgvTournaments);
+            Margin = new Padding(3, 4, 3, 4);
             Name = "ViewListOfTournaments";
-            Size = new Size(1091, 681);
+            Size = new Size(1423, 908);
             ((System.ComponentModel.ISupportInitialize)dgvTournaments).EndInit();
             ResumeLayout(false);
             PerformLayout();

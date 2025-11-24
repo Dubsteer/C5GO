@@ -1,16 +1,8 @@
-using LogicLayer.Models;
+using LogicLayer.FormModels;
 using LogicLayer.Managers;
-using LogicLayer.Exceptions;
+using LogicLayer.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Diagnostics;
-using LogicLayer.FormModels;
-using Microsoft.Identity.Client;
-using System.ComponentModel.DataAnnotations;
-using System.Collections.Generic;
-using Org.BouncyCastle.Bcpg.OpenPgp;
-using System.Reflection.Metadata;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Website.Pages.Posts
 {
@@ -20,15 +12,15 @@ namespace Website.Pages.Posts
         private readonly UserManager userManager;
         private readonly CommentManager commentManager;
 
-        public Post post { get; set; }
-        public List<Comment> comments { get; set; }
-        public User currentUser { get; set; }
+        public Post Post { get; set; }
+        public List<Comment> Comments { get; set; }
+        public User CurrentUser { get; set; }
 
-        [BindProperty]
-        public CommentModel NewComment { get; set; }
+        public bool ShowAllComments { get; set; }
+        public HashSet<int> ExpandedReplies { get; set; } = new();
 
-        [BindProperty]
-        public ReplyModel NewReply { get; set; }
+        [BindProperty] public CommentModel NewComment { get; set; }
+        [BindProperty] public ReplyModel NewReply { get; set; }
 
         public IndexModel(PostManager postManager, UserManager userManager, CommentManager commentManager)
         {
@@ -37,126 +29,106 @@ namespace Website.Pages.Posts
             this.commentManager = commentManager;
         }
 
-        public IActionResult OnGet(int id)
+        private bool Load(int id)
         {
-            post = postManager.GetPostById(id);
-            if (post == null)
-            {
-                return NotFound();
-            }
+            Post = postManager.GetPostById(id);
+            if (Post == null)
+                return false;
 
-            comments = commentManager.GetAllCommentsByPostId(id);
+            Comments = commentManager.GetAllCommentsWithReplies(id);
 
             if (User.Identity.IsAuthenticated)
             {
-                currentUser = userManager.GetUserById(Convert.ToInt32(User.FindFirst("id").Value));
+                int uid = int.Parse(User.FindFirst("id").Value);
+                CurrentUser = userManager.GetUserById(uid);
             }
-            else
-            {
-                currentUser = null;
-            }
+
+            return true;
+        }
+
+        public IActionResult OnGet(int id)
+        {
+            if (!Load(id))
+                return RedirectToPage("/Error");
 
             return Page();
         }
 
-        public IActionResult OnPostSubmitComment()
+        public IActionResult OnPostToggleComments(int id)
         {
-            if (!User.Identity.IsAuthenticated)
-            {
+            Load(id);
+            ShowAllComments = !ShowAllComments;
+            return Page();
+        }
+
+        public IActionResult OnPostToggleReplies(int id, int commentId)
+        {
+            Load(id);
+
+            if (ExpandedReplies.Contains(commentId))
+                ExpandedReplies.Remove(commentId);
+            else
+                ExpandedReplies.Add(commentId);
+
+            return Page();
+        }
+
+        public IActionResult OnPostSubmitComment(int id)
+        {
+            Load(id);
+
+            if (CurrentUser == null)
                 return Unauthorized();
-            }
 
-            currentUser = userManager.GetUserById(Convert.ToInt32(User.FindFirst("id").Value));
-
-            post = postManager.GetPostById(NewComment.commentPostId);
-            comments = commentManager.GetAllCommentsByPostId((int)post.Id);
-            
-            Comment comment = new Comment(
-                null,
-                currentUser,
+            var c = new Comment(
+                0,
+                CurrentUser,
                 NewComment.CommentText,
                 DateTime.Now,
-                NewComment.commentPostId
+                id
             );
 
-            try
-            {
-                commentManager.AddComment(comment);
-            }
-            catch (CommentAlreadyInUserExpetion ex)
-            {
-                ViewData["Error"] = ex.Message;
-                Debug.WriteLine(ex.Message);
-                return Page();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                return StatusCode(500); // Internal server error
-            }
-            
+            commentManager.AddComment(c);
 
-            return RedirectToPage("Index", new { id = post.Id });
+            return RedirectToPage("Index", new { id });
         }
 
-        public IActionResult OnPostSubmitReply()
+        public IActionResult OnPostSubmitReply(int id)
         {
-            if (!User.Identity.IsAuthenticated)
-            {
-                return Unauthorized();
-            }
+            Load(id);
 
-            currentUser = userManager.GetUserById(Convert.ToInt32(User.FindFirst("id").Value));
-
-            var comment = commentManager.GetCommentById(NewReply.replyCommentId);
-            post = postManager.GetPostById(comment.PostId);
-            comments = commentManager.GetAllCommentsByPostId((int)post.Id);
-
-            
-                CommentReply reply = new CommentReply(
-                    0,
-                    NewReply.ReplyText,
-                    DateTime.Now,
-                    NewReply.replyCommentId
-                );
-
-                try
-                {
-                    commentManager.AddReply(reply);
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(ex.Message);
-                    return StatusCode(500); // Internal server error
-                }
-            
-
-            return RedirectToPage("Index", new { id = post.Id });
-        }
-
-        public IActionResult OnPostDeleteComment(int id)
-        {
-            if (!User.Identity.IsAuthenticated)
+            if (CurrentUser == null)
                 return Unauthorized();
 
-            currentUser = userManager.GetUserById(
-                Convert.ToInt32(User.FindFirst("id").Value)
+            // ? OVDE JE FIX – šaljemo ceo User objekat
+            var reply = new CommentReply(
+                0,
+                NewReply.ReplyText,
+                DateTime.Now,
+                NewReply.replyCommentId,
+                CurrentUser     // ??? PRE JESTE BIO SAMO USERNAME
             );
 
-            var comment = commentManager.GetCommentById(id);
+            commentManager.AddReply(reply);
+
+            // opcija: odmah otvori replye nakon dodavanja
+            ExpandedReplies.Add(NewReply.replyCommentId);
+
+            return RedirectToPage("Index", new { id });
+        }
+
+        public IActionResult OnPostDeleteComment(int id, int cid)
+        {
+            Load(id);
+            var comment = commentManager.GetCommentById(cid);
+
             if (comment == null)
-                return NotFound();
+                return RedirectToPage("Index", new { id });
 
-            post = postManager.GetPostById(comment.PostId);
-
-            // ? user who wrote comment OR admin can delete
-            if (comment.User.Id == currentUser.Id || currentUser.IsAdmin)
-            {
+            if (CurrentUser.IsAdmin || CurrentUser.Id == comment.User.Id)
                 commentManager.DeleteComment(comment);
-                return RedirectToPage("Index", new { id = post.Id });
-            }
 
-            return Unauthorized();
+            return RedirectToPage("Index", new { id });
         }
     }
 }

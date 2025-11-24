@@ -142,7 +142,7 @@ namespace DesktopApp.UserControls
 
             try
             {
-                playerManager.DeletePlayerRole(currentPlayer);
+                playerRepo.DeletePlayerRole(currentPlayer);
 
                 MessageBox.Show("Player role deleted.",
                     "Delete user role",

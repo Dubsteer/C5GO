@@ -22,36 +22,31 @@ namespace DesktopApp.UserControls
         {
             InitializeComponent();
 
-            this.parentControls = new List<Control>();
-            this.connection = null;
-            this.tournamentRepo = null;
-            this.tournamentManager = null;
+            parentControls = new List<Control>();
         }
 
         public void Setup(IConnection connection, List<Control> parentControls)
         {
             this.connection = connection;
-            this.matchRepo = new MatchRepo(connection);
-            this.matchManager = new MatchManager(matchRepo);
-            this.tournamentRepo = new TournamentRepo(connection);
-            this.tournamentManager = new TournamentManager(tournamentRepo, matchManager);
             this.parentControls = parentControls;
 
+            matchRepo = new MatchRepo(connection);
+            matchManager = new MatchManager(matchRepo);
+
+            tournamentRepo = new TournamentRepo(connection);
+            tournamentManager = new TournamentManager(tournamentRepo, matchManager);
+
             if (!DesignMode)
-            {
                 VisibleChanged += ViewListOfTournaments_VisibleChanged;
-                btnCreateTournament.Click += btnCreateTournament_Click;
-            }
         }
 
-        public void ViewListOfTournaments_VisibleChanged(object sender, EventArgs e)
+        private void ViewListOfTournaments_VisibleChanged(object sender, EventArgs e)
         {
             if (Visible && !Disposing && !DesignMode)
-            {
                 dgvTournaments.DataSource = tournamentManager.GetAllTournaments();
-            }
         }
 
+        // ✅ FIX — METHOD THAT WAS MISSING
         public void RefreshTournaments()
         {
             dgvTournaments.DataSource = tournamentManager.GetAllTournaments();
@@ -59,8 +54,8 @@ namespace DesktopApp.UserControls
 
         private void btnCreateTournament_Click(object sender, EventArgs e)
         {
-            TabPage currentTab = parentControls.OfType<TabControl>().First().SelectedTab;
-            var addTournament = (AddTournament)currentTab.Controls["addTournament"];
+            var currentTab = parentControls.OfType<TabControl>().First().SelectedTab;
+            var addTournament = currentTab.Controls.OfType<AddTournament>().First();
 
             addTournament.Visible = true;
             this.Hide();
@@ -68,8 +63,8 @@ namespace DesktopApp.UserControls
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            if(dgvTournaments.SelectedRows.Count == 0)
-    {
+            if (dgvTournaments.SelectedRows.Count == 0)
+            {
                 MessageBox.Show("Please select a tournament.");
                 return;
             }
@@ -77,19 +72,16 @@ namespace DesktopApp.UserControls
             var t = (Tournament)dgvTournaments.CurrentRow.DataBoundItem;
 
             tournamentManager.RemoveTournament(t);
-
             MessageBox.Show("Tournament deleted.");
-            dgvTournaments.DataSource = tournamentManager.GetAllTournaments();
+
+            RefreshTournaments();
         }
 
         private void dgvTournaments_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            DataGridViewRow selectedRow = dgvTournaments.Rows[e.RowIndex];
+            int id = Convert.ToInt32(dgvTournaments.Rows[e.RowIndex].Cells["Id"].Value);
 
-            int id = Convert.ToInt32(selectedRow.Cells["Id"].Value);
-
-            Form tournamentDetails = new TournamentDetails(connection, tournamentManager.GetTournamentById(id));
-            tournamentDetails.Show();
+            new TournamentDetails(connection, tournamentManager.GetTournamentById(id)).Show();
         }
     }
 }

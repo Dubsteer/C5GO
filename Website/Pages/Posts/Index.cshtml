@@ -1,126 +1,153 @@
-﻿@page
-@using LogicLayer.Models
+﻿@page "{id:int}"
 @model Website.Pages.Posts.IndexModel
-@{
-    ViewData["Title"] = Model.post.Content;
-}
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+@{
+    ViewData["Title"] = "Post";
+}
 
 <style>
     body {
-        background: #0f0f0f;
-        color: white;
+        background: #202225;
     }
 
     .post-container {
-        max-width: 900px;
-        margin: 50px auto;
-        padding: 35px;
-        background: #1c1c1c;
-        border-radius: 14px;
-        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        background: #2f3136;
+        padding: 25px;
+        border-radius: 12px;
+        max-width: 850px;
+        margin: 20px auto;
+        color: #fff;
     }
 
-    .comment-box {
-        background: #2b2b2b;
+    .comment-container {
+        background: #2f3136;
         border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 20px;
+        padding: 12px 14px;
+        margin-bottom: 15px;
+        color: #ddd;
     }
 
-    .reply-box {
-        background: #232323;
-        border-left: 4px solid #6f42c1;
-        padding: 10px 15px;
-        margin-left: 20px;
+    .comment-header {
+        font-weight: bold;
+        font-size: 15px;
+    }
+
+    .comment-time {
+        font-size: 12px;
+        color: #aaa;
+        margin-left: 5px;
+    }
+
+    .reply-container {
+        background: #36393f;
         border-radius: 8px;
+        padding: 10px;
+        margin-left: 35px;
+        margin-top: 8px;
+        color: #ccc;
     }
 
-    .comment-author {
-        font-weight: bold;
-        color: #c59dff;
+    .show-btn, .reply-btn {
+        background: none;
+        border: none;
+        color: #58a6ff;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 0;
+        margin-top: 10px;
     }
 
-    .comment-text {
-        color: #e0e0e0;
-        margin-top: 3px;
-        margin-bottom: 10px;
+    .delete-btn {
+        background: none;
+        border: none;
+        color: #ff5555;
+        font-size: 12px;
+        margin-left: 15px;
+        cursor: pointer;
     }
-
-    .reply-author {
-        color: #b889ff;
-        font-weight: bold;
-    }
-
-    .reply-text {
-        color: #d8d8d8;
-    }
-
-    h1.title {
-        text-align: center;
-        margin-bottom: 30px;
-        color: #d7b4ff;
-        font-weight: 600;
-    }
-
 </style>
 
 <div class="post-container">
 
-    <h1 class="title">@Model.post.Content</h1>
+    <h1 style="text-align:center;">@Model.Post.Content</h1>
 
-    @* COMMENT FORM *@
+    <hr style="border-color:#444;" />
+
     @if (User.Identity.IsAuthenticated)
     {
-        <form method="post" asp-page-handler="SubmitComment">
-            <textarea asp-for="NewComment.CommentText" class="form-control mb-3" rows="3" placeholder="Write a comment..."></textarea>
-            <input type="hidden" asp-for="NewComment.commentPostId" value="@Model.post.Id" />
-            <button class="btn btn-primary">Submit Comment</button>
+        <form method="post" asp-page-handler="SubmitComment" asp-route-id="@Model.Post.Id">
+            <textarea asp-for="NewComment.CommentText" rows="3" class="form-control"></textarea>
+            <button type="submit" class="btn btn-primary mt-2">Send</button>
         </form>
     }
 
-    <hr class="my-4" />
+    <br />
 
-    <h3 style="color: #d7b4ff;">💬 Comments</h3>
-
-    @if (Model.comments == null || Model.comments.Count == 0)
+    @if (Model.Comments.Count > 0)
     {
-        <p class="text-muted">No comments yet.</p>
+        <form method="post" asp-page-handler="ToggleComments" asp-route-id="@Model.Post.Id">
+            <button class="show-btn">
+                @(Model.ShowAllComments ? "Hide comments" : $"Show all ({Model.Comments.Count})")
+            </button>
+        </form>
     }
 
-    @foreach (var com in Model.comments)
+    @{
+        var shown = Model.ShowAllComments ? Model.Comments : Model.Comments.Take(3).ToList();
+    }
+
+    <br />
+
+    @foreach (var com in shown)
     {
-        <div class="comment-box">
+        <div class="comment-container">
 
-            <span class="comment-author">@com.User.Username</span>
-            <div class="comment-text">@com.Content</div>
+            <div class="comment-header">
+                @com.User.Username
+                <span class="comment-time">@com.Posted_on.ToString("MMM dd, HH:mm")</span>
 
-            @* DELETE COMMENT *@
-            @if (Model.currentUser != null && (Model.currentUser.Id == com.User.Id || Model.currentUser.IsAdmin))
+                @if (Model.CurrentUser != null &&
+                            (Model.CurrentUser.Id == com.User.Id || Model.CurrentUser.IsAdmin))
+                {
+                    <form method="post" asp-page-handler="DeleteComment"
+                          asp-route-id="@Model.Post.Id" asp-route-cid="@com.Id"
+                          style="display:inline;">
+                        <button class="delete-btn">Delete</button>
+                    </form>
+                }
+        </div>
+
+        <div style="margin-top:6px;">@com.Content</div>
+
+        <form method="post" asp-page-handler="ToggleReplies"
+              asp-route-id="@Model.Post.Id" asp-route-commentId="@com.Id">
+            <button class="reply-btn">
+                @(Model.ExpandedReplies.Contains(com.Id)
+                                ? "🔼 Hide replies"
+                                : $"🔽 Show replies ({com.Replies.Count})")
+            </button>
+        </form>
+
+        @if (Model.ExpandedReplies.Contains(com.Id))
             {
-                <form method="post" asp-page-handler="DeleteComment" asp-route-id="@com.Id" style="display:inline;">
-                    <button class="btn btn-sm btn-danger">Delete</button>
-                </form>
-            }
+                foreach (var r in com.Replies)
+                {
+                    <div class="reply-container">
+                        <strong>@r.Username</strong>
+                        <span class="comment-time">@r.PostedOn.ToString("MMM dd, HH:mm")</span>
+                        <div>@r.Content</div>
+                    </div>
+                }
 
-            @* REPLY FORM *@
-            @if (User.Identity.IsAuthenticated)
-            {
-                <form method="post" asp-page-handler="SubmitReply" class="mt-3">
-                    <input type="hidden" asp-for="NewReply.replyCommentId" value="@com.Id" />
-                    <input asp-for="NewReply.ReplyText" class="form-control mb-2" placeholder="Write a reply..." />
-                    <button class="btn btn-secondary btn-sm">Reply</button>
-                </form>
-            }
-
-            @* REPLIES *@
-            @foreach (var r in com.Replies)
-            {
-                <div class="reply-box mt-2">
-                    <div class="reply-author">@r.AuthorUsername</div>
-                    <div class="reply-text">@r.Content</div>
-                </div>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <form method="post" asp-page-handler="SubmitReply" asp-route-id="@Model.Post.Id"
+                          style="margin-left:35px; margin-top:10px;">
+                        <input asp-for="NewReply.replyCommentId" type="hidden" value="@com.Id" />
+                        <input asp-for="NewReply.ReplyText" type="text" class="form-control" placeholder="Reply..." />
+                        <button type="submit" class="btn btn-secondary btn-sm mt-2">Reply</button>
+                    </form>
+                }
             }
         </div>
     }

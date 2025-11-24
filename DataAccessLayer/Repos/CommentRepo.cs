@@ -17,122 +17,112 @@ namespace DataLayer.Repos
             this.conn = conn;
         }
 
-        // --------------------------------------------------------------------
         // ADD COMMENT
-        // --------------------------------------------------------------------
         public void AddComment(Comment comment)
         {
             var cmd = new MySqlCommand(@"
                 INSERT INTO comment (authorid, content, posted_on, post_id)
-                VALUES (@aid, @content, @posted, @postid)
+                VALUES (@aid, @content, @posted, @pid)
             ", conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@aid", comment.User.Id);
             cmd.Parameters.AddWithValue("@content", comment.Content);
             cmd.Parameters.AddWithValue("@posted", comment.Posted_on);
-            cmd.Parameters.AddWithValue("@postid", comment.PostId);
+            cmd.Parameters.AddWithValue("@pid", comment.PostId);
 
             cmd.ExecuteNonQuery();
         }
 
-        // --------------------------------------------------------------------
-        // GET ALL COMMENTS FOR ONE POST
-        // --------------------------------------------------------------------
-        public List<Comment> GetAllCommentsByPostId(int id)
+        // GET ALL COMMENTS FOR POST
+        public List<Comment> GetAllCommentsByPostId(int postId)
         {
             var cmd = new MySqlCommand(@"
-                SELECT c.id, c.authorid, c.content, c.posted_on, c.post_id,
-                       u.first_name, u.last_name, u.age, u.username, u.email,
-                       u.password, u.is_moderator, u.steam_id
+                SELECT 
+                    c.id, c.authorid, c.content, c.posted_on, c.post_id,
+                    u.first_name, u.last_name, u.age, u.username, u.email,
+                    u.password, u.is_moderator, u.steam_id
                 FROM comment c
                 JOIN user u ON u.id = c.authorid
                 WHERE c.post_id = @pid
                 ORDER BY c.posted_on DESC
             ", conn.GetInnerConn());
 
-            cmd.Parameters.AddWithValue("@pid", id);
+            cmd.Parameters.AddWithValue("@pid", postId);
 
-            var comments = new List<Comment>();
+            List<Comment> comments = new();
 
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
+            using var r = cmd.ExecuteReader();
+            while (r.Read())
             {
                 var user = new User(
-                    reader.GetInt32("authorid"),
-                    reader.GetString("first_name"),
-                    reader.GetString("last_name"),
-                    reader.IsDBNull(reader.GetOrdinal("age")) ? 0 : reader.GetInt32("age"),
-                    reader.GetString("username"),
-                    reader.GetString("email"),
-                    reader.GetString("password"),
-                    reader.GetBoolean("is_moderator"),
-                    reader.GetString("steam_id")
+                    r.GetInt32("authorid"),
+                    r.GetString("first_name"),
+                    r.GetString("last_name"),
+                    r.IsDBNull(r.GetOrdinal("age")) ? 0 : r.GetInt32("age"),
+                    r.GetString("username"),
+                    r.GetString("email"),
+                    r.GetString("password"),
+                    r.GetBoolean("is_moderator"),
+                    r.GetString("steam_id")
                 );
 
                 comments.Add(new Comment(
-                    reader.GetInt32("id"),
+                    r.GetInt32("id"),
                     user,
-                    reader.GetString("content"),
-                    reader.GetDateTime("posted_on"),
-                    reader.GetInt32("post_id")
+                    r.GetString("content"),
+                    r.GetDateTime("posted_on"),
+                    r.GetInt32("post_id")
                 ));
             }
 
             return comments;
         }
 
-        // --------------------------------------------------------------------
-        // LEGACY: GET ONE COMMENT BY USER ID (required by old code)
-        // Returns the latest comment from a user
-        // --------------------------------------------------------------------
         public Comment GetCommentByUserId(int userId)
         {
             var cmd = new MySqlCommand(@"
-                SELECT c.id, c.authorid, c.content, c.posted_on, c.post_id,
-                       u.first_name, u.last_name, u.age, u.username, u.email,
-                       u.password, u.is_moderator, u.steam_id
-                FROM comment c
-                JOIN user u ON u.id = c.authorid
-                WHERE c.authorid = @uid
-                ORDER BY c.posted_on DESC
+                SELECT * FROM comment 
+                WHERE authorid = @uid
+                ORDER BY posted_on DESC
                 LIMIT 1
             ", conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@uid", userId);
 
-            using var reader = cmd.ExecuteReader();
-            if (!reader.Read())
-                return null;
-
-            var user = new User(
-                reader.GetInt32("authorid"),
-                reader.GetString("first_name"),
-                reader.GetString("last_name"),
-                reader.IsDBNull(reader.GetOrdinal("age")) ? 0 : reader.GetInt32("age"),
-                reader.GetString("username"),
-                reader.GetString("email"),
-                reader.GetString("password"),
-                reader.GetBoolean("is_moderator"),
-                reader.GetString("steam_id")
-            );
+            using var r = cmd.ExecuteReader();
+            if (!r.Read()) return null;
 
             return new Comment(
-                reader.GetInt32("id"),
-                user,
-                reader.GetString("content"),
-                reader.GetDateTime("posted_on"),
-                reader.GetInt32("post_id")
+                r.GetInt32("id"),
+                new User(r.GetInt32("authorid")),
+                r.GetString("content"),
+                r.GetDateTime("posted_on"),
+                r.GetInt32("post_id")
             );
         }
 
-        // --------------------------------------------------------------------
-        // UPDATE
-        // --------------------------------------------------------------------
+        public Comment GetCommentById(int id)
+        {
+            var cmd = new MySqlCommand("SELECT * FROM comment WHERE id=@id", conn.GetInnerConn());
+            cmd.Parameters.AddWithValue("@id", id);
+
+            using var r = cmd.ExecuteReader();
+            if (!r.Read()) return null;
+
+            return new Comment(
+                r.GetInt32("id"),
+                new User(r.GetInt32("authorid")),
+                r.GetString("content"),
+                r.GetDateTime("posted_on"),
+                r.GetInt32("post_id")
+            );
+        }
+
         public void UpdateComment(Comment comment)
         {
             var cmd = new MySqlCommand(@"
-                UPDATE comment
-                SET authorid=@aid, content=@content, posted_on=@posted, post_id=@pid
+                UPDATE comment SET
+                authorid=@aid, content=@content, posted_on=@posted, post_id=@pid
                 WHERE id=@id
             ", conn.GetInnerConn());
 
@@ -145,129 +135,92 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        // --------------------------------------------------------------------
-        // DELETE
-        // --------------------------------------------------------------------
         public void DeleteComment(Comment comment)
         {
-            var cmd = new MySqlCommand(
-                "DELETE FROM comment WHERE id=@id",
-                conn.GetInnerConn()
-            );
-
+            var cmd = new MySqlCommand("DELETE FROM comment WHERE id=@id", conn.GetInnerConn());
             cmd.Parameters.AddWithValue("@id", comment.Id);
             cmd.ExecuteNonQuery();
         }
 
-        // --------------------------------------------------------------------
-        // GET COMMENT BY ID
-        // --------------------------------------------------------------------
-        public Comment GetCommentById(int id)
-        {
-            var cmd = new MySqlCommand(@"
-                SELECT * FROM comment WHERE id=@id
-            ", conn.GetInnerConn());
-
-            cmd.Parameters.AddWithValue("@id", id);
-
-            using var reader = cmd.ExecuteReader();
-            if (!reader.Read())
-                return null;
-
-            return new Comment(
-                reader.GetInt32("id"),
-                new User(reader.GetInt32("authorid")),
-                reader.GetString("content"),
-                reader.GetDateTime("posted_on"),
-                reader.GetInt32("post_id")
-            );
-        }
-
-        // --------------------------------------------------------------------
-        // GET ALL COMMENTS
-        // --------------------------------------------------------------------
         public List<Comment> GetAllComments()
         {
-            var cmd = new MySqlCommand(@"
-                SELECT id, authorid, content, posted_on, post_id
-                FROM comment
-            ", conn.GetInnerConn());
+            var cmd = new MySqlCommand("SELECT * FROM comment", conn.GetInnerConn());
+            List<Comment> list = new();
 
-            var comments = new List<Comment>();
-
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
+            using var r = cmd.ExecuteReader();
+            while (r.Read())
             {
-                comments.Add(new Comment(
-                    reader.GetInt32("id"),
-                    new User(reader.GetInt32("authorid")),
-                    reader.GetString("content"),
-                    reader.GetDateTime("posted_on"),
-                    reader.GetInt32("post_id")
+                list.Add(new Comment(
+                    r.GetInt32("id"),
+                    new User(r.GetInt32("authorid")),
+                    r.GetString("content"),
+                    r.GetDateTime("posted_on"),
+                    r.GetInt32("post_id")
                 ));
             }
 
-            return comments;
+            return list;
         }
 
-        // --------------------------------------------------------------------
         // ADD REPLY
-        // --------------------------------------------------------------------
         public void AddReply(CommentReply reply)
         {
             var cmd = new MySqlCommand(@"
-                INSERT INTO commentreply (content, posted_on, comment_id)
-                VALUES (@content, @posted, @cid)
+                INSERT INTO commentreply (content, posted_on, comment_id, user_id)
+                VALUES (@content, @posted, @cid, @uid)
             ", conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@content", reply.Content);
-            cmd.Parameters.AddWithValue("@posted", DateTime.Now);
+            cmd.Parameters.AddWithValue("@posted", reply.PostedOn);
             cmd.Parameters.AddWithValue("@cid", reply.CommentId);
+            cmd.Parameters.AddWithValue("@uid", reply.User.Id);
 
             cmd.ExecuteNonQuery();
         }
 
-        // --------------------------------------------------------------------
-        // GET REPLIES
-        // --------------------------------------------------------------------
+        // GET ALL REPLIES FOR COMMENT
         public List<CommentReply> GetAllRepliesByCommentId(int commentId)
         {
             var cmd = new MySqlCommand(@"
-                SELECT * FROM commentreply
-                WHERE comment_id=@cid
-                ORDER BY posted_on ASC
+                SELECT 
+                    cr.id,
+                    cr.content,
+                    cr.posted_on,
+                    cr.comment_id,
+                    u.username
+                FROM commentreply cr
+                JOIN user u ON u.id = cr.user_id
+                WHERE cr.comment_id=@cid
+                ORDER BY cr.posted_on ASC
             ", conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@cid", commentId);
 
-            var replies = new List<CommentReply>();
+            List<CommentReply> list = new();
 
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
+            using var r = cmd.ExecuteReader();
+            while (r.Read())
             {
-                replies.Add(new CommentReply(
-                    reader.GetInt32("id"),
-                    reader.GetString("content"),
-                    reader.GetDateTime("posted_on"),
-                    reader.GetInt32("comment_id")
+                list.Add(new CommentReply(
+                    r.GetInt32("id"),
+                    r.GetString("content"),
+                    r.GetDateTime("posted_on"),
+                    r.GetInt32("comment_id"),
+                    r.GetString("username")
                 ));
             }
 
-            return replies;
+            return list;
         }
 
-        // --------------------------------------------------------------------
-        // CHECK IF COMMENT TEXT EXISTS
-        // --------------------------------------------------------------------
         public bool CheckIfCommentExists(string text)
         {
-            var cmd = new MySqlCommand(@"
-                SELECT EXISTS(
-                    SELECT * FROM comment WHERE content=@text
-                )
-            ", conn.GetInnerConn());
+            var cmd = new MySqlCommand(
+                "SELECT EXISTS(SELECT * FROM comment WHERE content = @txt)",
+                conn.GetInnerConn()
+            );
 
-            cmd.Parameters.AddWithValue("@text", text);
+            cmd.Parameters.AddWithValue("@txt", text);
             return Convert.ToInt32(cmd.ExecuteScalar()) == 1;
         }
     }

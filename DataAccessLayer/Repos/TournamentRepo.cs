@@ -89,24 +89,47 @@ namespace DataLayer.Repos
 
             cmd.ExecuteNonQuery();
         }
- 
+
 
         public void RemoveTournament(Tournament t)
         {
             EnsureConnection();
 
-            new MySqlCommand("DELETE FROM matches WHERE tournamentId=@id", conn.GetInnerConn())
-            { Parameters = { new("@id", t.Id) } }.ExecuteNonQuery();
+            // DELETE MATCHES (from matches table)
+            new MySqlCommand("DELETE FROM matches WHERE tournamentId = @id", conn.GetInnerConn())
+            { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
 
-            new MySqlCommand("DELETE FROM applications WHERE tournamentId=@id", conn.GetInnerConn())
-            { Parameters = { new("@id", t.Id) } }.ExecuteNonQuery();
+            // DELETE MATCHES (from match table - if exists)
+            new MySqlCommand("DELETE FROM `match` WHERE tournamentId = @id", conn.GetInnerConn())
+            { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
 
-            new MySqlCommand("DELETE FROM team_applications WHERE tournamentId=@id", conn.GetInnerConn())
-            { Parameters = { new("@id", t.Id) } }.ExecuteNonQuery();
+            // DELETE APPLICATIONS (solo players)
+            new MySqlCommand("DELETE FROM applications WHERE tournamentId = @id", conn.GetInnerConn())
+            { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
 
-            new MySqlCommand("DELETE FROM tournament WHERE id=@id", conn.GetInnerConn())
-            { Parameters = { new("@id", t.Id) } }.ExecuteNonQuery();
+            // DELETE TEAM APPLICATIONS
+            new MySqlCommand("DELETE FROM team_applications WHERE tournamentId = @id", conn.GetInnerConn())
+            { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
+
+            // DELETE TEAM JOIN REQUESTS (not required but CLEAN)
+            new MySqlCommand(
+                "DELETE j FROM team_join_request j " +
+                "JOIN team_player tp ON j.team_id = tp.team_id " +
+                "JOIN tournament_teams tt ON tt.team_id = tp.team_id " +
+                "WHERE tt.tournament_id = @id",
+                conn.GetInnerConn()
+            ).Parameters.AddWithValue("@id", t.Id);
+
+            // DELETE TOURNAMENT TEAMS
+            new MySqlCommand("DELETE FROM tournament_teams WHERE tournament_id = @id", conn.GetInnerConn())
+            { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
+
+            // FINALLY DELETE TOURNAMENT
+            new MySqlCommand("DELETE FROM tournament WHERE id = @id", conn.GetInnerConn())
+            { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
         }
+
+
 
         public void AddTournamentApp(Player p, Tournament t)
         {

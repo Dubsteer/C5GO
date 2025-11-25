@@ -21,9 +21,15 @@ namespace DesktopApp
 
         public User currentUser;
 
+        // ?? VAŽNO — detektuje da li je kliknut Logout
+        private bool isLoggingOut = false;
+
         public AdminPanel(IConnection connection, User currentUser)
         {
             InitializeComponent();
+
+            this.connection = connection;
+            this.currentUser = currentUser;
 
             var controls = this.Controls.Cast<Control>().ToList();
 
@@ -35,37 +41,45 @@ namespace DesktopApp
             addTournament.Setup(connection);
             viewListOfTournaments1.Setup(connection);
 
+            addTournament.TournamentCreated += () =>
+            {
+                addTournament.Hide();
+                viewListOfTournaments1.Show();
+                viewListOfTournaments1.RefreshTournaments();
+            };
+
             tabControl1.SelectedIndex = 0;
         }
-
-        // =====================
-        // NAVIGATION (VARIJANTA 2)
-        // =====================
 
         private void btnUsers_Click(object sender, EventArgs e)
         {
             tabControl1.SelectedIndex = 0;
+            addTournament.Hide();
+            viewListOfTournaments1.Hide();
         }
 
         private void btnPosts_Click(object sender, EventArgs e)
         {
             tabControl1.SelectedIndex = 1;
+            addTournament.Hide();
+            viewListOfTournaments1.Hide();
         }
 
         private void btnTournaments_Click(object sender, EventArgs e)
         {
             tabControl1.SelectedIndex = 2;
+            addTournament.Hide();
+            viewListOfTournaments1.Show();
         }
-
-        // =====================
-        // LOGOUT / EXIT
-        // =====================
 
         private void btnLogout_Click(object sender, EventArgs e)
         {
             if (MessageBox.Show("Logout?", "Logout", MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question) == DialogResult.Yes)
             {
+                // ?? OVO SPRE?AVA EXIT POPUP
+                isLoggingOut = true;
+
                 this.DialogResult = DialogResult.OK;
                 Close();
             }
@@ -73,6 +87,10 @@ namespace DesktopApp
 
         private void AdminPanel_FormClosing(object sender, FormClosingEventArgs e)
         {
+            // ?? AKO JE LOGOUT ? PRESKO?I EXIT PORUKU
+            if (isLoggingOut)
+                return;
+
             if (e.CloseReason == CloseReason.UserClosing)
             {
                 var d = MessageBox.Show(

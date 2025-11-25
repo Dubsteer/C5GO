@@ -60,31 +60,71 @@ namespace Website.Pages.Teams
             LoadUser();
 
             if (MyTeam != null)
-                throw new Exception("Already in a team.");
+            {
+                TempData["Error"] = "You are already in a team.";
+                return RedirectToPage("/Teams/Teams");
+            }
+
+            if (string.IsNullOrWhiteSpace(CurrentUser.SteamId) || CurrentUser.SteamId == "0")
+            {
+                TempData["Error"] = "You must add your SteamID before creating a team.";
+                return Redirect("/ViewProfile");
+            }
 
             teamManager.CreateTeam(teamName, CurrentUser.Id.Value);
 
+            TempData["Message"] = "Team created!";
             return RedirectToPage("/Teams/Teams");
         }
 
         public IActionResult OnPostJoin(int teamId)
         {
             LoadUser();
-            teamManager.RequestJoinTeam(teamId, CurrentUser.Id.Value);
+
+            try
+            {
+                teamManager.RequestJoinTeam(teamId, CurrentUser.Id.Value);
+                TempData["Message"] = "Join request sent!";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
             return RedirectToPage("/Teams/Teams");
         }
 
         public IActionResult OnPostApprove(int requestId)
         {
             LoadUser();
-            teamManager.ApproveRequest(requestId, CurrentUser.Id.Value);
+
+            try
+            {
+                teamManager.ApproveRequest(requestId, CurrentUser.Id.Value);
+                TempData["Message"] = "Player approved!";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
             return RedirectToPage("/Teams/Teams");
         }
 
         public IActionResult OnPostReject(int requestId)
         {
             LoadUser();
-            teamManager.RejectRequest(requestId, CurrentUser.Id.Value);
+
+            try
+            {
+                teamManager.RejectRequest(requestId, CurrentUser.Id.Value);
+                TempData["Message"] = "Request rejected.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
             return RedirectToPage("/Teams/Teams");
         }
     }

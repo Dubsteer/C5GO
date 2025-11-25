@@ -19,7 +19,6 @@
         margin-bottom: 25px;
     }
 
-    /* FILTER BUTTONS */
     .filter-btn {
         background: #21262d;
         border: 1px solid #30363d;
@@ -34,7 +33,6 @@
             border-color: #2ea043;
         }
 
-    /* CARD */
     .tournament-card {
         background: #161b22;
         border-radius: 12px;
@@ -60,7 +58,6 @@
         cursor: pointer;
     }
 
-    /* BADGES */
     .badge-open {
         background-color: #22c55e !important;
         font-size: 14px;
@@ -113,11 +110,11 @@
         <button name="filter" value="team" class="filter-btn @(Model.Filter == "team" ? "active" : "")">Team</button>
     </form>
 
-    <!-- ALERT -->
+    <!-- STEAM CHECK WARNING -->
     @if (!Model.IsPlayer)
     {
         <div class="alert alert-warning text-center">
-            Add your SteamID in your <a asp-page="/ViewProfile">Profile</a> first to join tournaments.
+            Add your SteamID in your <a asp-page="/ViewProfile">Profile</a> to join tournaments.
         </div>
     }
 
@@ -126,13 +123,11 @@
         {
             <div class="col-md-4">
 
-                <!-- WRAP WHOLE CARD INSIDE <a> -->
                 <a asp-page="/Tournaments/Details" asp-route-id="@t.Id">
                     <div class="tournament-card clickable-card">
 
                         <h3>
                             @t.Name
-
                             @if (t.IsTeamTournament)
                             {
                                 <span class="badge-team">Team @t.TeamSizeRequired v @t.TeamSizeRequired</span>
@@ -161,15 +156,13 @@
                         <hr />
 
                         <p><strong>@(t.IsTeamTournament ? "Teams" : "Players"):</strong> @t.Players.Count</p>
-
                         <p><strong>Matches:</strong> @t.Matches.Count</p>
 
                         <hr />
 
-                        <!-- ACTION BUTTONS -->
                         <div class="d-flex flex-wrap gap-2">
 
-                            <!-- SOLO JOIN -->
+                            <!-- SOLO JOIN (only with SteamID) -->
                             @if (!t.IsTeamTournament
                                                     && Model.IsPlayer
                                                     && t.Status == LogicLayer.Enums.Status.Open
@@ -181,13 +174,14 @@
                                 </form>
                             }
 
-                            <!-- TEAM JOIN -->
+                            <!-- TEAM JOIN (Team leader + all members must have SteamID) -->
                             @if (t.IsTeamTournament
                                                     && Model.MyTeam != null
-                                                    && Model.MyTeam.Captain.Id == Model.CurrentPlayer.Id
+                                                    && Model.MyTeam.Captain.Id == Model.CurrentPlayer?.Id
+                                                    && Model.MyTeam.Members.All(m => !string.IsNullOrWhiteSpace(m.SteamId) && m.SteamId != "0")
                                                     && Model.MyTeam.Members.Count == t.TeamSizeRequired
                                                     && t.Status == LogicLayer.Enums.Status.Open
-                                                    && !t.Players.Any(x => x.Id == Model.CurrentPlayer.Id))
+                                                    && !t.Players.Any(p => p.Id == Model.CurrentPlayer.Id))
                             {
                                 <form method="post" asp-page-handler="ApplyTeam" onclick="event.stopPropagation();">
                                     <input type="hidden" name="id" value="@t.Id" />

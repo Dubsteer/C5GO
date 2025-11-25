@@ -44,6 +44,34 @@ namespace LogicLayer.Managers
         }
 
         // =========================
+        // DesktopApp COMPATIBILITY
+        // =========================
+
+        // Simple add tournament – DesktopApp requires this
+        public void AddTournament(Tournament t)
+        {
+            repo.AddTournament(t);
+        }
+
+        // Simple auto tournament generator – DesktopApp compatibility
+        public void TournamentLogic(
+            List<Player> players,
+            Tournament tournament,
+            DateTime startDate,
+            int rounds)
+        {
+            if (players.Count < 2)
+                throw new Exception("Not enough players.");
+
+            // Generate matches 1v1 (DesktopApp only)
+            matchManager.GenerateMatches(players, tournament.Id, startDate, rounds);
+
+            // Update status
+            tournament.Status = Status.InProgress;
+            repo.UpdateTournament(tournament);
+        }
+
+        // =========================
         // APPS
         // =========================
 
@@ -79,6 +107,7 @@ namespace LogicLayer.Managers
             if (team.Members.Count != t.TeamSizeRequired)
                 throw new Exception("Team does not meet required size.");
 
+            // Add each member as a player into applications
             foreach (var member in team.Members)
             {
                 var player = new Player(

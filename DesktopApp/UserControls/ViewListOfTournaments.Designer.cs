@@ -53,7 +53,7 @@
             dgvTournaments.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvTournaments.Size = new Size(1085, 631);
             dgvTournaments.TabIndex = 0;
-            dgvTournaments.CellDoubleClick += dgvTournaments_CellDoubleClick;
+            /*dgvTournaments.CellDoubleClick += dgvTournaments_CellDoubleClick;*/
             // 
             // btnCreateTournament
             // 

@@ -4,6 +4,7 @@ using LogicLayer.Models;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Data;
 
 namespace DataLayer.Repos
 {
@@ -21,6 +22,35 @@ namespace DataLayer.Repos
             if (conn.GetInnerConn().State != System.Data.ConnectionState.Open)
                 conn.Open();
         }
+
+        // ---------------------------------------------------------
+        // HELPER REQUIRED BY TeamManager
+        // ---------------------------------------------------------
+
+        public User GetUserById(int id)
+        {
+            EnsureOpen();
+
+            var cmd = new MySqlCommand(
+                "SELECT id, username, steam_id FROM user WHERE id=@id",
+                conn.GetInnerConn());
+
+            cmd.Parameters.AddWithValue("@id", id);
+
+            using var r = cmd.ExecuteReader();
+            if (!r.Read()) return null;
+
+            return new User
+            {
+                Id = r.GetInt32("id"),
+                Username = r.GetString("username"),
+                SteamId = r.IsDBNull("steam_id") ? "0" : r.GetString("steam_id")
+            };
+        }
+
+        // ---------------------------------------------------------
+        // TEAM READ
+        // ---------------------------------------------------------
 
         public Team GetTeamById(int id)
         {
@@ -106,7 +136,7 @@ namespace DataLayer.Repos
 
             var list = new List<User>();
             var cmd = new MySqlCommand(
-                "SELECT u.id, u.username FROM team_player tp " +
+                "SELECT u.id, u.username, u.steam_id FROM team_player tp " +
                 "JOIN user u ON tp.user_id = u.id " +
                 "WHERE tp.team_id=@id AND tp.status='Approved'",
                 conn.GetInnerConn());
@@ -119,16 +149,25 @@ namespace DataLayer.Repos
                 list.Add(new User
                 {
                     Id = r.GetInt32("id"),
-                    Username = r.GetString("username")
+                    Username = r.GetString("username"),
+                    SteamId = r.IsDBNull("steam_id") ? "0" : r.GetString("steam_id")
                 });
             }
 
             return list;
         }
 
+        // ---------------------------------------------------------
+        // TEAM CREATE + VALIDATED ADD
+        // ---------------------------------------------------------
+
         public void CreateTeam(string name, int captainId)
         {
             EnsureOpen();
+
+            var captain = GetUserById(captainId);
+            if (string.IsNullOrWhiteSpace(captain.SteamId) || captain.SteamId == "0")
+                throw new Exception("Captain must have a SteamID to create a team.");
 
             var cmd = new MySqlCommand(
                 "INSERT INTO team (name, captain_id) VALUES (@n, @c)",
@@ -147,6 +186,10 @@ namespace DataLayer.Repos
         {
             EnsureOpen();
 
+            var user = GetUserById(userId);
+            if (string.IsNullOrWhiteSpace(user.SteamId) || user.SteamId == "0")
+                throw new Exception("User does not have a SteamID. Cannot join a team.");
+
             var cmd = new MySqlCommand(
                 "INSERT INTO team_player (team_id, user_id, role, status) VALUES (@t, @u, @r, @s)",
                 conn.GetInnerConn());
@@ -158,6 +201,32 @@ namespace DataLayer.Repos
 
             cmd.ExecuteNonQuery();
         }
+
+        // ---------------------------------------------------------
+        // JOIN REQUEST (VALIDATED)
+        // ---------------------------------------------------------
+
+        public void CreateJoinRequest(int teamId, int userId)
+        {
+            EnsureOpen();
+
+            var user = GetUserById(userId);
+            if (string.IsNullOrWhiteSpace(user.SteamId) || user.SteamId == "0")
+                throw new Exception("You must add your SteamID before joining a team.");
+
+            var cmd = new MySqlCommand(
+                "INSERT INTO team_join_request (team_id, user_id) VALUES (@t, @u)",
+                conn.GetInnerConn());
+
+            cmd.Parameters.AddWithValue("@t", teamId);
+            cmd.Parameters.AddWithValue("@u", userId);
+
+            cmd.ExecuteNonQuery();
+        }
+
+        // ---------------------------------------------------------
+        // ADMIN TOOLS
+        // ---------------------------------------------------------
 
         public void UpdatePlayerStatus(int teamId, int userId, string status)
         {
@@ -245,20 +314,6 @@ namespace DataLayer.Repos
             }
 
             return list;
-        }
-
-        public void CreateJoinRequest(int teamId, int userId)
-        {
-            EnsureOpen();
-
-            var cmd = new MySqlCommand(
-                "INSERT INTO team_join_request (team_id, user_id) VALUES (@t, @u)",
-                conn.GetInnerConn());
-
-            cmd.Parameters.AddWithValue("@t", teamId);
-            cmd.Parameters.AddWithValue("@u", userId);
-
-            cmd.ExecuteNonQuery();
         }
 
         public void DeleteJoinRequest(int requestId)

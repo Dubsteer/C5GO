@@ -41,12 +41,21 @@ namespace Website.Pages
                 var uid = int.Parse(User.FindFirst("id").Value);
                 var user = userManager.GetUserById(uid);
 
+                // Ako user nema SteamID ? NE MOŽE BITI PLAYER
+                if (string.IsNullOrWhiteSpace(user.SteamId) || user.SteamId == "0")
+                {
+                    CurrentPlayer = null;
+                    MyTeam = null;
+                    return;
+                }
+
                 CurrentPlayer = playerManager.GetPlayer(user);
                 MyTeam = teamManager.GetTeamOfUser(uid);
             }
             catch
             {
                 CurrentPlayer = null;
+                MyTeam = null;
             }
         }
 
@@ -63,11 +72,9 @@ namespace Website.Pages
                 t.Players = tournamentManager.GetAllPlayersInTournament(t);
                 t.Matches = tournamentManager.GetAllMatchesInTournament(t);
 
-                // AUTO STATUS UPDATE
                 tournamentManager.UpdateTournamentStatus(t);
             }
 
-            // FILTERING
             Tournaments = Filter switch
             {
                 "solo" => Tournaments.Where(t => !t.IsTeamTournament).ToList(),
@@ -78,11 +85,12 @@ namespace Website.Pages
             return Page();
         }
 
-        // ============= SOLO APPLY =============
+        // SOLO APPLY
         public IActionResult OnPostApplySolo(int id)
         {
             LoadCurrent();
-            if (CurrentPlayer == null)
+
+            if (!IsPlayer)
                 return Redirect("/ViewProfile");
 
             try
@@ -101,10 +109,13 @@ namespace Website.Pages
             return Redirect("/Tournaments");
         }
 
-        // ============= TEAM APPLY =============
+        // TEAM APPLY
         public IActionResult OnPostApplyTeam(int id)
         {
             LoadCurrent();
+
+            if (!IsPlayer)
+                return Redirect("/ViewProfile");
 
             if (MyTeam == null)
                 return Redirect("/Teams/Teams");
@@ -116,14 +127,17 @@ namespace Website.Pages
             {
                 var t = tournamentManager.GetTournamentById(id);
 
-                // TEAM MUST HAVE EXACT team_size_required members
                 if (MyTeam.Members.Count != t.TeamSizeRequired)
                     throw new Exception("Your team does not have the required number of members.");
 
-                // REGISTER EVERY MEMBER
                 foreach (var member in MyTeam.Members)
                 {
                     var player = playerManager.GetPlayer(member);
+
+                    // Member must have valid SteamID
+                    if (string.IsNullOrWhiteSpace(member.SteamId) || member.SteamId == "0")
+                        throw new Exception($"Player {member.Username} does not have a SteamID.");
+
                     tournamentManager.AddTournamentApp(player, t);
                 }
             }
@@ -135,12 +149,12 @@ namespace Website.Pages
             return Redirect("/Tournaments");
         }
 
-        // ============= LEAVE =============
+        // LEAVE
         public IActionResult OnPostLeave(int id)
         {
             LoadCurrent();
 
-            if (CurrentPlayer == null)
+            if (!IsPlayer)
                 return Redirect("/ViewProfile");
 
             try
@@ -156,12 +170,12 @@ namespace Website.Pages
             return Redirect("/Tournaments");
         }
 
-        // ============= ADMIN CLOSE =============
+        // ADMIN CLOSE
         public IActionResult OnPostClose(int id)
         {
             LoadCurrent();
 
-            if (CurrentPlayer == null || !CurrentPlayer.IsAdmin)
+            if (!IsPlayer || !CurrentPlayer.IsAdmin)
                 return Unauthorized();
 
             try
@@ -177,12 +191,12 @@ namespace Website.Pages
             return Redirect("/Tournaments");
         }
 
-        // ============= ADMIN DELETE =============
+        // ADMIN DELETE
         public IActionResult OnPostDelete(int id)
         {
             LoadCurrent();
 
-            if (CurrentPlayer == null || !CurrentPlayer.IsAdmin)
+            if (!IsPlayer || !CurrentPlayer.IsAdmin)
                 return Unauthorized();
 
             try

@@ -1,143 +1,151 @@
-﻿@page "{id:int}"
+﻿@page
 @model Website.Pages.Teams.DetailsModel
 @{
     ViewData["Title"] = "Team Details";
 }
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
 
 <style>
     body {
         background-color: #0d1117;
-        color: white;
-        font-family: "Segoe UI", Roboto, sans-serif;
+        color: #e2e2e2;
+        font-family: 'Segoe UI', Roboto, sans-serif;
     }
 
-    .box {
+    .team-card {
         background: #161b22;
-        padding: 25px;
-        border-radius: 12px;
-        max-width: 700px;
-        margin: 40px auto;
         border: 1px solid #2d333b;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 30px;
     }
 
-    h2 {
-        color: #a5b4fc;
+    h2, h3 {
+        color: #ffffff;
         font-weight: 700;
-        margin-bottom: 20px;
     }
 
-    .member-row {
-        padding: 8px;
-        border-bottom: 1px solid #2d333b;
-        display: flex;
-        justify-content: space-between;
+    .member-pill {
+        background: #1f2937;
+        border-radius: 8px;
+        padding: 10px 15px;
+        font-size: 16px;
+        margin-bottom: 6px;
+        border: 1px solid #374151;
     }
 
-    .kick-btn {
-        background: #ef4444;
-        border: none;
-        padding: 6px 12px;
+    .pending-pill {
+        background: #312e81;
+        border-radius: 8px;
+        padding: 10px 15px;
+        font-size: 16px;
+        margin-bottom: 6px;
+        color: #c7d2fe;
+        border: 1px solid #4338ca;
+    }
+
+    .captain-tag {
+        padding: 4px 8px;
+        font-size: 12px;
+        background-color: #2563eb;
+        margin-left: 10px;
         border-radius: 6px;
-        color: white;
     }
 
-    .user-link {
-        color: #58a6ff !important;
-        font-weight: 600;
-        text-decoration: none;
+    .btn-action {
+        margin-left: 10px;
     }
-
-        .user-link:hover {
-            color: #7fbaff !important;
-            text-decoration: underline;
-        }
 </style>
 
-<div class="box">
+<div class="container mt-5">
 
-    <h2>@Model.Team.Name</h2>
-
-    <h4>Captain</h4>
-    <p>
-        <a asp-page="/UserProfile" asp-route-id="@Model.Team.Captain.Id" class="user-link">
-            @Model.Team.Captain.Username
-        </a>
-    </p>
-
-    <hr />
-
-    <h4>Members</h4>
-
-    @foreach (var m in Model.Members)
+    <!-- ALERTS -->
+    @if (TempData["Error"] != null)
     {
-        <div class="member-row">
-            <span>
-                <a asp-page="/UserProfile" asp-route-id="@m.Id" class="user-link">
-                    @m.Username
-                </a>
-            </span>
-
-            @* Kick — only for captain & cannot kick himself *@
-            @if (Model.CurrentUser.Id == Model.Team.Captain.Id && m.Id != Model.Team.Captain.Id)
-            {
-                <form method="post" asp-page-handler="Kick">
-                    <input type="hidden" name="userId" value="@m.Id" />
-                    <input type="hidden" name="teamId" value="@Model.Team.Id" />
-                    <button class="kick-btn">Kick</button>
-                </form>
-            }
-        </div>
+        <div class="alert alert-danger text-center">@TempData["Error"]</div>
+    }
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success text-center">@TempData["Success"]</div>
     }
 
-    <hr />
+    <div class="team-card">
+        <h2>@Model.Team.Name</h2>
 
-    @* Leave Team (only non-captain) *@
-    @if (Model.CurrentUser.Id != Model.Team.Captain.Id)
-    {
-        <form method="post" asp-page-handler="Leave">
-            <input type="hidden" name="teamId" value="@Model.Team.Id" />
-            <button class="btn btn-warning mt-3">Leave Team</button>
-        </form>
-    }
+        <hr />
 
-    <hr />
+        <!-- MEMBERS -->
+        <h3>Members</h3>
 
-    <h4>Pending Join Requests</h4>
-
-    @if (Model.Pending.Count == 0)
-    {
-        <p style="color:gray;">No pending requests</p>
-    }
-    else
-    {
-        @foreach (var r in Model.Pending)
+        @foreach (var m in Model.Members)
         {
-            <div class="member-row">
-                <span>
-                    <a asp-page="/UserProfile" asp-route-id="@r.User.Id" class="user-link">
-                        @r.User.Username
-                    </a>
-                </span>
+            <div class="member-pill d-flex justify-content-between align-items-center">
 
                 <div>
-                    @* Approve *@
-                    <form method="post" asp-page-handler="Approve" style="display:inline-block;">
-                        <input type="hidden" name="requestId" value="@r.Id" />
-                        <input type="hidden" name="teamId" value="@Model.Team.Id" />
-                        <button class="btn btn-success btn-sm">Approve</button>
-                    </form>
+                    @m.Username
 
-                    @* Reject *@
-                    <form method="post" asp-page-handler="Reject" style="display:inline-block;">
-                        <input type="hidden" name="requestId" value="@r.Id" />
-                        <input type="hidden" name="teamId" value="@Model.Team.Id" />
-                        <button class="btn btn-danger btn-sm">Reject</button>
-                    </form>
+                    @if (m.Id == Model.Team.Captain.Id)
+                    {
+                        <span class="captain-tag">CAPTAIN</span>
+                    }
                 </div>
+
+                @* KICK BUTTON *@
+                @if (Model.CurrentUser.Id == Model.Team.Captain.Id && m.Id != Model.Team.Captain.Id)
+                {
+                    <form method="post" asp-page-handler="Kick" class="d-inline">
+                        <input type="hidden" name="userId" value="@m.Id" />
+                        <input type="hidden" name="teamId" value="@Model.Team.Id" />
+                        <button class="btn btn-danger btn-sm btn-action">Kick</button>
+                    </form>
+                }
+
+                @* LEAVE BUTTON *@
+                @if (m.Id == Model.CurrentUser.Id && m.Id != Model.Team.Captain.Id)
+                {
+                    <form method="post" asp-page-handler="Leave" class="d-inline">
+                        <input type="hidden" name="teamId" value="@Model.Team.Id" />
+                        <button class="btn btn-warning btn-sm btn-action">Leave</button>
+                    </form>
+                }
             </div>
         }
-    }
 
+        <hr />
+
+        <!-- PENDING REQUESTS -->
+        <h3>Join Requests</h3>
+
+        @if (!Model.Pending.Any())
+        {
+            <p>No pending requests.</p>
+        }
+        else
+        {
+            @foreach (var r in Model.Pending)
+            {
+                <div class="pending-pill d-flex justify-content-between align-items-center">
+
+                    <span>@r.User.Username</span>
+
+                    <div>
+                        <form method="post" asp-page-handler="Approve" class="d-inline">
+                            <input type="hidden" name="requestId" value="@r.Id" />
+                            <input type="hidden" name="teamId" value="@Model.Team.Id" />
+                            <button class="btn btn-success btn-sm btn-action">Approve</button>
+                        </form>
+
+                        <form method="post" asp-page-handler="Reject" class="d-inline">
+                            <input type="hidden" name="requestId" value="@r.Id" />
+                            <input type="hidden" name="teamId" value="@Model.Team.Id" />
+                            <button class="btn btn-danger btn-sm btn-action">Reject</button>
+                        </form>
+                    </div>
+
+                </div>
+            }
+        }
+
+    </div>
 </div>

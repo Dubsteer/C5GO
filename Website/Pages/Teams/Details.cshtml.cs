@@ -32,6 +32,7 @@ namespace Website.Pages.Teams
         public IActionResult OnGet(int id)
         {
             LoadUser();
+
             Team = teamManager.GetTeam(id);
 
             if (Team == null)
@@ -43,36 +44,100 @@ namespace Website.Pages.Teams
             return Page();
         }
 
+        // =============================================
+        // APPROVE REQUEST
+        // =============================================
         public IActionResult OnPostApprove(int requestId, int teamId)
         {
             LoadUser();
-            teamManager.ApproveRequest(requestId, CurrentUser.Id.Value);
+
+            try
+            {
+                teamManager.ApproveRequest(requestId, CurrentUser.Id.Value);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
             return RedirectToPage("/Teams/Details", new { id = teamId });
         }
 
+        // =============================================
+        // REJECT REQUEST
+        // =============================================
         public IActionResult OnPostReject(int requestId, int teamId)
         {
             LoadUser();
-            teamManager.RejectRequest(requestId, CurrentUser.Id.Value);
+
+            try
+            {
+                teamManager.RejectRequest(requestId, CurrentUser.Id.Value);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
             return RedirectToPage("/Teams/Details", new { id = teamId });
         }
 
+        // =============================================
+        // LEAVE TEAM
+        // =============================================
         public IActionResult OnPostLeave(int teamId)
         {
             LoadUser();
-            teamManager.LeaveTeam(CurrentUser.Id.Value);
-            return RedirectToPage("/Teams/Teams");
+
+            try
+            {
+                teamManager.LeaveTeam(CurrentUser.Id.Value);
+                return RedirectToPage("/Teams/Teams");
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+                return RedirectToPage("/Teams/Details", new { id = teamId });
+            }
         }
 
+        // =============================================
+        // KICK MEMBER
+        // =============================================
         public IActionResult OnPostKick(int userId, int teamId)
         {
             LoadUser();
-            teamManager.KickMember(CurrentUser.Id.Value, userId);
+
+            try
+            {
+                teamManager.KickMember(CurrentUser.Id.Value, userId);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
             return RedirectToPage("/Teams/Details", new { id = teamId });
         }
 
+        // =============================================
+        // NEW: USER SEND JOIN REQUEST
+        // =============================================
+        public IActionResult OnPostJoinTeam(int teamId)
+        {
+            LoadUser();
 
+            try
+            {
+                teamManager.RequestJoinTeam(teamId, CurrentUser.Id.Value);
+                TempData["Success"] = "Join request sent successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
 
-
+            return RedirectToPage("/Teams/Details", new { id = teamId });
+        }
     }
 }

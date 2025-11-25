@@ -21,5 +21,8 @@ namespace LogicLayer.IRepos
 
         void CreateJoinRequest(int teamId, int userId);
         void DeleteJoinRequest(int requestId);
+
+        // ★★★ DODATO ZBOG TeamManager-a ★★★
+        User GetUserById(int userId);
     }
 }

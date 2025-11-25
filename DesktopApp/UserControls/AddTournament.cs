@@ -12,7 +12,6 @@ namespace DesktopApp.UserControls
     {
         private TournamentManager tournamentManager;
 
-        // 📌 EVENT → javlja AdminPanel-u da je turnir napravljen
         public event Action TournamentCreated;
 
         public AddTournament()
@@ -69,10 +68,9 @@ namespace DesktopApp.UserControls
                 MessageBox.Show("Tournament created!", "Success",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                // 📌 obaveštavamo AdminPanel da refresuje listu
                 TournamentCreated?.Invoke();
 
-                this.Visible = false;
+                this.Hide();
             }
             catch (Exception ex)
             {
@@ -83,7 +81,7 @@ namespace DesktopApp.UserControls
 
         private void btnBack_Click(object sender, EventArgs e)
         {
-            this.Visible = false;
+            this.Hide();
         }
     }
 }

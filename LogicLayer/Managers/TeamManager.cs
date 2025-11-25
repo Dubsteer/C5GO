@@ -52,6 +52,10 @@ namespace LogicLayer.Managers
 
         public void RequestJoinTeam(int teamId, int userId)
         {
+            var user = teamRepo.GetUserById(userId);
+            if (string.IsNullOrWhiteSpace(user.SteamId) || user.SteamId == "0")
+                throw new Exception("You must add your SteamID before joining a team.");
+
             if (teamRepo.GetTeamByUser(userId) != null)
                 throw new Exception("Already in a team.");
 
@@ -79,6 +83,10 @@ namespace LogicLayer.Managers
 
             if (req == null)
                 throw new Exception("Request not found.");
+
+            var user = teamRepo.GetUserById(req.UserId);
+            if (string.IsNullOrWhiteSpace(user.SteamId) || user.SteamId == "0")
+                throw new Exception("User must add SteamID before joining.");
 
             teamRepo.AddPlayerToTeam(captainTeam.Id, req.UserId, "Member", "Approved");
             teamRepo.DeleteJoinRequest(requestId);

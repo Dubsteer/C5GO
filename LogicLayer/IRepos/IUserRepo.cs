@@ -1,19 +1,20 @@
 ﻿using LogicLayer.Models;
+using System.Collections.Generic;
 
 namespace LogicLayer.IRepos
 {
     public interface IUserRepo
     {
-        public void CreateUser(User user);
+        List<User> GetAllUsers();
 
-        public List<User> GetAllUsers();
+        User? GetUserById(int id);
 
-        public void UpdateUser(User user);
+        void CreateUser(User user);
+        void UpdateUser(User user);
+        void DeleteUser(User user);
 
-        public void DeleteUser(User user);
+        bool CheckIfUsernameExists(string username, int selfId);
 
-        public bool CheckIfUsernameExists(string username, int selfId);
-
-        public List<User> SearchUser(string term);
+        List<User> SearchUser(string term);
     }
 }

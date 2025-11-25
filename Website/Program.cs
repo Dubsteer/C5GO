@@ -1,50 +1,68 @@
 using DataLayer;
-using LogicLayer;
-using LogicLayer.Managers;
-using LogicLayer.IRepos;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using DataLayer.Repos;
+using LogicLayer;
+using LogicLayer.IRepos;
+using LogicLayer.Managers;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddRazorPages();
 
+// ==========================================
+// AUTHENTICATION
+// ==========================================
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = new PathString("/login");
+        options.LoginPath = "/login";
     });
 
+// ==========================================
+// DATABASE CONNECTION  (SINGLETON — FIXED)
+// ==========================================
 builder.Services.AddSingleton<IConnection, MySQLConnection>(sp =>
 {
-    var connection = new MySQLConnection(builder.Configuration.GetConnectionString("DefaultConnection"));
-    connection.Open();
-    return connection;
+    var conn = new MySQLConnection(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    );
+
+    conn.Open();  // IMPORTANT: Keep connection open (your old system depends on this)
+    return conn;
 });
 
-IServiceCollection serviceCollection = builder.Services.AddSingleton<IUserRepo, UserRepo>();
-builder.Services.AddSingleton<IPostRepo, PostRepo>();
-builder.Services.AddSingleton<ICommentRepo, CommentRepo>();
-builder.Services.AddSingleton<ITournamentRepo, TournamentRepo>();
-builder.Services.AddSingleton<IMatchRepo, MatchRepo>();
-builder.Services.AddSingleton<IPlayerRepo, PlayerRepo> ();
+// ==========================================
+// REPOSITORIES (SCOPED)
+// ==========================================
+builder.Services.AddScoped<IUserRepo, UserRepo>();
+builder.Services.AddScoped<IPostRepo, PostRepo>();
+builder.Services.AddScoped<ICommentRepo, CommentRepo>();
+builder.Services.AddScoped<ITournamentRepo, TournamentRepo>();
+builder.Services.AddScoped<IMatchRepo, MatchRepo>();
+builder.Services.AddScoped<IPlayerRepo, PlayerRepo>();
 
-builder.Services.AddSingleton<UserManager>();
-builder.Services.AddSingleton<PostManager>();
-builder.Services.AddSingleton<CommentManager>();
-builder.Services.AddSingleton<TournamentManager>();
-builder.Services.AddSingleton<MatchManager>();
-builder.Services.AddSingleton<PlayerManager>();
+// TEAMS (NEW)
+builder.Services.AddScoped<ITeamRepo, TeamRepo>();
+
+// ==========================================
+// MANAGERS (SCOPED)
+// ==========================================
+builder.Services.AddScoped<UserManager>();
+builder.Services.AddScoped<PostManager>();
+builder.Services.AddScoped<CommentManager>();
+builder.Services.AddScoped<TournamentManager>();
+builder.Services.AddScoped<MatchManager>();
+builder.Services.AddScoped<PlayerManager>();
+
+// TEAMS (NEW)
+builder.Services.AddScoped<TeamManager>();
 
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
-{ 
+{
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -52,6 +70,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
 app.UseStatusCodePagesWithRedirects("/errors/{0}");
 
 app.UseAuthentication();

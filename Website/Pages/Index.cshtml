@@ -5,63 +5,80 @@
     ViewData["Title"] = "Posts";
 }
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-
 <style>
     body {
-        background-color: #121212;
+        background-color: #0d1117;
+        color: #f0f0f0;
+        font-family: "Segoe UI", Roboto, sans-serif;
     }
 
+    h1 {
+        color: #ffffff;
+        font-weight: 900;
+        font-size: 36px;
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    /* ===== POST CARD (identično tournament-card) ===== */
     .post-card {
-        background: #1e1e1e;
-        color: white;
+        background: #161b22;
         border-radius: 12px;
-        padding: 20px;
-        border: 1px solid #333;
-        transition: 0.25s;
+        padding: 22px;
+        border: 1px solid #2d333b;
+        transition: transform .20s ease, box-shadow .20s ease;
         min-height: 180px;
     }
 
         .post-card:hover {
-            border-color: #7b4bff;
-            transform: translateY(-3px);
+            transform: scale(1.03);
+            box-shadow: 0px 0px 10px rgba(99, 102, 241, 0.4);
+            border-color: #6366f1;
         }
 
-    a.post-link {
-        color: #b38cff;
-        text-decoration: none;
+    .post-title {
+        color: #ffffff;
         font-size: 22px;
         font-weight: 600;
+        margin-bottom: 12px;
+        text-decoration: none;
+        display: block;
     }
 
-        a.post-link:hover {
-            text-decoration: underline;
+        .post-title:hover {
+            color: #a5b4fc;
         }
 
     .post-snippet {
-        color: #aaa;
-        margin-top: 12px;
-        font-size: 16px;
+        color: #d0d0d0;
+        font-size: 15px;
+        margin-top: 10px;
     }
 </style>
 
 <div class="container mt-5">
-    <h1 class="text-center mb-5" style="color: #000;">ANNOUNCEMENTS</h1>
 
-    <div class="row row-cols-1 row-cols-md-3 g-4">
+    <h1>ANNOUNCEMENTS</h1>
+
+    <div class="row g-4">
         @foreach (Post post in Model.Posts)
         {
-            <div class="col">
+            <div class="col-md-4">
                 <div class="post-card">
-                    <a class="post-link"
+
+                    <a class="post-title"
                        asp-page="/Posts/Post"
                        asp-route-id="@post.Id">
                         @Model.TruncateString(post.Content, 45)
                     </a>
 
-                    <p class="post-snippet">@Model.TruncateString(post.Content, 110)</p>
+                    <p class="post-snippet">
+                        @Model.TruncateString(post.Content, 110)
+                    </p>
+
                 </div>
             </div>
         }
     </div>
+
 </div>

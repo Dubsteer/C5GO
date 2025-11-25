@@ -5,28 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - C5G0</title>
 
-    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-
-    <!-- Modern font -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* NAVBAR BASE */
+        body {
+            background-color: #0d1117;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
         .custom-navbar {
             background-color: #1e3d3d;
             padding: 12px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        /* LOGO */
         .nav-logo {
             width: 48px;
             height: 48px;
             margin-right: 10px;
         }
 
-        /* SITE TITLE */
         .nav-title {
             font-size: 24px;
             font-weight: 700;
@@ -34,38 +35,61 @@
             font-family: 'Montserrat', sans-serif;
         }
 
-        /* NAV LINKS */
-        .nav-link {
-            color: #e4e4e4 !important;
-            font-size: 17px;
-            padding: 8px 12px;
-            margin: 0 5px;
-            transition: 0.2s ease-in-out;
+        .center-nav {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 25px;
         }
 
-            .nav-link:hover {
-                color: #00e3c2 !important;
+            .center-nav a {
+                color: #e4e4e4 !important;
+                font-size: 17px;
+                font-weight: 600;
+                transition: 0.2s;
             }
 
-        /* USERNAME SPECIAL */
-        .nav-username {
-            color: #00ffcc !important;
+                .center-nav a:hover {
+                    color: #00e3c2 !important;
+                }
+
+        .nav-active {
+            color: #00e3c2 !important;
             font-weight: 700;
+        }
+
+        .nav-user-box {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-username {
+            font-weight: 800;
             font-size: 18px;
+            letter-spacing: 0.3px;
+            color: #ffffff !important;
         }
 
-        /* CONTENT WRAPPER */
-        .content-box {
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 35px;
-            margin-top: 40px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        .logout-link {
+            color: #ff8f8f !important;
+            font-weight: 600;
+            font-size: 16px;
+            transition: 0.2s;
         }
 
-        /* FOOTER */
+            .logout-link:hover {
+                color: #ff4c4c !important;
+            }
+
+        main {
+            flex: 1;
+            padding-top: 40px;
+            padding-bottom: 40px;
+        }
+
         footer {
-            margin-top: 60px;
             padding: 15px 0;
             text-align: center;
             background-color: #1e3d3d;
@@ -77,42 +101,49 @@
 
 <body>
 
-    <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg custom-navbar">
-        <div class="container">
+        <div class="container position-relative">
 
-            <!-- Logo + title -->
             <a class="navbar-brand d-flex align-items-center" asp-area="" asp-page="/Index">
                 <img src="/Images/C5G0_logo.png" class="nav-logo">
                 <span class="nav-title">C5G0</span>
             </a>
 
-            <!-- Mobile toggle -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <div class="center-nav">
 
-            <!-- Nav links -->
-            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <a class="@(ViewData["Title"]?.ToString() == "Tournaments" ? "nav-active" : "")"
+                   asp-page="/Tournaments">Tournaments</a>
+
+                <a class="@(ViewData["Title"]?.ToString() == "Teams" ? "nav-active" : "")"
+                   asp-page="/Teams/Teams">Teams</a>
+
+                <a class="@(ViewData["Title"]?.ToString() == "Posts" ? "nav-active" : "")"
+                   asp-page="/Index">Posts</a>
+
+            </div>
+
+            <div class="collapse navbar-collapse justify-content-end">
                 <ul class="navbar-nav align-items-center">
 
-                    @if (!User.Identity.IsAuthenticated)
+                    @if (User?.Identity != null && User.Identity.IsAuthenticated)
                     {
-                        <li class="nav-item"><a class="nav-link" asp-page="/Login">Login</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-page="/Register">Register</a></li>
+                        <li class="nav-item nav-user-box">
+                            <a class="nav-username" href="/ViewProfile">
+                                @User.Identity.Name
+                            </a>
+                            <a class="logout-link" href="/Logout">
+                                Logout
+                            </a>
+                        </li>
                     }
                     else
                     {
-                        <!-- FIXED -->
                         <li class="nav-item">
-                            <a class="nav-link" asp-page="/Tournaments">Tournaments</a>
+                            <a class="nav-link" asp-page="/Login">Login</a>
                         </li>
-
                         <li class="nav-item">
-                            <a class="nav-link nav-username" href="/ViewProfile">@User.Identity.Name</a>
+                            <a class="nav-link" asp-page="/Register">Register</a>
                         </li>
-
-                        <li class="nav-item"><a class="nav-link" href="/Logout">Logout</a></li>
                     }
 
                 </ul>
@@ -121,14 +152,10 @@
         </div>
     </nav>
 
-    <!-- PAGE CONTENT -->
     <main class="container">
-        <div class="content-box">
-            @RenderBody()
-        </div>
+        @RenderBody()
     </main>
 
-    <!-- FOOTER -->
     <footer>
         © 2025 Designed by Vladimir Stijepovic
     </footer>

@@ -1,51 +1,111 @@
 ﻿@page
 @model Website.Pages.LoginModel
 @{
-    ViewData["Title"] = "Log in";
+    ViewData["Title"] = "Login";
 }
 
-
 <style>
-    .centered-container {
+    body {
+        background-color: #0d1117;
+        font-family: "Segoe UI", Roboto, sans-serif;
+        color: #fff;
+    }
+
+    .auth-container {
         display: flex;
         justify-content: center;
         align-items: center;
         height: 100vh;
     }
 
-    .card {
-        max-width: 400px;
-        padding: 20px;
+    .auth-card {
+        background: #161b22;
+        padding: 35px;
+        width: 420px;
+        border-radius: 12px;
+        border: 1px solid #2d333b;
+        box-shadow: 0 0 10px rgba(99,102,241,0.25);
     }
+
+        .auth-card h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+    .auth-input {
+        width: 100%;
+        padding: 10px;
+        margin-top: 6px;
+        margin-bottom: 15px;
+        background: #0d1117;
+        border: 1px solid #2d333b;
+        color: #fff;
+        border-radius: 8px;
+    }
+
+        .auth-input:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+    .auth-btn {
+        width: 100%;
+        padding: 12px;
+        background-color: #4f46e5;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+        margin-top: 10px;
+    }
+
+        .auth-btn:hover {
+            background-color: #6366f1;
+        }
+
+    .small-text {
+        text-align: center;
+        color: #9ca3af;
+        margin-top: 15px;
+    }
+
+    a {
+        color: #58a6ff;
+        text-decoration: none;
+    }
+
+        a:hover {
+            text-decoration: underline;
+        }
 </style>
 
-<div class="centered-container">
-    <div class="card">
-        
+<div class="auth-container">
+    <div class="auth-card">
 
-        <h2 class="card-title">Log In</h2>
+        <h2>Log In</h2>
+
         <form method="post">
-            <div class="form-group">
-                <label>Username:</label>
-                <br />
-                <input asp-for="LoginFormModel.Username">
-                <span asp-validation-for="LoginFormModel.Username"></span>
-            </div>
-            <div class="form-group">
-                <label>Password:</label>
-                <br />
-                <input type="password" asp-for="LoginFormModel.Password">
-                <span asp-validation-for="LoginFormModel.Password"></span>
-            </div>
+            <label>Username</label>
+            <input asp-for="LoginFormModel.Username" class="auth-input" />
 
-            <br />
-            <small class="form-text text-muted">Don't have an account? <a href="/Register">Register</a></small>
-            <br />
-            <input type="submit" value="Log In" />
+            <label>Password</label>
+            <input asp-for="LoginFormModel.Password" type="password" class="auth-input" />
+
+            <input type="submit" class="auth-btn" value="Log In" />
         </form>
+
+        <div class="small-text">
+            Don't have an account? <a href="/Register">Register</a>
+        </div>
 
         <section scripts>
             <partial name="_ValidationScriptsPartial" />
         </section>
+
     </div>
 </div>

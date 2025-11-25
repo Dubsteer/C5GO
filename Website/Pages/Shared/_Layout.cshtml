@@ -14,8 +14,10 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            font-family: 'Montserrat', sans-serif;
         }
 
+        /* NAVBAR */
         .custom-navbar {
             background-color: #1e3d3d;
             padding: 12px 0;
@@ -32,44 +34,44 @@
             font-size: 24px;
             font-weight: 700;
             color: #ffffff;
-            font-family: 'Montserrat', sans-serif;
         }
 
+        /* CENTER NAV LINKS */
         .center-nav {
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 25px;
+            gap: 28px;
         }
 
-            .center-nav a {
+            .center-nav a,
+            .nav-link,
+            .nav-username {
                 color: #e4e4e4 !important;
                 font-size: 17px;
                 font-weight: 600;
                 transition: 0.2s;
+                letter-spacing: 0.3px;
             }
 
-                .center-nav a:hover {
+                .center-nav a:hover,
+                .nav-link:hover,
+                .nav-username:hover {
                     color: #00e3c2 !important;
+                    text-decoration: none;
                 }
 
         .nav-active {
             color: #00e3c2 !important;
-            font-weight: 700;
+            font-weight: 700 !important;
         }
 
+        /* USER BOX */
         .nav-user-box {
             display: flex;
             align-items: center;
             gap: 15px;
-        }
-
-        .nav-username {
-            font-weight: 800;
-            font-size: 18px;
-            letter-spacing: 0.3px;
-            color: #ffffff !important;
         }
 
         .logout-link {
@@ -104,13 +106,14 @@
     <nav class="navbar navbar-expand-lg custom-navbar">
         <div class="container position-relative">
 
+            <!-- LOGO + TITLE -->
             <a class="navbar-brand d-flex align-items-center" asp-area="" asp-page="/Index">
                 <img src="/Images/C5G0_logo.png" class="nav-logo">
                 <span class="nav-title">C5G0</span>
             </a>
 
+            <!-- CENTER NAVIGATION -->
             <div class="center-nav">
-
                 <a class="@(ViewData["Title"]?.ToString() == "Tournaments" ? "nav-active" : "")"
                    asp-page="/Tournaments">Tournaments</a>
 
@@ -119,9 +122,9 @@
 
                 <a class="@(ViewData["Title"]?.ToString() == "Posts" ? "nav-active" : "")"
                    asp-page="/Index">Posts</a>
-
             </div>
 
+            <!-- RIGHT SIDE (LOGIN / USER PROFILE) -->
             <div class="collapse navbar-collapse justify-content-end">
                 <ul class="navbar-nav align-items-center">
 
@@ -152,10 +155,12 @@
         </div>
     </nav>
 
+    <!-- MAIN CONTENT -->
     <main class="container">
         @RenderBody()
     </main>
 
+    <!-- FOOTER -->
     <footer>
         © 2025 Designed by Vladimir Stijepovic
     </footer>

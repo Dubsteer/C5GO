@@ -18,8 +18,23 @@ namespace DataLayer.Repos
 
         private void EnsureConnection()
         {
-            if (conn.GetInnerConn().State != System.Data.ConnectionState.Open)
+            if (conn.GetInnerConn().State != ConnectionState.Open)
                 conn.Open();
+        }
+
+        private string SafeString(MySqlDataReader reader, string column)
+        {
+            return reader.IsDBNull(column) ? "" : reader.GetString(column);
+        }
+
+        private int SafeInt(MySqlDataReader reader, string column)
+        {
+            return reader.IsDBNull(column) ? 0 : reader.GetInt32(column);
+        }
+
+        private bool SafeBool(MySqlDataReader reader, string column)
+        {
+            return !reader.IsDBNull(column) && reader.GetBoolean(column);
         }
 
         public void CreateUser(User user)
@@ -28,18 +43,18 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 @"INSERT INTO user 
-                  (first_name, last_name, age, username, email, password, is_moderator, steam_id)
-                  VALUES (@FIRST_NAME, @LAST_NAME, @AGE, @USERNAME, @EMAIL, @PASSWORD, @IS_MODERATOR, @STEAM_ID)",
+                (first_name, last_name, age, username, email, password, is_moderator, steam_id)
+                VALUES (@FIRST_NAME, @LAST_NAME, @AGE, @USERNAME, @EMAIL, @PASSWORD, @IS_MODERATOR, @STEAM_ID)",
                 conn.GetInnerConn());
 
-            cmd.Parameters.Add("@FIRST_NAME", MySqlDbType.VarChar).Value = user.Firstname;
-            cmd.Parameters.Add("@LAST_NAME", MySqlDbType.VarChar).Value = user.Lastname;
-            cmd.Parameters.Add("@AGE", MySqlDbType.Int32).Value = user.Age;
-            cmd.Parameters.Add("@USERNAME", MySqlDbType.VarChar).Value = user.Username;
-            cmd.Parameters.Add("@EMAIL", MySqlDbType.VarChar).Value = user.Gmail;
-            cmd.Parameters.Add("@PASSWORD", MySqlDbType.VarChar).Value = user.Password;
-            cmd.Parameters.Add("@IS_MODERATOR", MySqlDbType.Bit).Value = user.IsAdmin;
-            cmd.Parameters.Add("@STEAM_ID", MySqlDbType.VarChar).Value = user.SteamId ?? "0";
+            cmd.Parameters.AddWithValue("@FIRST_NAME", user.Firstname ?? "");
+            cmd.Parameters.AddWithValue("@LAST_NAME", user.Lastname ?? "");
+            cmd.Parameters.AddWithValue("@AGE", user.Age);
+            cmd.Parameters.AddWithValue("@USERNAME", user.Username);
+            cmd.Parameters.AddWithValue("@EMAIL", user.Gmail);
+            cmd.Parameters.AddWithValue("@PASSWORD", user.Password);
+            cmd.Parameters.AddWithValue("@IS_MODERATOR", user.IsAdmin);
+            cmd.Parameters.AddWithValue("@STEAM_ID", user.SteamId ?? "00000000");
 
             try
             {
@@ -57,7 +72,7 @@ namespace DataLayer.Repos
             EnsureConnection();
 
             var cmd = new MySqlCommand(
-                @"SELECT id, first_name, last_name, age, username, email, password, is_moderator, steam_id
+                @"SELECT id, first_name, last_name, age, username, email, password, is_moderator, steam_id 
                   FROM user",
                 conn.GetInnerConn());
 
@@ -70,14 +85,14 @@ namespace DataLayer.Repos
                 {
                     users.Add(new User(
                         reader.GetInt32("id"),
-                        reader.GetString("first_name"),
-                        reader.GetString("last_name"),
-                        reader.GetInt32("age"),
-                        reader.GetString("username"),
-                        reader.GetString("email"),
-                        reader.GetString("password"),
-                        reader.GetBoolean("is_moderator"),
-                        reader.IsDBNull("steam_id") ? "0" : reader.GetString("steam_id")
+                        SafeString(reader, "first_name"),
+                        SafeString(reader, "last_name"),
+                        SafeInt(reader, "age"),
+                        SafeString(reader, "username"),
+                        SafeString(reader, "email"),
+                        SafeString(reader, "password"),
+                        SafeBool(reader, "is_moderator"),
+                        SafeString(reader, "steam_id")
                     ));
                 }
             }
@@ -100,7 +115,7 @@ namespace DataLayer.Repos
                   WHERE id = @ID",
                 conn.GetInnerConn());
 
-            cmd.Parameters.Add("@ID", MySqlDbType.Int32).Value = id;
+            cmd.Parameters.AddWithValue("@ID", id);
 
             try
             {
@@ -110,14 +125,14 @@ namespace DataLayer.Repos
 
                 return new User(
                     reader.GetInt32("id"),
-                    reader.GetString("first_name"),
-                    reader.GetString("last_name"),
-                    reader.GetInt32("age"),
-                    reader.GetString("username"),
-                    reader.GetString("email"),
-                    reader.GetString("password"),
-                    reader.GetBoolean("is_moderator"),
-                    reader.IsDBNull("steam_id") ? "0" : reader.GetString("steam_id")
+                    SafeString(reader, "first_name"),
+                    SafeString(reader, "last_name"),
+                    SafeInt(reader, "age"),
+                    SafeString(reader, "username"),
+                    SafeString(reader, "email"),
+                    SafeString(reader, "password"),
+                    SafeBool(reader, "is_moderator"),
+                    SafeString(reader, "steam_id")
                 );
             }
             catch (Exception ex)
@@ -132,27 +147,27 @@ namespace DataLayer.Repos
             EnsureConnection();
 
             var cmd = new MySqlCommand(
-                @"UPDATE user SET 
-                    first_name=@FIRST_NAME, 
-                    last_name=@LAST_NAME, 
-                    age=@AGE, 
-                    username=@USERNAME, 
-                    email=@EMAIL, 
-                    password=@PASSWORD, 
+                @"UPDATE user SET
+                    first_name=@FIRST_NAME,
+                    last_name=@LAST_NAME,
+                    age=@AGE,
+                    username=@USERNAME,
+                    email=@EMAIL,
+                    password=@PASSWORD,
                     is_moderator=@IS_MODERATOR,
                     steam_id=@STEAM_ID
-                  WHERE id=@ID",
+                WHERE id=@ID",
                 conn.GetInnerConn());
 
-            cmd.Parameters.Add("@ID", MySqlDbType.Int32).Value = user.Id;
-            cmd.Parameters.Add("@FIRST_NAME", MySqlDbType.VarChar).Value = user.Firstname;
-            cmd.Parameters.Add("@LAST_NAME", MySqlDbType.VarChar).Value = user.Lastname;
-            cmd.Parameters.Add("@AGE", MySqlDbType.Int32).Value = user.Age;
-            cmd.Parameters.Add("@USERNAME", MySqlDbType.VarChar).Value = user.Username;
-            cmd.Parameters.Add("@EMAIL", MySqlDbType.VarChar).Value = user.Gmail;
-            cmd.Parameters.Add("@PASSWORD", MySqlDbType.VarChar).Value = user.Password;
-            cmd.Parameters.Add("@IS_MODERATOR", MySqlDbType.Bit).Value = user.IsAdmin;
-            cmd.Parameters.Add("@STEAM_ID", MySqlDbType.VarChar).Value = user.SteamId ?? "0";
+            cmd.Parameters.AddWithValue("@ID", user.Id);
+            cmd.Parameters.AddWithValue("@FIRST_NAME", user.Firstname ?? "");
+            cmd.Parameters.AddWithValue("@LAST_NAME", user.Lastname ?? "");
+            cmd.Parameters.AddWithValue("@AGE", user.Age);
+            cmd.Parameters.AddWithValue("@USERNAME", user.Username);
+            cmd.Parameters.AddWithValue("@EMAIL", user.Gmail);
+            cmd.Parameters.AddWithValue("@PASSWORD", user.Password);
+            cmd.Parameters.AddWithValue("@IS_MODERATOR", user.IsAdmin);
+            cmd.Parameters.AddWithValue("@STEAM_ID", user.SteamId ?? "00000000");
 
             try
             {
@@ -169,19 +184,16 @@ namespace DataLayer.Repos
         {
             EnsureConnection();
 
-            // delete comments
             var cmd1 = new MySqlCommand("DELETE FROM comment WHERE authorid=@ID", conn.GetInnerConn());
-            cmd1.Parameters.Add("@ID", MySqlDbType.Int32).Value = user.Id;
+            cmd1.Parameters.AddWithValue("@ID", user.Id);
             cmd1.ExecuteNonQuery();
 
-            // delete applications
             var cmd2 = new MySqlCommand("DELETE FROM applications WHERE playerId=@ID", conn.GetInnerConn());
-            cmd2.Parameters.Add("@ID", MySqlDbType.Int32).Value = user.Id;
+            cmd2.Parameters.AddWithValue("@ID", user.Id);
             cmd2.ExecuteNonQuery();
 
-            // delete user
             var cmd3 = new MySqlCommand("DELETE FROM user WHERE id=@ID", conn.GetInnerConn());
-            cmd3.Parameters.Add("@ID", MySqlDbType.Int32).Value = user.Id;
+            cmd3.Parameters.AddWithValue("@ID", user.Id);
 
             try
             {
@@ -200,13 +212,13 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 @"SELECT EXISTS(
-                    SELECT 1 FROM user 
+                    SELECT 1 FROM user
                     WHERE username = BINARY @USERNAME AND id != @ID
                 )",
                 conn.GetInnerConn());
 
-            cmd.Parameters.Add("@USERNAME", MySqlDbType.VarChar).Value = username;
-            cmd.Parameters.Add("@ID", MySqlDbType.Int32).Value = selfId;
+            cmd.Parameters.AddWithValue("@USERNAME", username);
+            cmd.Parameters.AddWithValue("@ID", selfId);
 
             try
             {
@@ -229,7 +241,7 @@ namespace DataLayer.Repos
                   WHERE username LIKE CONCAT('%', @term, '%')",
                 conn.GetInnerConn());
 
-            cmd.Parameters.Add("@term", MySqlDbType.VarChar).Value = term;
+            cmd.Parameters.AddWithValue("@term", term);
 
             var users = new List<User>();
 
@@ -241,14 +253,14 @@ namespace DataLayer.Repos
                 {
                     users.Add(new User(
                         reader.GetInt32("id"),
-                        reader.GetString("first_name"),
-                        reader.GetString("last_name"),
-                        reader.GetInt32("age"),
-                        reader.GetString("username"),
-                        reader.GetString("email"),
-                        reader.GetString("password"),
-                        reader.GetBoolean("is_moderator"),
-                        reader.IsDBNull("steam_id") ? "0" : reader.GetString("steam_id")
+                        SafeString(reader, "first_name"),
+                        SafeString(reader, "last_name"),
+                        SafeInt(reader, "age"),
+                        SafeString(reader, "username"),
+                        SafeString(reader, "email"),
+                        SafeString(reader, "password"),
+                        SafeBool(reader, "is_moderator"),
+                        SafeString(reader, "steam_id")
                     ));
                 }
             }

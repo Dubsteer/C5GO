@@ -4,53 +4,122 @@
     ViewData["Title"] = "Register";
 }
 
-<h2 class="card-title">Register</h2>
-<form method="post">
-    <div class="form-group">
-        <label>First name:</label>
-        <br />
-        <input asp-for="FullUserFormModel.Firstname">
-        <span asp-validation-for="FullUserFormModel.Firstname"></span>
-    </div>
-    <div class="form-group">
-        <label>Last name:</label>
-        <br />
-        <input asp-for="FullUserFormModel.Lastname">
-        <span asp-validation-for="FullUserFormModel.Lastname"></span>
-    </div>
-    <div class="form-group">
-        <label>Age:</label>
-        <br />
-        <input asp-for="FullUserFormModel.Age" type="number" min="14" max="106" class="form-control" />
-        <span asp-validation-for="FullUserFormModel.Age" class="text-danger"></span>
+<style>
+    body {
+        background-color: #0d1117;
+        font-family: "Segoe UI", Roboto, sans-serif;
+        color: #fff;
+    }
 
-    </div>
+    .auth-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-top: 50px;
+        padding-bottom: 50px;
+    }
 
-    <div class="form-group">
-        <label>Username:</label>
-        <br />
-        <input asp-for="FullUserFormModel.Username">
-        <span asp-validation-for="FullUserFormModel.Username"></span>
-    </div>
-    <div class="form-group">
-        <label>Email:</label>
-        <br />
-        <input asp-for="FullUserFormModel.Gmail">
-        <span asp-validation-for="FullUserFormModel.Gmail"></span>
-    </div>
-    <div class="form-group">
-        <label>Password:</label>
-        <br />
-        <input type="password" asp-for="FullUserFormModel.Password">
-        <span asp-validation-for="FullUserFormModel.Password"></span>
-    </div>
+    .auth-card {
+        background: #161b22;
+        padding: 35px;
+        width: 450px;
+        border-radius: 12px;
+        border: 1px solid #2d333b;
+        box-shadow: 0 0 10px rgba(99,102,241,0.25);
+        margin-top: 30px;
+    }
 
-    <br />
-    <small class="form-text text-muted">Already have an account? <a href="/Login">Log in</a></small>
-    <br />
-    <input type="submit" value="Create your account" />
-</form>
+        .auth-card h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 700;
+            color: #fff;
+        }
 
-@section scripts{
-    <partial name="_ValidationScriptsPartial" />
-}
+    .auth-input {
+        width: 100%;
+        padding: 10px;
+        margin-top: 6px;
+        margin-bottom: 15px;
+        background: #0d1117;
+        border: 1px solid #2d333b;
+        color: #fff;
+        border-radius: 8px;
+    }
+
+        .auth-input:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+    .auth-btn {
+        width: 100%;
+        padding: 12px;
+        background-color: #4f46e5;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+        margin-top: 5px;
+    }
+
+        .auth-btn:hover {
+            background-color: #6366f1;
+        }
+
+    .small-text {
+        text-align: center;
+        color: #9ca3af;
+        margin-top: 15px;
+    }
+
+    a {
+        color: #58a6ff;
+        text-decoration: none;
+    }
+
+        a:hover {
+            text-decoration: underline;
+        }
+</style>
+
+<div class="auth-container">
+    <div class="auth-card">
+
+        <h2>Create Account</h2>
+
+        <form method="post">
+
+            <label>First name</label>
+            <input asp-for="FullUserFormModel.Firstname" class="auth-input" />
+
+            <label>Last name</label>
+            <input asp-for="FullUserFormModel.Lastname" class="auth-input" />
+
+            <label>Age</label>
+            <input asp-for="FullUserFormModel.Age" type="number" min="14" max="106" class="auth-input" />
+
+            <label>Username</label>
+            <input asp-for="FullUserFormModel.Username" class="auth-input" />
+
+            <label>Email</label>
+            <input asp-for="FullUserFormModel.Gmail" class="auth-input" />
+
+            <label>Password</label>
+            <input asp-for="FullUserFormModel.Password" type="password" class="auth-input" />
+
+            <input type="submit" class="auth-btn" value="Create your account" />
+        </form>
+
+        <div class="small-text">
+            Already have an account? <a href="/Login">Log In</a>
+        </div>
+
+        @section scripts{
+            <partial name="_ValidationScriptsPartial" />
+        }
+    </div>
+</div>

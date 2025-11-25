@@ -1,0 +1,59 @@
+﻿@page "{id:int}"
+@model Website.Pages.UserProfileModel
+
+@{
+    ViewData["Title"] = "User Profile";
+}
+
+<style>
+    .profile-card {
+        max-width: 700px;
+        margin: 40px auto;
+        background: #161b22;
+        color: #ddd;
+        padding: 30px;
+        border-radius: 15px;
+        border: 1px solid #2d333b;
+        box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+
+    .profile-title {
+        color: white;
+        font-size: 30px;
+        font-weight: 900;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .profile-item {
+        margin-bottom: 12px;
+        font-size: 17px;
+    }
+
+    .label {
+        color: #aaa;
+        font-weight: 600;
+        margin-right: 8px;
+    }
+</style>
+
+<div class="profile-card">
+
+    <h2 class="profile-title">@Model.ViewedUser.Username</h2>
+
+    <div class="profile-item"><span class="label">First Name:</span> @Model.ViewedUser.Firstname</div>
+    <div class="profile-item"><span class="label">Last Name:</span> @Model.ViewedUser.Lastname</div>
+    <div class="profile-item"><span class="label">Email:</span> @Model.ViewedUser.Gmail</div>
+    <div class="profile-item"><span class="label">Birthday:</span> @(Model.ViewedUser.Birthday?.ToString("yyyy-MM-dd") ?? "N/A")</div>
+
+    <div class="profile-item">
+        <span class="label">Steam ID:</span>
+        @(Model.ViewedPlayer?.SteamId ?? "N/A")
+    </div>
+
+    <div class="profile-item">
+        <span class="label">Role:</span>
+        @(Model.ViewedUser.IsAdmin ? "Admin" : "Player")
+    </div>
+
+</div>

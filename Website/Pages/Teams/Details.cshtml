@@ -10,6 +10,7 @@
     body {
         background-color: #0d1117;
         color: white;
+        font-family: "Segoe UI", Roboto, sans-serif;
     }
 
     .box {
@@ -41,19 +42,44 @@
         border-radius: 6px;
         color: white;
     }
+
+    .user-link {
+        color: #58a6ff !important;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+        .user-link:hover {
+            color: #7fbaff !important;
+            text-decoration: underline;
+        }
 </style>
 
 <div class="box">
+
     <h2>@Model.Team.Name</h2>
+
+    <h4>Captain</h4>
+    <p>
+        <a href="/UserProfile?id=@Model.Team.Captain.Id" class="user-link">
+            @Model.Team.Captain.Username
+        </a>
+    </p>
+
+    <hr />
 
     <h4>Members</h4>
 
     @foreach (var m in Model.Members)
     {
         <div class="member-row">
-            <span>@m.Username</span>
+            <span>
+                <a href="/UserProfile?id=@m.Id" class="user-link">
+                    @m.Username
+                </a>
+            </span>
 
-            @* KICK (samo za kapitena i ne može sebe da kickuje) *@
+            @* Kick — only for captain & cannot kick himself *@
             @if (Model.CurrentUser.Id == Model.Team.Captain.Id && m.Id != Model.Team.Captain.Id)
             {
                 <form method="post" asp-page-handler="Kick">
@@ -67,7 +93,7 @@
 
     <hr />
 
-    @* LEAVE TEAM (samo za non-captain) *@
+    @* Leave Team (only non-captain) *@
     @if (Model.CurrentUser.Id != Model.Team.Captain.Id)
     {
         <form method="post" asp-page-handler="Leave">
@@ -89,17 +115,21 @@
         @foreach (var r in Model.Pending)
         {
             <div class="member-row">
-                <span>@r.User.Username</span>
+                <span>
+                    <a href="/UserProfile?id=@r.User.Id" class="user-link">
+                        @r.User.Username
+                    </a>
+                </span>
 
                 <div>
-                    @* ==== APPROVE ==== *@
+                    @* Approve *@
                     <form method="post" asp-page-handler="Approve" style="display:inline-block;">
                         <input type="hidden" name="requestId" value="@r.Id" />
                         <input type="hidden" name="teamId" value="@Model.Team.Id" />
                         <button class="btn btn-success btn-sm">Approve</button>
                     </form>
 
-                    @* ==== REJECT ==== *@
+                    @* Reject *@
                     <form method="post" asp-page-handler="Reject" style="display:inline-block;">
                         <input type="hidden" name="requestId" value="@r.Id" />
                         <input type="hidden" name="teamId" value="@Model.Team.Id" />
@@ -109,4 +139,5 @@
             </div>
         }
     }
+
 </div>

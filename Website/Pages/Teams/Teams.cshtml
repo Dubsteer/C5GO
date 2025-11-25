@@ -27,17 +27,8 @@
         transition: transform .20s ease, box-shadow .20s ease;
         min-height: 220px;
         margin-bottom: 35px;
-        color: #ffffff !important; /* OVDJE JE GRESKA BILA */
+        color: #ffffff !important;
     }
-
-        .team-card h3,
-        .team-card p,
-        .team-card strong,
-        .team-card span,
-        .team-card li,
-        .team-card h6 {
-            color: #ffffff !important;
-        }
 
         .team-card:hover {
             transform: scale(1.03);
@@ -45,18 +36,22 @@
             border-color: #6366f1;
         }
 
-    .btn-sm {
-        padding: 5px 12px;
-        border-radius: 6px;
-        font-size: 14px;
+    .user-link {
+        color: #58a6ff !important;
+        font-weight: 600;
+        text-decoration: none;
     }
+
+        .user-link:hover {
+            color: #7fbaff !important;
+            text-decoration: underline;
+        }
 </style>
 
 <div class="container mt-5">
 
     <h1 class="text-center">Teams</h1>
 
-    <!-- CREATE TEAM -->
     @if (Model.MyTeam == null)
     {
         <div class="text-center mb-4">
@@ -85,7 +80,14 @@
                 <div class="team-card">
 
                     <h3>@t.Name</h3>
-                    <p><strong>Captain:</strong> @t.Captain.Username</p>
+
+                    <p>
+                        <strong>Captain:</strong>
+                        <a asp-page="/UserProfile" asp-route-id="@t.Captain.Id" class="user-link">
+                            @t.Captain.Username
+                        </a>
+                    </p>
+
                     <p><strong>Members:</strong> @t.Members.Count / 5</p>
 
                     <button class="btn btn-secondary btn-sm" type="button"
@@ -99,7 +101,11 @@
                             <ul>
                                 @foreach (var p in t.Members)
                                 {
-                                    <li>@p.Username</li>
+                                    <li>
+                                        <a asp-page="/UserProfile" asp-route-id="@p.Id" class="user-link">
+                                            @p.Username
+                                        </a>
+                                    </li>
                                 }
                             </ul>
                         }
@@ -111,7 +117,6 @@
 
                     <div class="mt-3">
 
-                        <!-- JOIN TEAM -->
                         @if (Model.MyTeam == null)
                         {
                             if (!Model.PendingRequests.Contains(t.Id))
@@ -126,40 +131,6 @@
                                 <span style="color:#aaa;">Request sent...</span>
                             }
                         }
-
-                        <!-- CAPTAIN OPTIONS -->
-                        @if (Model.MyTeam != null &&
-                                            Model.MyTeam.Id == t.Id &&
-                                            Model.MyTeam.Captain.Id == Model.CurrentUser.Id)
-                        {
-                            <hr />
-                            <h6>Pending Requests:</h6>
-
-                            @if (Model.TeamManager.GetJoinRequests(t.Id).Count == 0)
-                            {
-                                <span style="color:gray;">No pending requests</span>
-                            }
-                            else
-                            {
-                                foreach (var r in Model.TeamManager.GetJoinRequests(t.Id))
-                                {
-                                    <div class="mt-2">
-                                        <strong>@r.User.Username</strong>
-
-                                        <form method="post" asp-page-handler="Approve" style="display:inline;">
-                                            <input type="hidden" name="requestId" value="@r.Id" />
-                                            <button class="btn btn-success btn-sm">Approve</button>
-                                        </form>
-
-                                        <form method="post" asp-page-handler="Reject" style="display:inline;">
-                                            <input type="hidden" name="requestId" value="@r.Id" />
-                                            <button class="btn btn-danger btn-sm">Reject</button>
-                                        </form>
-                                    </div>
-                                }
-                            }
-                        }
-
                     </div>
                 </div>
             </div>

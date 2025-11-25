@@ -12,31 +12,37 @@ namespace Website.Pages
     {
         public List<Tournament> Tournaments { get; set; } = new();
         public Player CurrentPlayer { get; set; }
+        public Team MyTeam { get; set; }
+
+        public string Filter { get; set; } = "all";
         public bool IsPlayer => CurrentPlayer != null;
 
         private readonly UserManager userManager;
         private readonly TournamentManager tournamentManager;
         private readonly PlayerManager playerManager;
+        private readonly TeamManager teamManager;
 
-        public TournamentsModel(TournamentManager tournamentManager, PlayerManager playerManager, UserManager userManager)
+        public TournamentsModel(
+            TournamentManager tournamentManager,
+            PlayerManager playerManager,
+            UserManager userManager,
+            TeamManager teamManager)
         {
             this.tournamentManager = tournamentManager;
             this.playerManager = playerManager;
             this.userManager = userManager;
+            this.teamManager = teamManager;
         }
 
-        // ----------------------------------------------------
-        // LOAD CURRENT PLAYER
-        // ----------------------------------------------------
-        private void LoadCurrentPlayer()
+        private void LoadCurrent()
         {
             try
             {
-                var userId = Convert.ToInt32(User.FindFirst("id").Value);
-                var user = userManager.GetUserById(userId);
+                var uid = int.Parse(User.FindFirst("id").Value);
+                var user = userManager.GetUserById(uid);
 
-                // If user has no SteamID ? player = null
                 CurrentPlayer = playerManager.GetPlayer(user);
+                MyTeam = teamManager.GetTeamOfUser(uid);
             }
             catch
             {
@@ -44,12 +50,11 @@ namespace Website.Pages
             }
         }
 
-        // ----------------------------------------------------
-        // GET ALL TOURNAMENTS
-        // ----------------------------------------------------
-        public IActionResult OnGet()
+        // GET
+        public IActionResult OnGet(string filter = "all")
         {
-            LoadCurrentPlayer();
+            LoadCurrent();
+            Filter = filter;
 
             Tournaments = tournamentManager.GetAllTournaments();
 
@@ -57,20 +62,28 @@ namespace Website.Pages
             {
                 t.Players = tournamentManager.GetAllPlayersInTournament(t);
                 t.Matches = tournamentManager.GetAllMatchesInTournament(t);
+
+                // AUTO STATUS UPDATE
+                tournamentManager.UpdateTournamentStatus(t);
             }
+
+            // FILTERING
+            Tournaments = Filter switch
+            {
+                "solo" => Tournaments.Where(t => !t.IsTeamTournament).ToList(),
+                "team" => Tournaments.Where(t => t.IsTeamTournament).ToList(),
+                _ => Tournaments
+            };
 
             return Page();
         }
 
-        // ----------------------------------------------------
-        // JOIN TOURNAMENT
-        // ----------------------------------------------------
-        public IActionResult OnPostApply(int id)
+        // ============= SOLO APPLY =============
+        public IActionResult OnPostApplySolo(int id)
         {
-            LoadCurrentPlayer();
-
+            LoadCurrent();
             if (CurrentPlayer == null)
-                return Redirect("/Profile");
+                return Redirect("/ViewProfile");
 
             try
             {
@@ -82,21 +95,53 @@ namespace Website.Pages
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("JoinError: " + ex.Message);
+                Debug.WriteLine("SoloApplyError: " + ex.Message);
             }
 
             return Redirect("/Tournaments");
         }
 
-        // ----------------------------------------------------
-        // LEAVE TOURNAMENT
-        // ----------------------------------------------------
+        // ============= TEAM APPLY =============
+        public IActionResult OnPostApplyTeam(int id)
+        {
+            LoadCurrent();
+
+            if (MyTeam == null)
+                return Redirect("/Teams/Teams");
+
+            if (MyTeam.Captain.Id != CurrentPlayer.Id)
+                return Unauthorized();
+
+            try
+            {
+                var t = tournamentManager.GetTournamentById(id);
+
+                // TEAM MUST HAVE EXACT team_size_required members
+                if (MyTeam.Members.Count != t.TeamSizeRequired)
+                    throw new Exception("Your team does not have the required number of members.");
+
+                // REGISTER EVERY MEMBER
+                foreach (var member in MyTeam.Members)
+                {
+                    var player = playerManager.GetPlayer(member);
+                    tournamentManager.AddTournamentApp(player, t);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("TeamApplyError: " + ex.Message);
+            }
+
+            return Redirect("/Tournaments");
+        }
+
+        // ============= LEAVE =============
         public IActionResult OnPostLeave(int id)
         {
-            LoadCurrentPlayer();
+            LoadCurrent();
 
             if (CurrentPlayer == null)
-                return Redirect("/Profile");
+                return Redirect("/ViewProfile");
 
             try
             {
@@ -111,12 +156,10 @@ namespace Website.Pages
             return Redirect("/Tournaments");
         }
 
-        // ----------------------------------------------------
-        // ADMIN: CLOSE TOURNAMENT
-        // ----------------------------------------------------
+        // ============= ADMIN CLOSE =============
         public IActionResult OnPostClose(int id)
         {
-            LoadCurrentPlayer();
+            LoadCurrent();
 
             if (CurrentPlayer == null || !CurrentPlayer.IsAdmin)
                 return Unauthorized();
@@ -124,8 +167,7 @@ namespace Website.Pages
             try
             {
                 var t = tournamentManager.GetTournamentById(id);
-                t.Status = LogicLayer.Enums.Status.Closed;
-                tournamentManager.UpdateTournament(t);
+                tournamentManager.SetStatus(t, LogicLayer.Enums.Status.Closed);
             }
             catch (Exception ex)
             {
@@ -135,12 +177,10 @@ namespace Website.Pages
             return Redirect("/Tournaments");
         }
 
-        // ----------------------------------------------------
-        // ADMIN: DELETE TOURNAMENT
-        // ----------------------------------------------------
+        // ============= ADMIN DELETE =============
         public IActionResult OnPostDelete(int id)
         {
-            LoadCurrentPlayer();
+            LoadCurrent();
 
             if (CurrentPlayer == null || !CurrentPlayer.IsAdmin)
                 return Unauthorized();

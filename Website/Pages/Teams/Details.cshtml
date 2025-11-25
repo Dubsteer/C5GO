@@ -61,7 +61,7 @@
 
     <h4>Captain</h4>
     <p>
-        <a href="/UserProfile?id=@Model.Team.Captain.Id" class="user-link">
+        <a asp-page="/UserProfile" asp-route-id="@Model.Team.Captain.Id" class="user-link">
             @Model.Team.Captain.Username
         </a>
     </p>
@@ -74,7 +74,7 @@
     {
         <div class="member-row">
             <span>
-                <a href="/UserProfile?id=@m.Id" class="user-link">
+                <a asp-page="/UserProfile" asp-route-id="@m.Id" class="user-link">
                     @m.Username
                 </a>
             </span>
@@ -116,7 +116,7 @@
         {
             <div class="member-row">
                 <span>
-                    <a href="/UserProfile?id=@r.User.Id" class="user-link">
+                    <a asp-page="/UserProfile" asp-route-id="@r.User.Id" class="user-link">
                         @r.User.Username
                     </a>
                 </span>

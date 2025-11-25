@@ -20,7 +20,13 @@
         margin-bottom: 40px;
     }
 
-    /* ===== POST CARD (identično tournament-card) ===== */
+    /* ===== CLICKABLE POST CARD (FULL CARD IS LINK) ===== */
+    .post-link {
+        text-decoration: none !important;
+        color: inherit !important;
+        display: block;
+    }
+
     .post-card {
         background: #161b22;
         border-radius: 12px;
@@ -28,6 +34,7 @@
         border: 1px solid #2d333b;
         transition: transform .20s ease, box-shadow .20s ease;
         min-height: 180px;
+        cursor: pointer;
     }
 
         .post-card:hover {
@@ -41,13 +48,7 @@
         font-size: 22px;
         font-weight: 600;
         margin-bottom: 12px;
-        text-decoration: none;
-        display: block;
     }
-
-        .post-title:hover {
-            color: #a5b4fc;
-        }
 
     .post-snippet {
         color: #d0d0d0;
@@ -61,24 +62,33 @@
     <h1>ANNOUNCEMENTS</h1>
 
     <div class="row g-4">
+
         @foreach (Post post in Model.Posts)
         {
             <div class="col-md-4">
-                <div class="post-card">
 
-                    <a class="post-title"
-                       asp-page="/Posts/Post"
-                       asp-route-id="@post.Id">
-                        @Model.TruncateString(post.Content, 45)
-                    </a>
+                <!-- FULL CARD CLICKABLE LIKE TOURNAMENTS -->
+                <a asp-page="/Posts/Post"
+                   asp-route-id="@post.Id"
+                   class="post-link">
 
-                    <p class="post-snippet">
-                        @Model.TruncateString(post.Content, 110)
-                    </p>
+                    <div class="post-card">
 
-                </div>
+                        <div class="post-title">
+                            @Model.TruncateString(post.Content, 45)
+                        </div>
+
+                        <p class="post-snippet">
+                            @Model.TruncateString(post.Content, 110)
+                        </p>
+
+                    </div>
+
+                </a>
+
             </div>
         }
+
     </div>
 
 </div>

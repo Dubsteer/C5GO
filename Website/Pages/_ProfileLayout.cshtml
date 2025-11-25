@@ -1,0 +1,74 @@
+﻿@{
+    Layout = "_Layout";   /* koristi glavni layout sajta */
+}
+
+<!-- PROFILE WRAPPER -->
+<div class="container mt-5 mb-5">
+    <div class="profile-wrapper p-4">
+
+        <!-- Page title -->
+        <h2 class="page-title text-info">@ViewData["Title"]</h2>
+        <hr class="section-divider" />
+
+        <!-- Profile page content -->
+        @RenderBody()
+
+    </div>
+</div>
+
+<!-- Allows pages to inject scripts (e.g. validation scripts) -->
+@RenderSection("Scripts", required: false)
+
+<!-- GLOBAL PROFILE CSS -->
+<style>
+    .profile-wrapper {
+        background: #161b22;
+        border-radius: 12px;
+        padding: 30px;
+        color: white;
+        border: 1px solid #2d333b;
+        box-shadow: 0 0 20px rgba(0,0,0,0.35);
+    }
+
+    .page-title {
+        font-size: 30px;
+        font-weight: 800;
+        margin-bottom: 10px;
+        text-align: left;
+    }
+
+    .section-divider {
+        border-color: #2d333b;
+        margin-bottom: 25px;
+    }
+
+    .profile-label {
+        color: #9ca3af;
+        font-weight: 600;
+        font-size: 15px;
+        display: block;
+        margin-bottom: 3px;
+    }
+
+    .profile-value {
+        font-size: 18px;
+        margin-bottom: 15px;
+    }
+
+    .btn-main {
+        background: #2386f4;
+        color: white;
+        font-weight: 600;
+        padding: 10px 20px;
+        border-radius: 8px;
+        border: none;
+        transition: 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+        .btn-main:hover {
+            background: #1c6ecc;
+            transform: scale(1.02);
+        }
+</style>

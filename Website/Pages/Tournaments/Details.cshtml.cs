@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using LogicLayer.Managers;
 using LogicLayer.Models;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Website.Pages.Tournaments
 {
@@ -11,6 +13,11 @@ namespace Website.Pages.Tournaments
         private readonly TournamentManager tournamentManager;
 
         public Tournament Tournament { get; set; }
+
+        // Bracket rounds
+        public List<Match> Round1 { get; set; } = new();
+        public List<Match> Round2 { get; set; } = new();
+        public List<Match> Round3 { get; set; } = new();
 
         public DetailsModel(TournamentManager tournamentManager)
         {
@@ -26,11 +33,21 @@ namespace Website.Pages.Tournaments
                 if (Tournament == null)
                     return NotFound();
 
-                // ?? LOAD PLAYERS
                 Tournament.Players = tournamentManager.GetAllPlayersInTournament(Tournament);
-
-                // ?? LOAD MATCHES (ako nema Matches property, izbriši ovu liniju)
                 Tournament.Matches = tournamentManager.GetAllMatchesInTournament(Tournament);
+
+                var matches = Tournament.Matches.OrderBy(m => m.Id).ToList();
+
+                int count = matches.Count;
+
+                if (count >= 4)
+                    Round1 = matches.Take(4).ToList();
+
+                if (count >= 6)
+                    Round2 = matches.Skip(4).Take(2).ToList();
+
+                if (count >= 7)
+                    Round3 = matches.Skip(6).Take(1).ToList();
             }
             catch (Exception ex)
             {

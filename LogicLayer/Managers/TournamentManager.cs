@@ -18,9 +18,10 @@ namespace LogicLayer.Managers
             this.matchManager = matchManager;
         }
 
-        // --------------------------
-        // BASIC CRUD
-        // --------------------------
+        // =========================
+        // CRUD
+        // =========================
+
         public List<Tournament> GetAllTournaments()
         {
             return repo.GetAllTournaments();
@@ -30,11 +31,6 @@ namespace LogicLayer.Managers
         {
             return repo.GetAllTournaments().FirstOrDefault(t => t.Id == id)
                 ?? throw new Exception("Tournament not found");
-        }
-
-        public void AddTournament(Tournament t)
-        {
-            repo.AddTournament(t);
         }
 
         public void UpdateTournament(Tournament t)
@@ -47,9 +43,10 @@ namespace LogicLayer.Managers
             repo.RemoveTournament(t);
         }
 
-        // --------------------------
-        // PLAYERS
-        // --------------------------
+        // =========================
+        // APPS
+        // =========================
+
         public List<Player> GetAllPlayersInTournament(Tournament t)
         {
             return repo.GetAllPlayersInTournament(t.Id);
@@ -70,43 +67,84 @@ namespace LogicLayer.Managers
             repo.RemovePlayerFromTournament(p, t);
         }
 
-        // --------------------------
+        // =========================
+        // TEAM APPLY
+        // =========================
+
+        public void ApplyTeamTournament(Team team, Tournament t)
+        {
+            if (!t.IsTeamTournament)
+                throw new Exception("This is not a team tournament.");
+
+            if (team.Members.Count != t.TeamSizeRequired)
+                throw new Exception("Team does not meet required size.");
+
+            foreach (var member in team.Members)
+            {
+                var player = new Player(
+                    member.Id!.Value,
+                    member.Firstname,
+                    member.Lastname,
+                    member.Age,
+                    member.Username,
+                    member.Gmail,
+                    member.Password,
+                    member.SteamId,
+                    member.IsAdmin
+                );
+
+                AddTournamentApp(player, t);
+            }
+        }
+
+        // =========================
         // MATCHES
-        // --------------------------
+        // =========================
+
         public List<Match> GetAllMatchesInTournament(Tournament t)
         {
             return matchManager.GetMatchesByTournamentId(t.Id);
         }
 
-        // --------------------------
-        // STATUS
-        // --------------------------
+        // =========================
+        // AUTO STATUS MANAGER
+        // =========================
+
+        public void UpdateTournamentStatus(Tournament t)
+        {
+            var players = GetAllPlayersInTournament(t);
+            var matches = GetAllMatchesInTournament(t);
+
+            // If tournament is CLOSED, do not modify
+            if (t.Status == Status.Closed)
+                return;
+
+            // If no matches yet but players joined → OPEN
+            if (matches.Count == 0)
+            {
+                t.Status = Status.Open;
+                repo.UpdateTournament(t);
+                return;
+            }
+
+            // If any match is not finished → IN PROGRESS
+            if (matches.Any(m => m.Status == Status.InProgress))
+            {
+                t.Status = Status.InProgress;
+                repo.UpdateTournament(t);
+                return;
+            }
+
+            // All matches finished → CLOSED
+            t.Status = Status.Closed;
+            repo.UpdateTournament(t);
+        }
+
+        // Helper
         public void SetStatus(Tournament t, Status status)
         {
             t.Status = status;
             repo.UpdateTournament(t);
-        }
-
-        public void OpenTournament(Tournament t) => SetStatus(t, Status.Open);
-        public void CloseTournament(Tournament t) => SetStatus(t, Status.Closed);
-        public void SetInProgress(Tournament t) => SetStatus(t, Status.InProgress);
-
-        // --------------------------
-        // DESKTOP APP – RUN TOURNAMENT
-        // --------------------------
-        public void TournamentLogic(List<Player> players, Tournament t, DateTime startDate, int rounds)
-        {
-            if (players.Count < 2)
-                throw new Exception("Not enough players");
-
-            // set status → InProgress
-            SetInProgress(t);
-
-            // GENERATE MATCHES
-            matchManager.GenerateMatches(players, t.Id, startDate, rounds);
-
-            // finish → Closed
-            CloseTournament(t);
         }
     }
 }

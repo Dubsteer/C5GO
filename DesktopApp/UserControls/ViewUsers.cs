@@ -138,7 +138,9 @@ namespace DesktopApp.UserControls
             }
 
             var currentUser = (User)dgvUsers.CurrentRow.DataBoundItem;
-            var currentPlayer = new Player((int)currentUser.Id, currentUser.Firstname, currentUser.Lastname, currentUser.Age, currentUser.Username, currentUser.Gmail, currentUser.Password, "0", currentUser.IsAdmin);
+
+            var currentPlayer = new Player(currentUser);
+            currentPlayer.SteamId = "0";
 
             try
             {
@@ -158,6 +160,7 @@ namespace DesktopApp.UserControls
             }
 
             dgvUsers.DataSource = userManager.GetAllUsers();
+
         }
     }
 }

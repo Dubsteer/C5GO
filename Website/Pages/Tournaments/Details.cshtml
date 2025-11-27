@@ -4,177 +4,217 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
 
 <style>
-
     body {
         background-color: #0d1117;
         color: white;
         font-family: "Segoe UI", Roboto, sans-serif;
     }
 
-    .bracket-container {
-        display: flex;
-        justify-content: center;
-        gap: 40px;
-        margin-top: 40px;
-        overflow-x: auto;
-        padding-bottom: 40px;
-    }
-
-    .round-column {
-        width: 260px;
-    }
-
-    .round-title {
-        text-align: center;
-        font-size: 20px;
-        font-weight: 700;
-        margin-bottom: 15px;
+    .section-title {
+        font-size: 24px;
+        font-weight: 800;
         color: #58a6ff;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #30363d;
+        padding-bottom: 6px;
     }
 
     .match-box {
         background: #161b22;
         border: 1px solid #30363d;
         border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 25px;
-        position: relative;
+        padding: 15px;
+        margin-bottom: 15px;
         box-shadow: 0 0 6px rgba(0,0,0,0.25);
     }
 
     .team-row {
         display: flex;
         justify-content: space-between;
+        font-size: 17px;
         padding: 4px 0;
-        font-size: 16px;
     }
 
-    .team-name {
-        color: #fff;
+    .score {
+        font-weight: bold;
+        color: #a5b4fc;
     }
 
     .loser {
         opacity: 0.45;
     }
 
-    .score {
-        font-weight: 700;
-        color: #a5b4fc;
+    .team-name {
+        font-weight: 500;
     }
 
     .back-btn {
         background: #4da3ff;
         color: white;
-        border: none;
         padding: 10px 20px;
         border-radius: 8px;
         text-decoration: none;
         font-weight: bold;
     }
 
-        .back-btn:hover {
-            background: #7cc2ff;
-        }
-
+    .team-list-box {
+        background: #151b24;
+        border: 1px solid #30363d;
+        padding: 10px 12px;
+        border-radius: 6px;
+        margin-bottom: 8px;
+    }
 </style>
+
 
 <div class="container mt-4">
 
-    <h1 class="text-center mb-4" style="font-weight:900; font-size:36px;">
+    <!-- TITLE -->
+    <h1 class="text-center mb-2" style="font-weight:900; font-size:36px;">
         🏆 @Model.Tournament.Name
     </h1>
 
-    <p class="text-center">@Model.Tournament.Description</p>
+    <p class="text-center" style="font-size:18px; opacity:0.8;">
+        @Model.Tournament.Description
+    </p>
+
+    <div class="text-center mb-4">
+        <span class="badge bg-info" style="font-size:18px;">
+            @(Model.Tournament.IsTeamTournament ? "TEAM Tournament" : "SOLO Tournament")
+        </span>
+    </div>
 
     <hr style="border-color:#2d333b" />
 
-    <h2 class="text-center mt-4" style="color:#a5b4fc;">Tournament Bracket</h2>
 
-    <!-- BRACKET -->
-    <div class="bracket-container">
+    <!-- =================================================== -->
+    <!-- TEAM TOURNAMENT - TEAM LIST -->
+    <!-- =================================================== -->
+    @if (Model.Tournament.IsTeamTournament)
+    {
+        <h3 class="section-title">Registered Teams (@Model.TeamsById.Count)</h3>
 
-        <!-- ROUND 1 -->
-        <div class="round-column">
-            <div class="round-title">Quarter-finals</div>
-
-            @if (Model.Round1.Count == 0)
+        @if (!Model.TeamsById.Any())
+        {
+            <p>No teams have registered yet.</p>
+        }
+        else
+        {
+            foreach (var t in Model.TeamsById.Values)
             {
-                <p style="text-align:center; color:gray;">No matches</p>
+                <div class="team-list-box">
+                    <strong>@t.Name</strong> (Captain: @t.Captain.Username)
+                    <br />
+                    <small style="opacity:0.7;">
+                        Members: @string.Join(", ", t.Members.Select(m => m.Username))
+                    </small>
+                </div>
             }
-            else
+        }
+
+        <hr style="border-color:#2d333b; margin:25px 0;" />
+    }
+
+
+    <!-- =================================================== -->
+    <!-- SOLO MATCHES -->
+    <!-- =================================================== -->
+    @if (!Model.Tournament.IsTeamTournament)
+    {
+        <h3 class="section-title">Matches</h3>
+
+        @if (!Model.SoloMatches.Any())
+        {
+            <p>No matches have been generated yet.</p>
+        }
+        else
+        {
+            foreach (var m in Model.SoloMatches)
             {
-                @foreach (var m in Model.Round1)
-                {
-                    <div class="match-box">
-                        <div class="team-row @(m.Player1Score < m.Player2Score ? "loser" : "")">
-                            <span class="team-name">@m.User1.Username</span>
-                            <span class="score">@m.Player1Score</span>
-                        </div>
-
-                        <div class="team-row @(m.Player2Score < m.Player1Score ? "loser" : "")">
-                            <span class="team-name">@m.User2.Username</span>
-                            <span class="score">@m.Player2Score</span>
-                        </div>
-                    </div>
-                }
-            }
-        </div>
-
-        <!-- ROUND 2 -->
-        <div class="round-column">
-            <div class="round-title">Semi-finals</div>
-
-            @if (Model.Round2.Count == 0)
-            {
-                <p style="text-align:center; color:gray;">No matches</p>
-            }
-            else
-            {
-                @foreach (var m in Model.Round2)
-                {
-                    <div class="match-box">
-                        <div class="team-row @(m.Player1Score < m.Player2Score ? "loser" : "")">
-                            <span class="team-name">@m.User1.Username</span>
-                            <span class="score">@m.Player1Score</span>
-                        </div>
-
-                        <div class="team-row @(m.Player2Score < m.Player1Score ? "loser" : "")">
-                            <span class="team-name">@m.User2.Username</span>
-                            <span class="score">@m.Player2Score</span>
-                        </div>
-                    </div>
-                }
-            }
-        </div>
-
-        <!-- FINAL -->
-        <div class="round-column">
-            <div class="round-title">Grand Final</div>
-
-            @if (Model.Round3.Count == 0)
-            {
-                <p style="text-align:center; color:gray;">No final match</p>
-            }
-            else
-            {
-                var finalMatch = Model.Round3.First();
-
                 <div class="match-box">
-                    <div class="team-row @(finalMatch.Player1Score < finalMatch.Player2Score ? "loser" : "")">
-                        <span class="team-name">@finalMatch.User1.Username</span>
-                        <span class="score">@finalMatch.Player1Score</span>
+                    <div class="team-row @(m.Player1Score < m.Player2Score ? "loser" : "")">
+                        <span class="team-name">@m.User1.Username</span>
+                        <span class="score">@m.Player1Score</span>
                     </div>
 
-                    <div class="team-row @(finalMatch.Player2Score < finalMatch.Player1Score ? "loser" : "")">
-                        <span class="team-name">@finalMatch.User2.Username</span>
-                        <span class="score">@finalMatch.Player2Score</span>
+                    <div class="team-row @(m.Player2Score < m.Player1Score ? "loser" : "")">
+                        <span class="team-name">@m.User2.Username</span>
+                        <span class="score">@m.Player2Score</span>
+                    </div>
+
+                    <div style="font-size:14px; opacity:0.6; margin-top:6px;">
+                        @m.MatchDate.ToString("dd.MM.yyyy HH:mm")
                     </div>
                 </div>
             }
-        </div>
+        }
+    }
 
-    </div>
+    <!-- SOLO PLAYERS -->
+    @if (!Model.Tournament.IsTeamTournament)
+    {
+        <h3 class="section-title mt-4">Players (@Model.SoloPlayers.Count)</h3>
 
+        @if (!Model.SoloPlayers.Any())
+        {
+            <p>No players joined yet.</p>
+        }
+        else
+        {
+            <ul class="list-group" style="max-width:400px;">
+                @foreach (var p in Model.SoloPlayers)
+                {
+                    <li class="list-group-item bg-dark text-white">
+                        @p.Username
+                    </li>
+                }
+            </ul>
+        }
+
+        <hr style="border-color:#2d333b; margin:25px 0;" />
+    }
+
+
+    <!-- =================================================== -->
+    <!-- TEAM MATCHES -->
+    <!-- =================================================== -->
+    @if (Model.Tournament.IsTeamTournament)
+    {
+        <h3 class="section-title">Team Matches</h3>
+
+        @if (!Model.TeamMatches.Any())
+        {
+            <p>No matches scheduled yet.</p>
+        }
+        else
+        {
+            foreach (var m in Model.TeamMatches)
+            {
+                var t1 = Model.TeamsById.ContainsKey(m.Team1Id) ? Model.TeamsById[m.Team1Id].Name : $"Team {m.Team1Id}";
+                var t2 = Model.TeamsById.ContainsKey(m.Team2Id) ? Model.TeamsById[m.Team2Id].Name : $"Team {m.Team2Id}";
+
+                <div class="match-box">
+
+                    <div class="team-row @(m.Team1Score < m.Team2Score ? "loser" : "")">
+                        <span class="team-name">@t1</span>
+                        <span class="score">@m.Team1Score</span>
+                    </div>
+
+                    <div class="team-row @(m.Team2Score < m.Team1Score ? "loser" : "")">
+                        <span class="team-name">@t2</span>
+                        <span class="score">@m.Team2Score</span>
+                    </div>
+
+                    <div style="font-size:14px; opacity:0.6; margin-top:6px;">
+                        @m.MatchDate.ToString("dd.MM.yyyy HH:mm")
+                    </div>
+                </div>
+            }
+        }
+    }
+
+
+    <!-- BACK BUTTON -->
     <div class="text-center mt-4">
         <a href="/Tournaments" class="back-btn">⬅ Back to Tournaments</a>
     </div>

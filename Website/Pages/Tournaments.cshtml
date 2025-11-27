@@ -4,223 +4,183 @@
     ViewData["Title"] = "Tournaments";
 }
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
 
 <style>
     body {
         background-color: #0d1117;
-        color: #f0f0f0;
+        color: white;
         font-family: "Segoe UI", Roboto, sans-serif;
     }
 
-    h1 {
-        color: #ffffff;
-        font-weight: 700;
-        margin-bottom: 25px;
-    }
-
-    .filter-btn {
-        background: #21262d;
-        border: 1px solid #30363d;
-        color: white;
-        padding: 8px 18px;
-        border-radius: 10px;
-        font-weight: 600;
-    }
-
-        .filter-btn.active {
-            background: #238636;
-            border-color: #2ea043;
-        }
-
-    .tournament-card {
+    .card-box {
         background: #161b22;
+        border: 1px solid #30363d;
         border-radius: 12px;
-        padding: 22px;
-        border: 1px solid #2d333b;
-        transition: transform .20s ease, box-shadow .20s ease;
-        min-height: 260px;
-    }
-
-    a .tournament-card:hover {
-        transform: scale(1.03);
-        box-shadow: 0px 0px 10px rgba(99, 102, 241, 0.4);
-        border-color: #6366f1;
-    }
-
-    a {
-        text-decoration: none;
-        color: inherit;
-        display: block;
-    }
-
-    .clickable-card {
+        padding: 20px;
+        margin-bottom: 25px;
+        box-shadow: 0 0 6px rgba(0,0,0,0.25);
+        transition: 0.2s;
         cursor: pointer;
+        position: relative;
     }
 
-    .badge-open {
-        background-color: #22c55e !important;
-        font-size: 14px;
-        padding: 6px 10px;
-        border-radius: 8px;
+    .card-box:hover {
+        transform: scale(1.02);
+        border-color: #4da3ff;
     }
 
-    .badge-progress {
-        background-color: #facc15 !important;
-        color: #000;
-        font-size: 14px;
-        padding: 6px 10px;
-        border-radius: 8px;
+    .full-link {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
     }
 
-    .badge-closed {
-        background-color: #ef4444 !important;
-        font-size: 14px;
-        padding: 6px 10px;
-        border-radius: 8px;
+    .btn-small {
+        padding: 6px 12px;
+        margin-right: 5px;
+        position: relative;
+        z-index: 5;
     }
 
-    .badge-team {
-        background-color: #3b82f6 !important;
+    .tag {
         font-size: 12px;
         padding: 4px 8px;
         border-radius: 6px;
-        margin-left: 6px;
+        font-weight: bold;
     }
 
-    .badge-solo {
-        background-color: #a855f7 !important;
-        font-size: 12px;
-        padding: 4px 8px;
-        border-radius: 6px;
-        margin-left: 6px;
-    }
+    .tag-solo { background: #8b5cf6; color: white; }
+    .tag-team { background: #3b82f6; color: white; }
+
+    .tag-status-open { background: #22c55e; color: black; }
+    .tag-status-running { background: #eab308; color: black; }
+    .tag-status-closed { background: #ef4444; color: white; }
 </style>
 
-<div class="container mt-5">
+<div class="container mt-4">
 
-    <h1 class="text-center mb-4" style="color:#white; font-weight:900; font-size:36px;">
-        Tournaments
-    </h1>
+    <h1 class="text-center mb-4">Tournaments</h1>
 
-    <!-- FILTER BAR -->
-    <form method="get" class="text-center mb-4">
-        <button name="filter" value="all" class="filter-btn @(Model.Filter == "all" ? "active" : "")">All</button>
-        <button name="filter" value="solo" class="filter-btn @(Model.Filter == "solo" ? "active" : "")">Solo</button>
-        <button name="filter" value="team" class="filter-btn @(Model.Filter == "team" ? "active" : "")">Team</button>
-    </form>
+    <!-- FILTER -->
+    <div class="text-center mb-4">
 
-    <!-- STEAM CHECK WARNING -->
-    @if (!Model.IsPlayer)
-    {
-        <div class="alert alert-warning text-center">
-            Add your SteamID in your <a asp-page="/ViewProfile">Profile</a> to join tournaments.
-        </div>
-    }
+        <a href="/Tournaments?filter=all"
+           class="btn btn-small @(Model.Filter == "all" ? "btn-success" : "btn-secondary")">
+            All
+        </a>
 
-    <div class="row g-4">
+        <a href="/Tournaments?filter=solo"
+           class="btn btn-small @(Model.Filter == "solo" ? "btn-success" : "btn-secondary")">
+            Solo
+        </a>
+
+        <a href="/Tournaments?filter=team"
+           class="btn btn-small @(Model.Filter == "team" ? "btn-success" : "btn-secondary")">
+            Team
+        </a>
+    </div>
+
+    <div class="row">
         @foreach (var t in Model.Tournaments)
         {
             <div class="col-md-4">
+                <div class="card-box">
 
-                <a asp-page="/Tournaments/Details" asp-route-id="@t.Id">
-                    <div class="tournament-card clickable-card">
+                    <a class="full-link" href="/Tournaments/Details/@t.Id"></a>
 
-                        <h3>
-                            @t.Name
-                            @if (t.IsTeamTournament)
+                    <h3>@t.Name</h3>
+                    <p>@t.Description</p>
+
+                    <!-- TYPE TAG -->
+                    @if (t.IsTeamTournament)
+                    {
+                        <span class="tag tag-team">Team @t.TeamSizeRequired v @t.TeamSizeRequired</span>
+                    }
+                    else
+                    {
+                        <span class="tag tag-solo">Solo</span>
+                    }
+
+                    <!-- STATUS TAG -->
+                    <div class="mt-2">
+                        @if (t.Status == LogicLayer.Enums.Status.Open)
+                        {
+                            <span class="tag tag-status-open">OPEN</span>
+                        }
+                        else if (t.Status == LogicLayer.Enums.Status.InProgress)
+                        {
+                            <span class="tag tag-status-running">IN PROGRESS</span>
+                        }
+                        else
+                        {
+                            <span class="tag tag-status-closed">CLOSED</span>
+                        }
+                    </div>
+
+                    <!-- INFO -->
+                    <div class="mt-3">
+                        @if (!t.IsTeamTournament)
+                        {
+                            <b>Players:</b> @t.PlayersCount <br />
+                            <b>Matches:</b> @t.MatchesCount
+                        }
+                        else
+                        {
+                            <b>Teams:</b> @t.TeamsCount <br />
+                            <b>Matches:</b> @t.MatchesCount
+                        }
+                    </div>
+
+                    <!-- BUTTONS -->
+                    <div class="mt-3">
+
+                        <!-- LEAVE -->
+                        @if (t.CanLeave)
+                        {
+                            if (!t.IsTeamTournament)
                             {
-                                <span class="badge-team">Team @t.TeamSizeRequired v @t.TeamSizeRequired</span>
+                                <form method="post" asp-page-handler="Leave" asp-route-id="@t.Id" style="display:inline;">
+                                    <button type="submit" class="btn btn-warning btn-small">Leave</button>
+                                </form>
                             }
                             else
                             {
-                                <span class="badge-solo">Solo</span>
+                                <form method="post" asp-page-handler="LeaveTeam" asp-route-id="@t.Id" style="display:inline;">
+                                    <button type="submit" class="btn btn-warning btn-small">Leave Team</button>
+                                </form>
                             }
-                        </h3>
-
-                        <p>@t.Description</p>
-
-                        @switch (t.Status)
-                        {
-                            case LogicLayer.Enums.Status.Open:
-                                <span class="badge badge-open">OPEN</span>
-                                break;
-                            case LogicLayer.Enums.Status.InProgress:
-                                <span class="badge badge-progress">IN PROGRESS</span>
-                                break;
-                            case LogicLayer.Enums.Status.Closed:
-                                <span class="badge badge-closed">CLOSED</span>
-                                break;
                         }
-
-                        <hr />
-
-                        <p><strong>@(t.IsTeamTournament ? "Teams" : "Players"):</strong> @t.Players.Count</p>
-                        <p><strong>Matches:</strong> @t.Matches.Count</p>
-
-                        <hr />
-
-                        <div class="d-flex flex-wrap gap-2">
-
-                            <!-- SOLO JOIN (only with SteamID) -->
-                            @if (!t.IsTeamTournament
-                                                    && Model.IsPlayer
-                                                    && t.Status == LogicLayer.Enums.Status.Open
-                                                    && !t.Players.Any(p => p.Id == Model.CurrentPlayer.Id))
+                        else
+                        {
+                            <!-- JOIN -->
+                            if (t.Status == LogicLayer.Enums.Status.Open)
                             {
-                                <form method="post" asp-page-handler="ApplySolo" onclick="event.stopPropagation();">
-                                    <input type="hidden" name="id" value="@t.Id" />
-                                    <button class="btn btn-success btn-sm">Join</button>
-                                </form>
-                            }
-
-                            <!-- TEAM JOIN (Team leader + all members must have SteamID) -->
-                            @if (t.IsTeamTournament
-                                                    && Model.MyTeam != null
-                                                    && Model.MyTeam.Captain.Id == Model.CurrentPlayer?.Id
-                                                    && Model.MyTeam.Members.All(m => !string.IsNullOrWhiteSpace(m.SteamId) && m.SteamId != "0")
-                                                    && Model.MyTeam.Members.Count == t.TeamSizeRequired
-                                                    && t.Status == LogicLayer.Enums.Status.Open
-                                                    && !t.Players.Any(p => p.Id == Model.CurrentPlayer.Id))
-                            {
-                                <form method="post" asp-page-handler="ApplyTeam" onclick="event.stopPropagation();">
-                                    <input type="hidden" name="id" value="@t.Id" />
-                                    <button class="btn btn-info btn-sm">Join (Team)</button>
-                                </form>
-                            }
-
-                            <!-- LEAVE -->
-                            @if (Model.IsPlayer
-                                                    && t.Players.Any(p => p.Id == Model.CurrentPlayer.Id))
-                            {
-                                <form method="post" asp-page-handler="Leave" onclick="event.stopPropagation();">
-                                    <input type="hidden" name="id" value="@t.Id" />
-                                    <button class="btn btn-warning btn-sm">Leave</button>
-                                </form>
-                            }
-
-                            <!-- ADMIN -->
-                            @if (Model.IsPlayer && Model.CurrentPlayer.IsAdmin)
-                            {
-                                @if (t.Status != LogicLayer.Enums.Status.Closed)
+                                if (!t.IsTeamTournament)
                                 {
-                                    <form method="post" asp-page-handler="Close" onclick="event.stopPropagation();">
-                                        <input type="hidden" name="id" value="@t.Id" />
-                                        <button class="btn btn-danger btn-sm">Close</button>
+                                    <form method="post" asp-page-handler="ApplySolo" asp-route-id="@t.Id" style="display:inline;">
+                                        <button type="submit" class="btn btn-success btn-small">Join</button>
                                     </form>
                                 }
-
-                                <form method="post" asp-page-handler="Delete" onclick="event.stopPropagation();">
-                                    <input type="hidden" name="id" value="@t.Id" />
-                                    <button class="btn btn-outline-danger btn-sm">Delete</button>
-                                </form>
+                                else
+                                {
+                                    <form method="post" asp-page-handler="ApplyTeam" asp-route-id="@t.Id" style="display:inline;">
+                                        <button type="submit" class="btn btn-success btn-small">Join (Team)</button>
+                                    </form>
+                                }
                             }
+                        }
 
-                        </div>
+                        <!-- ADMIN DELETE -->
+                        @if (Model.IsAdmin)
+                        {
+                            <form method="post" asp-page-handler="Delete" asp-route-id="@t.Id" style="display:inline;">
+                                <button class="btn btn-danger btn-small">Delete</button>
+                            </form>
+                        }
 
                     </div>
-                </a>
-
+                </div>
             </div>
         }
     </div>

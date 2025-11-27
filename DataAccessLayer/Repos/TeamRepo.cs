@@ -316,6 +316,20 @@ namespace DataLayer.Repos
             return list;
         }
 
+        public void DeleteTeam(int teamId)
+        {
+            EnsureOpen();
+
+            var cmd = new MySqlCommand(
+                "DELETE FROM team WHERE id=@id",
+                conn.GetInnerConn()
+            );
+
+            cmd.Parameters.AddWithValue("@id", teamId);
+            cmd.ExecuteNonQuery();
+        }
+
+
         public void DeleteJoinRequest(int requestId)
         {
             EnsureOpen();

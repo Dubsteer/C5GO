@@ -92,14 +92,16 @@ namespace Website.Pages.Teams
             try
             {
                 teamManager.LeaveTeam(CurrentUser.Id.Value);
-                return RedirectToPage("/Teams/Teams");
+                TempData["Message"] = "You left the team.";
             }
             catch (Exception ex)
             {
                 TempData["Error"] = ex.Message;
-                return RedirectToPage("/Teams/Details", new { id = teamId });
             }
+
+            return RedirectToPage("/Teams/Teams");
         }
+
 
         // =============================================
         // KICK MEMBER

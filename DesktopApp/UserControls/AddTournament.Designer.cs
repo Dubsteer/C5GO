@@ -11,88 +11,118 @@
             base.Dispose(disposing);
         }
 
+        #region Designer generated code
+
         private void InitializeComponent()
         {
-            this.tbDescription = new System.Windows.Forms.TextBox();
-            this.tbName = new System.Windows.Forms.TextBox();
-            this.btnCreate = new System.Windows.Forms.Button();
-            this.btnBack = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
+            this.lblName = new Label();
+            this.tbName = new TextBox();
+            this.lblDescription = new Label();
+            this.tbDescription = new TextBox();
+            this.lblMode = new Label();
+            this.cbMode = new ComboBox();
+            this.lblTeamSize = new Label();
+            this.nudTeamSize = new NumericUpDown();
+            this.btnCreate = new Button();
+            this.btnBack = new Button();
+            ((System.ComponentModel.ISupportInitialize)(this.nudTeamSize)).BeginInit();
             this.SuspendLayout();
-            // 
-            // tbDescription
-            // 
-            this.tbDescription.Location = new System.Drawing.Point(35, 173);
-            this.tbDescription.Multiline = true;
-            this.tbDescription.Name = "tbDescription";
-            this.tbDescription.Size = new System.Drawing.Size(471, 282);
-            this.tbDescription.TabIndex = 0;
-            // 
-            // tbName
-            // 
-            this.tbName.Location = new System.Drawing.Point(35, 78);
+
+            // LABEL: Tournament Name
+            this.lblName.AutoSize = true;
+            this.lblName.Location = new System.Drawing.Point(40, 30);
+            this.lblName.Name = "lblName";
+            this.lblName.Size = new System.Drawing.Size(136, 20);
+            this.lblName.Text = "Tournament Name:";
+
+            // TEXTBOX: Name
+            this.tbName.Location = new System.Drawing.Point(40, 55);
             this.tbName.Name = "tbName";
-            this.tbName.Size = new System.Drawing.Size(350, 23);
-            this.tbName.TabIndex = 1;
-            // 
-            // btnCreate
-            // 
-            this.btnCreate.Location = new System.Drawing.Point(616, 173);
+            this.tbName.Size = new System.Drawing.Size(300, 27);
+
+            // LABEL: Description
+            this.lblDescription.AutoSize = true;
+            this.lblDescription.Location = new System.Drawing.Point(40, 105);
+            this.lblDescription.Name = "lblDescription";
+            this.lblDescription.Size = new System.Drawing.Size(85, 20);
+            this.lblDescription.Text = "Description:";
+
+            // TEXTBOX: Description
+            this.tbDescription.Location = new System.Drawing.Point(40, 130);
+            this.tbDescription.Multiline = true;
+            this.tbDescription.Size = new System.Drawing.Size(300, 90);
+            this.tbDescription.Name = "tbDescription";
+
+            // LABEL: Type (Solo / Team)
+            this.lblMode.AutoSize = true;
+            this.lblMode.Location = new System.Drawing.Point(40, 245);
+            this.lblMode.Name = "lblMode";
+            this.lblMode.Size = new System.Drawing.Size(42, 20);
+            this.lblMode.Text = "Type:";
+
+            // COMBOBOX: Type
+            this.cbMode.DropDownStyle = ComboBoxStyle.DropDownList;
+            this.cbMode.Location = new System.Drawing.Point(40, 270);
+            this.cbMode.Size = new System.Drawing.Size(150, 28);
+            this.cbMode.Name = "cbMode";
+
+            // LABEL: Team Size
+            this.lblTeamSize.AutoSize = true;
+            this.lblTeamSize.Location = new System.Drawing.Point(40, 320);
+            this.lblTeamSize.Name = "lblTeamSize";
+            this.lblTeamSize.Size = new System.Drawing.Size(150, 20);
+            this.lblTeamSize.Text = "Team size (5v5 only):";
+
+            // NUMERIC: Team Size
+            this.nudTeamSize.Location = new System.Drawing.Point(40, 345);
+            this.nudTeamSize.Minimum = 5;
+            this.nudTeamSize.Maximum = 5;
+            this.nudTeamSize.Value = 5;
+            this.nudTeamSize.Name = "nudTeamSize";
+            this.nudTeamSize.Size = new System.Drawing.Size(80, 27);
+
+            // BUTTON: Create
+            this.btnCreate.Location = new System.Drawing.Point(40, 400);
             this.btnCreate.Name = "btnCreate";
-            this.btnCreate.Size = new System.Drawing.Size(182, 63);
-            this.btnCreate.TabIndex = 2;
+            this.btnCreate.Size = new System.Drawing.Size(200, 40);
             this.btnCreate.Text = "Create Tournament";
-            this.btnCreate.UseVisualStyleBackColor = true;
-            // 
-            // btnBack
-            // 
-            this.btnBack.Location = new System.Drawing.Point(616, 254);
+
+            // BUTTON: Back
+            this.btnBack.Location = new System.Drawing.Point(260, 400);
             this.btnBack.Name = "btnBack";
-            this.btnBack.Size = new System.Drawing.Size(182, 59);
-            this.btnBack.TabIndex = 3;
+            this.btnBack.Size = new System.Drawing.Size(80, 40);
             this.btnBack.Text = "Back";
-            this.btnBack.UseVisualStyleBackColor = true;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(35, 47);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(140, 15);
-            this.label1.TabIndex = 4;
-            this.label1.Text = "Name of the Tournament";
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(35, 138);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(168, 15);
-            this.label2.TabIndex = 5;
-            this.label2.Text = "Description of the Tournament";
-            // 
-            // AddTournament
-            // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.btnBack);
-            this.Controls.Add(this.btnCreate);
+
+            // CONTROL ROOT
+            this.Controls.Add(this.lblName);
             this.Controls.Add(this.tbName);
+            this.Controls.Add(this.lblDescription);
             this.Controls.Add(this.tbDescription);
-            this.Name = "AddTournament";
-            this.Size = new System.Drawing.Size(900, 600);
+            this.Controls.Add(this.lblMode);
+            this.Controls.Add(this.cbMode);
+            this.Controls.Add(this.lblTeamSize);
+            this.Controls.Add(this.nudTeamSize);
+            this.Controls.Add(this.btnCreate);
+            this.Controls.Add(this.btnBack);
+
+            this.Size = new System.Drawing.Size(400, 500);
+
+            ((System.ComponentModel.ISupportInitialize)(this.nudTeamSize)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
         }
 
-        private System.Windows.Forms.TextBox tbDescription;
-        private System.Windows.Forms.TextBox tbName;
-        private System.Windows.Forms.Button btnCreate;
-        private System.Windows.Forms.Button btnBack;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label2;
+        #endregion
+
+        private Label lblName;
+        private TextBox tbName;
+        private Label lblDescription;
+        private TextBox tbDescription;
+        private Label lblMode;
+        private ComboBox cbMode;
+        private Label lblTeamSize;
+        private NumericUpDown nudTeamSize;
+        private Button btnCreate;
+        private Button btnBack;
     }
 }

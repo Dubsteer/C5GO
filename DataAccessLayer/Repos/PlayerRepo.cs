@@ -2,7 +2,7 @@
 using LogicLayer.IRepos;
 using LogicLayer.Models;
 using MySql.Data.MySqlClient;
-using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace DataLayer.Repos
 {
@@ -30,13 +30,12 @@ namespace DataLayer.Repos
         public List<Player> GetAllPlayers()
         {
             var cmd = new MySqlCommand("SELECT * FROM user WHERE steam_id != '0'", conn.GetInnerConn());
-
             var list = new List<Player>();
 
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                list.Add(new Player(
+                var u = new User(
                     reader.GetInt32("id"),
                     reader.GetString("first_name"),
                     reader.GetString("last_name"),
@@ -44,10 +43,13 @@ namespace DataLayer.Repos
                     reader.GetString("username"),
                     reader.GetString("email"),
                     reader.GetString("password"),
-                    reader.GetString("steam_id"),
-                    reader.GetBoolean("is_moderator")
-                ));
+                    reader.GetBoolean("is_moderator"),
+                    reader.GetString("steam_id")
+                );
+
+                list.Add(new Player(u));
             }
+
             return list;
         }
 
@@ -56,24 +58,25 @@ namespace DataLayer.Repos
             var cmd = new MySqlCommand("SELECT * FROM user WHERE id=@id", conn.GetInnerConn());
             cmd.Parameters.AddWithValue("@id", user.Id);
 
-            using var reader = cmd.ExecuteReader();
-            if (reader.Read())
+            using var r = cmd.ExecuteReader();
+            if (r.Read())
             {
-                string steamId = reader.GetString("steam_id");
+                if (r.GetString("steam_id") == "0")
+                    return null;
 
-                if (steamId == "0") return null; // not a player
-
-                return new Player(
-                    reader.GetInt32("id"),
-                    reader.GetString("first_name"),
-                    reader.GetString("last_name"),
-                    reader.GetInt32("age"),
-                    reader.GetString("username"),
-                    reader.GetString("email"),
-                    reader.GetString("password"),
-                    steamId,
-                    reader.GetBoolean("is_moderator")
+                var u = new User(
+                    r.GetInt32("id"),
+                    r.GetString("first_name"),
+                    r.GetString("last_name"),
+                    r.GetInt32("age"),
+                    r.GetString("username"),
+                    r.GetString("email"),
+                    r.GetString("password"),
+                    r.GetBoolean("is_moderator"),
+                    r.GetString("steam_id")
                 );
+
+                return new Player(u);
             }
 
             return null;

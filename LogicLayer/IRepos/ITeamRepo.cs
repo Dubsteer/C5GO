@@ -24,5 +24,6 @@ namespace LogicLayer.IRepos
 
         // ★★★ DODATO ZBOG TeamManager-a ★★★
         User GetUserById(int userId);
+        void DeleteTeam(int id);
     }
 }

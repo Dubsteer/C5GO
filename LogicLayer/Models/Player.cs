@@ -1,16 +1,19 @@
-﻿namespace LogicLayer.Models
+﻿using LogicLayer.Models;
+
+namespace LogicLayer.Models
 {
     public class Player : User
     {
-        private User captain;
-
-        public Player(User captain)
+        // Konstruktor kada pravimo Player iz User objekta
+        public Player(User u)
+            : base(u.Id, u.Firstname, u.Lastname, u.Age, u.Username, u.Gmail, u.Password, u.IsAdmin, u.SteamId)
         {
-            this.captain = captain;
         }
 
-        public Player(int id, string firstname, string lastname, int age, string username, string gmail,
-                      string password, string steamId, bool isAdmin)
+        // KONSTRUKTOR KOJI TI TREBA ZA DESKTOP APP + WEBSITE
+        public Player(int id, string firstname, string lastname, int age,
+                      string username, string gmail, string password,
+                      string steamId, bool isAdmin)
             : base(id, firstname, lastname, age, username, gmail, password, isAdmin, steamId)
         {
         }

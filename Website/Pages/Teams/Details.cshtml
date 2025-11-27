@@ -78,6 +78,15 @@
         <!-- MEMBERS -->
         <h3>Members</h3>
 
+        @if (Model.CurrentUser.Id == Model.Team.Captain.Id)
+        {
+            <form method="post" asp-page-handler="Leave" class="mb-3">
+                <input type="hidden" name="teamId" value="@Model.Team.Id" />
+                <button class="btn btn-danger">Delete Team</button>
+            </form>
+        }
+
+
         @foreach (var m in Model.Members)
         {
             <div class="member-pill d-flex justify-content-between align-items-center">

@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using LogicLayer.Managers;
 using LogicLayer.Models;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,48 +10,67 @@ namespace Website.Pages.Tournaments
     public class DetailsModel : PageModel
     {
         private readonly TournamentManager tournamentManager;
+        private readonly TeamManager teamManager;
 
         public Tournament Tournament { get; set; }
 
-        // Bracket rounds
-        public List<Match> Round1 { get; set; } = new();
-        public List<Match> Round2 { get; set; } = new();
-        public List<Match> Round3 { get; set; } = new();
+        // SOLO
+        public List<Match> SoloMatches { get; set; } = new();
+        public List<Player> SoloPlayers { get; set; } = new();
 
-        public DetailsModel(TournamentManager tournamentManager)
+        // TEAMS
+        public List<TeamMatch> TeamMatches { get; set; } = new();
+        public Dictionary<int, Team> TeamsById { get; set; } = new();
+
+        public DetailsModel(TournamentManager tournamentManager, TeamManager teamManager)
         {
             this.tournamentManager = tournamentManager;
+            this.teamManager = teamManager;
         }
 
         public IActionResult OnGet(int id)
         {
-            try
+            Tournament = tournamentManager.GetTournamentById(id);
+            if (Tournament == null)
+                return NotFound();
+
+            // ======================================
+            // SOLO TOURNAMENT
+            // ======================================
+            if (!Tournament.IsTeamTournament)
             {
-                Tournament = tournamentManager.GetTournamentById(id);
+                // LOAD SOLO PLAYERS
+                SoloPlayers = tournamentManager.GetAllPlayersInTournament(Tournament)
+                                               .OrderBy(p => p.Username)
+                                               .ToList();
 
-                if (Tournament == null)
-                    return NotFound();
+                Tournament.Players = SoloPlayers;
 
-                Tournament.Players = tournamentManager.GetAllPlayersInTournament(Tournament);
-                Tournament.Matches = tournamentManager.GetAllMatchesInTournament(Tournament);
-
-                var matches = Tournament.Matches.OrderBy(m => m.Id).ToList();
-
-                int count = matches.Count;
-
-                if (count >= 4)
-                    Round1 = matches.Take(4).ToList();
-
-                if (count >= 6)
-                    Round2 = matches.Skip(4).Take(2).ToList();
-
-                if (count >= 7)
-                    Round3 = matches.Skip(6).Take(1).ToList();
+                // LOAD SOLO MATCHES
+                SoloMatches = tournamentManager.GetAllMatchesInTournament(Tournament)
+                                               .OrderBy(m => m.MatchDate)
+                                               .ToList();
             }
-            catch (Exception ex)
+
+            // ======================================
+            // TEAM TOURNAMENT
+            // ======================================
+            else
             {
-                Console.WriteLine(ex.Message);
-                return StatusCode(500);
+                // LOAD TEAM MATCHES
+                TeamMatches = tournamentManager.GetAllTeamMatchesInTournament(Tournament)
+                                               .OrderBy(m => m.MatchDate)
+                                               .ToList();
+
+                // LOAD TEAMS
+                var teamIds = tournamentManager.GetTeamsInTournament(Tournament);
+
+                foreach (var tid in teamIds)
+                {
+                    var team = teamManager.GetTeam(tid);
+                    if (team != null)
+                        TeamsById[tid] = team;
+                }
             }
 
             return Page();

@@ -22,43 +22,79 @@ namespace DataLayer.Repos
                 conn.Open();
         }
 
+        // ============================================
+        // GET ALL
+        // ============================================
         public List<Tournament> GetAllTournaments()
         {
             EnsureConnection();
 
             var list = new List<Tournament>();
+            var cmd = new MySqlCommand(
+                @"SELECT id, name, description, status_int, is_team, team_size_required 
+                  FROM tournament", conn.GetInnerConn());
 
-            var cmd = new MySqlCommand(@"
-        SELECT id, name, description, status_int, 
-               is_team, team_size_required
-        FROM tournament", conn.GetInnerConn());
+            using var r = cmd.ExecuteReader();
 
-            using var reader = cmd.ExecuteReader();
-
-            while (reader.Read())
+            while (r.Read())
             {
-                list.Add(new Tournament(
-                    reader.GetInt32("id"),
-                    reader.GetString("name"),
-                    reader.GetString("description"),
-                    (Status)reader.GetInt32("status_int"),
-                    reader.GetBoolean("is_team"),
-                    reader.GetInt32("team_size_required")
-                ));
+                var t = new Tournament
+                {
+                    Id = r.GetInt32("id"),
+                    Name = r.GetString("name"),
+                    Description = r.GetString("description"),
+                    Status = (Status)r.GetInt32("status_int"),
+                    IsTeamTournament = r.GetBoolean("is_team"),
+                    TeamSizeRequired = r.GetInt32("team_size_required")
+                };
+
+                list.Add(t);
             }
 
             return list;
         }
 
+        // ============================================
+        // GET BY ID
+        // ============================================
+        public Tournament GetTournamentById(int id)
+        {
+            EnsureConnection();
 
+            var cmd = new MySqlCommand(
+                @"SELECT id, name, description, status_int, is_team, team_size_required
+                  FROM tournament WHERE id=@id",
+                conn.GetInnerConn());
+
+            cmd.Parameters.AddWithValue("@id", id);
+
+            using var r = cmd.ExecuteReader();
+
+            if (!r.Read()) return null;
+
+            return new Tournament
+            {
+                Id = r.GetInt32("id"),
+                Name = r.GetString("name"),
+                Description = r.GetString("description"),
+                Status = (Status)r.GetInt32("status_int"),
+                IsTeamTournament = r.GetBoolean("is_team"),
+                TeamSizeRequired = r.GetInt32("team_size_required")
+            };
+        }
+
+        // ============================================
+        // ADD / UPDATE / DELETE
+        // ============================================
         public void AddTournament(Tournament t)
         {
             EnsureConnection();
 
-            var cmd = new MySqlCommand(@"
-        INSERT INTO tournament
-        (name, description, status_int, is_team, team_size_required)
-        VALUES (@n, @d, @s, @team, @size)", conn.GetInnerConn());
+            var cmd = new MySqlCommand(
+                @"INSERT INTO tournament 
+                  (name, description, status_int, is_team, team_size_required)
+                  VALUES (@n, @d, @s, @team, @size)",
+                conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@n", t.Name);
             cmd.Parameters.AddWithValue("@d", t.Description);
@@ -69,16 +105,15 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-
         public void UpdateTournament(Tournament t)
         {
             EnsureConnection();
 
-            var cmd = new MySqlCommand(@"
-        UPDATE tournament
-        SET name=@n, description=@d, status_int=@s,
-            is_team=@team, team_size_required=@size
-        WHERE id=@id", conn.GetInnerConn());
+            var cmd = new MySqlCommand(
+                @"UPDATE tournament 
+                  SET name=@n, description=@d, status_int=@s, is_team=@team, team_size_required=@size
+                  WHERE id=@id",
+                conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@id", t.Id);
             cmd.Parameters.AddWithValue("@n", t.Name);
@@ -90,57 +125,39 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-
         public void RemoveTournament(Tournament t)
         {
             EnsureConnection();
 
-            // DELETE MATCHES (from matches table)
-            new MySqlCommand("DELETE FROM matches WHERE tournamentId = @id", conn.GetInnerConn())
+            new MySqlCommand("DELETE FROM matches WHERE tournamentId=@id", conn.GetInnerConn())
             { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
 
-            // DELETE MATCHES (from match table - if exists)
-            new MySqlCommand("DELETE FROM `match` WHERE tournamentId = @id", conn.GetInnerConn())
+            new MySqlCommand("DELETE FROM `match` WHERE tournamentId=@id", conn.GetInnerConn())
             { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
 
-            // DELETE APPLICATIONS (solo players)
-            new MySqlCommand("DELETE FROM applications WHERE tournamentId = @id", conn.GetInnerConn())
+            new MySqlCommand("DELETE FROM applications WHERE tournamentId=@id", conn.GetInnerConn())
             { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
 
-            // DELETE TEAM APPLICATIONS
-            new MySqlCommand("DELETE FROM team_applications WHERE tournamentId = @id", conn.GetInnerConn())
+            new MySqlCommand("DELETE FROM team_applications WHERE tournamentId=@id", conn.GetInnerConn())
             { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
 
-            // DELETE TEAM JOIN REQUESTS (not required but CLEAN)
-            new MySqlCommand(
-                "DELETE j FROM team_join_request j " +
-                "JOIN team_player tp ON j.team_id = tp.team_id " +
-                "JOIN tournament_teams tt ON tt.team_id = tp.team_id " +
-                "WHERE tt.tournament_id = @id",
-                conn.GetInnerConn()
-            ).Parameters.AddWithValue("@id", t.Id);
-
-            // DELETE TOURNAMENT TEAMS
-            new MySqlCommand("DELETE FROM tournament_teams WHERE tournament_id = @id", conn.GetInnerConn())
-            { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
-
-            // FINALLY DELETE TOURNAMENT
-            new MySqlCommand("DELETE FROM tournament WHERE id = @id", conn.GetInnerConn())
+            new MySqlCommand("DELETE FROM tournament WHERE id=@id", conn.GetInnerConn())
             { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
         }
 
-
-
+        // ============================================
+        // SOLO
+        // ============================================
         public void AddTournamentApp(Player p, Tournament t)
         {
             EnsureConnection();
 
             var cmd = new MySqlCommand(
-                "INSERT INTO applications (tournamentId, playerId) VALUES (@tid, @pid)",
+                "INSERT INTO applications (tournamentId, playerId) VALUES (@t, @p)",
                 conn.GetInnerConn());
 
-            cmd.Parameters.AddWithValue("@tid", t.Id);
-            cmd.Parameters.AddWithValue("@pid", p.Id);
+            cmd.Parameters.AddWithValue("@t", t.Id);
+            cmd.Parameters.AddWithValue("@p", p.Id);
 
             cmd.ExecuteNonQuery();
         }
@@ -150,31 +167,32 @@ namespace DataLayer.Repos
             EnsureConnection();
 
             var cmd = new MySqlCommand(
-                "DELETE FROM applications WHERE tournamentId=@tid AND playerId=@pid",
+                "DELETE FROM applications WHERE tournamentId=@t AND playerId=@p",
                 conn.GetInnerConn());
 
-            cmd.Parameters.AddWithValue("@tid", t.Id);
-            cmd.Parameters.AddWithValue("@pid", p.Id);
+            cmd.Parameters.AddWithValue("@t", t.Id);
+            cmd.Parameters.AddWithValue("@p", p.Id);
 
             cmd.ExecuteNonQuery();
         }
 
-        public List<Player> GetAllPlayersInTournament(int tid)
+        public List<Player> GetAllPlayersInTournament(int id)
         {
             EnsureConnection();
 
             var list = new List<Player>();
 
-            var cmd = new MySqlCommand(@"
-                SELECT user.id, first_name, last_name, age, username, email, password, steam_id, is_moderator
-                FROM user
-                JOIN applications ON user.id = applications.playerId
-                WHERE applications.tournamentId=@id",
+            var cmd = new MySqlCommand(
+                @"SELECT user.id, first_name, last_name, age, username, email, password, steam_id, is_moderator
+                  FROM user
+                  JOIN applications ON user.id = applications.playerId
+                  WHERE applications.tournamentId=@id",
                 conn.GetInnerConn());
 
-            cmd.Parameters.AddWithValue("@id", tid);
+            cmd.Parameters.AddWithValue("@id", id);
 
             using var r = cmd.ExecuteReader();
+
             while (r.Read())
             {
                 list.Add(new Player(
@@ -193,17 +211,19 @@ namespace DataLayer.Repos
             return list;
         }
 
-        // TEAM APPLICATIONS ---------
+        // ============================================
+        // TEAMS
+        // ============================================
         public void AddTeamTournamentApp(int teamId, int tournamentId)
         {
             EnsureConnection();
 
             var cmd = new MySqlCommand(
-                "INSERT INTO team_applications (teamId, tournamentId) VALUES (@team, @tour)",
+                "INSERT INTO team_applications (teamId, tournamentId) VALUES (@t, @tt)",
                 conn.GetInnerConn());
 
-            cmd.Parameters.AddWithValue("@team", teamId);
-            cmd.Parameters.AddWithValue("@tour", tournamentId);
+            cmd.Parameters.AddWithValue("@t", teamId);
+            cmd.Parameters.AddWithValue("@tt", tournamentId);
 
             cmd.ExecuteNonQuery();
         }
@@ -213,6 +233,7 @@ namespace DataLayer.Repos
             EnsureConnection();
 
             var list = new List<int>();
+
             var cmd = new MySqlCommand(
                 "SELECT teamId FROM team_applications WHERE tournamentId=@id",
                 conn.GetInnerConn());
@@ -220,10 +241,25 @@ namespace DataLayer.Repos
             cmd.Parameters.AddWithValue("@id", tournamentId);
 
             using var r = cmd.ExecuteReader();
+
             while (r.Read())
                 list.Add(r.GetInt32(0));
 
             return list;
+        }
+
+        public void RemoveTeamTournamentApp(int teamId, int tournamentId)
+        {
+            EnsureConnection();
+
+            var cmd = new MySqlCommand(
+                "DELETE FROM team_applications WHERE teamId=@t AND tournamentId=@tt",
+                conn.GetInnerConn());
+
+            cmd.Parameters.AddWithValue("@t", teamId);
+            cmd.Parameters.AddWithValue("@tt", tournamentId);
+
+            cmd.ExecuteNonQuery();
         }
     }
 }

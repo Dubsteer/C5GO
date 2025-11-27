@@ -30,8 +30,28 @@ namespace DesktopApp.UserControls
             btnCreate.Click += btnCreate_Click;
             btnBack.Click += btnBack_Click;
 
+            // ✅ prvo dodaj Item-e!!
+            cbMode.Items.Clear();
+            cbMode.Items.Add("Solo");
+            cbMode.Items.Add("Team");
+
+            // 🔥 DEFAULT = SOLO
+            cbMode.SelectedIndex = 0;
+
+            // Solo / Team switch
+            cbMode.SelectedIndexChanged += (s, e) =>
+            {
+                bool isTeam = cbMode.SelectedItem.ToString() == "Team";
+                lblTeamSize.Visible = isTeam;
+                nudTeamSize.Visible = isTeam;
+            };
+
+            lblTeamSize.Visible = false;
+            nudTeamSize.Visible = false;
+
             VisibleChanged += AddTournament_VisibleChanged;
         }
+
 
         private void AddTournament_VisibleChanged(object sender, EventArgs e)
         {
@@ -39,6 +59,7 @@ namespace DesktopApp.UserControls
             {
                 tbName.Clear();
                 tbDescription.Clear();
+                cbMode.SelectedIndex = 0;
             }
         }
 
@@ -54,13 +75,19 @@ namespace DesktopApp.UserControls
                 return;
             }
 
+            bool isTeam = cbMode.SelectedItem.ToString() == "Team";
+
+            int teamSize = isTeam ? (int)nudTeamSize.Value : 1;
+
             try
             {
                 Tournament t = new Tournament
                 {
                     Name = name,
                     Description = description,
-                    Status = Status.Open
+                    Status = Status.Open,
+                    IsTeamTournament = isTeam,
+                    TeamSizeRequired = teamSize
                 };
 
                 tournamentManager.AddTournament(t);
@@ -69,8 +96,7 @@ namespace DesktopApp.UserControls
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 TournamentCreated?.Invoke();
-
-                this.Hide();
+                this.Visible = false;
             }
             catch (Exception ex)
             {
@@ -81,7 +107,7 @@ namespace DesktopApp.UserControls
 
         private void btnBack_Click(object sender, EventArgs e)
         {
-            this.Hide();
+            this.Visible = false;
         }
     }
 }

@@ -21,54 +21,84 @@ namespace DataLayer.Repos
             var matches = new List<Match>();
 
             var cmd = new MySqlCommand(@"
-                SELECT m.*, 
-                       u1.*, u2.*
-                FROM matches m
-                LEFT JOIN user u1 ON m.user_id1 = u1.id
-                LEFT JOIN user u2 ON m.user_id2 = u2.id;", conn.GetInnerConn());
+    SELECT 
+        m.id AS match_id,
+        m.tournamentId AS match_tournamentId,
+        m.player1Score AS match_player1Score,
+        m.player2Score AS match_player2Score,
+        m.datetime AS match_datetime,
+        m.status AS match_status,
 
-            using var reader = cmd.ExecuteReader();
+        u1.id AS user1_id,
+        u1.first_name AS user1_first_name,
+        u1.last_name AS user1_last_name,
+        u1.age AS user1_age,
+        u1.username AS user1_username,
+        u1.email AS user1_email,
+        u1.password AS user1_password,
+        u1.is_moderator AS user1_is_moderator,
+        u1.steam_id AS user1_steam_id,
 
-            while (reader.Read())
+        u2.id AS user2_id,
+        u2.first_name AS user2_first_name,
+        u2.last_name AS user2_last_name,
+        u2.age AS user2_age,
+        u2.username AS user2_username,
+        u2.email AS user2_email,
+        u2.password AS user2_password,
+        u2.is_moderator AS user2_is_moderator,
+        u2.steam_id AS user2_steam_id
+
+    FROM `match` m
+    JOIN user u1 ON m.user_id1 = u1.id
+    JOIN user u2 ON m.user_id2 = u2.id
+", conn.GetInnerConn());
+
+
+            using var r = cmd.ExecuteReader();
+
+            while (r.Read())
             {
-                var p1 = new Player(
-                    reader.GetInt32("user_id1"),
-                    reader.GetString("first_name"),
-                    reader.GetString("last_name"),
-                    21,
-                    reader.GetString("username"),
-                    reader.GetString("email"),
-                    "0",
-                    "",
-                    reader.GetBoolean("is_moderator")
+                var user1 = new User(
+                    r.GetInt32("user1_id"),
+                    r.GetString("user1_first_name"),
+                    r.GetString("user1_last_name"),
+                    r.GetInt32("user1_age"),
+                    r.GetString("user1_username"),
+                    r.GetString("user1_email"),
+                    r.GetString("user1_password"),
+                    r.GetBoolean("user1_is_moderator"),
+                    r.GetString("user1_steam_id")
                 );
 
-                var p2 = new Player(
-                    reader.GetInt32("user_id2"),
-                    reader.GetString("first_name"),
-                    reader.GetString("last_name"),
-                    21,
-                    reader.GetString("username"),
-                    reader.GetString("email"),
-                    "0",
-                    "",
-                    reader.GetBoolean("is_moderator")
+                var user2 = new User(
+                    r.GetInt32("user2_id"),
+                    r.GetString("user2_first_name"),
+                    r.GetString("user2_last_name"),
+                    r.GetInt32("user2_age"),
+                    r.GetString("user2_username"),
+                    r.GetString("user2_email"),
+                    r.GetString("user2_password"),
+                    r.GetBoolean("user2_is_moderator"),
+                    r.GetString("user2_steam_id")
                 );
 
                 matches.Add(new Match(
-                    reader.GetInt32("id"),
-                    reader.GetInt32("tournamentId"),
-                    p1,
-                    p2,
-                    reader.GetInt32("player1Score"),
-                    reader.GetInt32("player2Score"),
-                    reader.GetDateTime("match_date"),
-                    (Status)reader.GetInt32("status_int")
+                    r.GetInt32("match_id"),
+                    r.GetInt32("match_tournamentId"),
+                    new Player(user1),
+                    new Player(user2),
+                    r.GetInt32("match_player1Score"),
+                    r.GetInt32("match_player2Score"),
+                    r.GetDateTime("match_datetime"),
+                    (Status)Enum.Parse(typeof(Status), r.GetString("match_status"))
                 ));
             }
 
             return matches;
         }
+
+
 
 
         public void AddMatch(Match match)

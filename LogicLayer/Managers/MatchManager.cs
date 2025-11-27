@@ -29,9 +29,13 @@ namespace LogicLayer.Managers
 
         public List<Match> GetMatchesByTournamentId(int tid)
         {
-            return matchRepo.GetAllMatches()
-                .Where(m => m.TournamentId == tid)
-                .ToList();
+            return GetAllMatches().Where(m => m.TournamentId == tid).ToList();
+        }
+
+        // OVO JE BILO POTREBNO A NIJE POSTOJALO
+        public List<Match> GetAllMatchesInTournament(Tournament t)
+        {
+            return GetMatchesByTournamentId(t.Id);
         }
 
         public void AddMatch(Match match)
@@ -57,22 +61,18 @@ namespace LogicLayer.Managers
                 .ToList();
         }
 
-        // --------------------------
-        //  AUTO MATCH GENERATOR
-        // --------------------------
+        // AUTO MATCH GENERATOR
         public void GenerateMatches(List<Player> players, int tournamentId, DateTime startDate, int rounds)
         {
             var rnd = new Random();
             var shuffled = players.OrderBy(x => rnd.Next()).ToList();
-
-            int idCounter = 1;
 
             for (int round = 0; round < rounds; round++)
             {
                 for (int i = 0; i < shuffled.Count - 1; i += 2)
                 {
                     var match = new Match(
-                        idCounter++,
+                        0, // id se NE KORISTI jer DB auto-increment radi posao
                         tournamentId,
                         shuffled[i],
                         shuffled[i + 1],

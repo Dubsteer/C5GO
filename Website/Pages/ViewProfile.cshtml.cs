@@ -67,19 +67,17 @@ namespace Website.Pages
             if (!ModelState.IsValid)
                 return Page();
 
-            _playerManager.InitializeRole(new Player(
-                PageUser.Id.Value,
-                PageUser.Firstname,
-                PageUser.Lastname,
-                PageUser.Age,
-                PageUser.Username,
-                PageUser.Gmail,
-                PageUser.Password,
-                SteamId,
-                PageUser.IsAdmin
-            ));
+            // 1. Ažuriramo Steam ID user-u
+            PageUser.SteamId = SteamId;
+
+            // 2. Napravimo Player objekat iz user-a
+            var newPlayer = new Player(PageUser);
+
+            // 3. Sačuvamo u bazi kao "player"
+            _playerManager.InitializeRole(newPlayer);
 
             return Redirect("/ViewProfile");
         }
+
     }
 }

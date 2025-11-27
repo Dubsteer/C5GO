@@ -11,7 +11,9 @@ namespace DesktopApp.UserControls
     public partial class ViewListOfTournaments : UserControl
     {
         private IConnection connection;
+        private MatchRepo matchRepo;
         private MatchManager matchManager;
+        private TournamentRepo tournamentRepo;
         private TournamentManager tournamentManager;
 
         public ViewListOfTournaments()
@@ -23,28 +25,24 @@ namespace DesktopApp.UserControls
         {
             this.connection = connection;
 
-            var matchRepo = new MatchRepo(connection);
+            matchRepo = new MatchRepo(connection);
             matchManager = new MatchManager(matchRepo);
 
-            var tournamentRepo = new TournamentRepo(connection);
+            tournamentRepo = new TournamentRepo(connection);
             tournamentManager = new TournamentManager(tournamentRepo, matchManager);
-
-            // Fix: event se dodaje SAMO JEDNOM
-            btnCreateTournament.Click -= btnCreateTournament_Click;
-            btnDelete.Click -= btnDeleteTournament_Click;
-            dgvTournaments.CellDoubleClick -= dgvTournaments_CellDoubleClick;
-
-            btnCreateTournament.Click += btnCreateTournament_Click;
-            btnDelete.Click += btnDeleteTournament_Click;
-            dgvTournaments.CellDoubleClick += dgvTournaments_CellDoubleClick;
 
             if (!DesignMode)
                 VisibleChanged += ViewListOfTournaments_VisibleChanged;
+
+            btnCreateTournament.Click += btnCreateTournament_Click;
+            btnDelete.Click += btnDeleteTournament_Click;
+
+            dgvTournaments.CellDoubleClick += dgvTournaments_CellDoubleClick;
         }
 
         private void ViewListOfTournaments_VisibleChanged(object sender, EventArgs e)
         {
-            if (Visible && !Disposing)
+            if (Visible && !Disposing && !DesignMode)
                 RefreshTournaments();
         }
 
@@ -56,12 +54,18 @@ namespace DesktopApp.UserControls
 
         private void btnCreateTournament_Click(object sender, EventArgs e)
         {
-            var add = this.Parent.Controls.OfType<AddTournament>().FirstOrDefault();
+            // SAKRIVAMO LIstOfTournaments
+            this.Hide();
 
-            if (add != null)
+            // TRAŽIMO AddTournament kontrolu unutar istog TabPage
+            var parent = this.Parent.Controls
+                .OfType<AddTournament>()
+                .FirstOrDefault();
+
+            if (parent != null)
             {
-                add.Visible = true;
-                add.BringToFront();
+                parent.Show();
+                parent.BringToFront();
             }
         }
 
@@ -73,19 +77,23 @@ namespace DesktopApp.UserControls
                 return;
             }
 
-            var t = (Tournament)dgvTournaments.SelectedRows[0].DataBoundItem;
+            var t = (Tournament)dgvTournaments.CurrentRow.DataBoundItem;
 
             tournamentManager.RemoveTournament(t);
-
             MessageBox.Show("Tournament deleted.");
+
             RefreshTournaments();
         }
 
         private void dgvTournaments_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex < 0) return;
+            if (e.RowIndex < 0)
+                return;
 
-            int id = Convert.ToInt32(dgvTournaments.Rows[e.RowIndex].Cells["Id"].Value);
+            int id = Convert.ToInt32(
+                dgvTournaments.Rows[e.RowIndex].Cells["Id"].Value
+            );
+
             var t = tournamentManager.GetTournamentById(id);
 
             new TournamentDetails(connection, t).Show();

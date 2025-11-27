@@ -16,7 +16,12 @@ namespace LogicLayer.Managers
 
         public Team GetTeamOfUser(int userId)
         {
-            return teamRepo.GetTeamByUser(userId);
+            var team = teamRepo.GetTeamByUser(userId);
+
+            if (team != null)
+                team.Members = teamRepo.GetTeamMembers(team.Id);
+
+            return team;
         }
 
         public Team GetTeam(int id)
@@ -65,10 +70,7 @@ namespace LogicLayer.Managers
             teamRepo.CreateJoinRequest(teamId, userId);
         }
 
-        // ---------------------------------------------------------
         // APPROVE
-        // ---------------------------------------------------------
-
         public void ApproveRequest(int requestId, int captainId)
         {
             var captainTeam = teamRepo.GetTeamByUser(captainId);
@@ -92,10 +94,7 @@ namespace LogicLayer.Managers
             teamRepo.DeleteJoinRequest(requestId);
         }
 
-        // ---------------------------------------------------------
         // REJECT
-        // ---------------------------------------------------------
-
         public void RejectRequest(int requestId, int captainId)
         {
             var captainTeam = teamRepo.GetTeamByUser(captainId);
@@ -114,10 +113,7 @@ namespace LogicLayer.Managers
             teamRepo.DeleteJoinRequest(requestId);
         }
 
-        // ---------------------------------------------------------
         // LEAVE TEAM
-        // ---------------------------------------------------------
-
         public void LeaveTeam(int userId)
         {
             var team = teamRepo.GetTeamByUser(userId);
@@ -126,15 +122,15 @@ namespace LogicLayer.Managers
                 throw new Exception("Not in a team.");
 
             if (team.Captain.Id == userId)
-                throw new Exception("Captain cannot leave the team.");
+            {
+                teamRepo.DeleteTeam(team.Id);
+                return;
+            }
 
             teamRepo.RemovePlayer(team.Id, userId);
         }
 
-        // ---------------------------------------------------------
         // KICK MEMBER
-        // ---------------------------------------------------------
-
         public void KickMember(int captainId, int userId)
         {
             var team = teamRepo.GetTeamByUser(captainId);

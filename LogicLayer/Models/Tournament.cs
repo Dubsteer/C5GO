@@ -6,36 +6,26 @@ namespace LogicLayer.Models
     public class Tournament
     {
         public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-
+        public string Name { get; set; }
+        public string Description { get; set; }
         public Status Status { get; set; }
 
-        // Solo players (1v1)
+        public bool IsTeamTournament { get; set; }
+        public int TeamSizeRequired { get; set; }
+
+        // Loaded collections
         public List<Player> Players { get; set; } = new();
-
-        // Matches
         public List<Match> Matches { get; set; } = new();
+        public List<int> TeamIds { get; set; } = new();
+        public List<Team> Teams { get; set; } = new();
 
-        // 🔥 TEAM TOURNAMENT
-        public bool IsTeamTournament { get; set; } = false;
-        public int TeamSizeRequired { get; set; } = 1;  // 1 = solo, 5 = CS2
+        // UI helpers
+        public int PlayersCount => Players.Count;
+        public int TeamsCount => Teams.Count;
+        public int MatchesCount => Matches.Count;
 
-        public bool IsOpen => Status == Status.Open;
-        public bool IsClosed => Status == Status.Closed;
-        public bool IsInProgress => Status == Status.InProgress;
+        public bool CanLeave { get; set; }
 
         public Tournament() { }
-
-        public Tournament(int id, string name, string description, Status status,
-                          bool isTeam, int teamSize)
-        {
-            Id = id;
-            Name = name;
-            Description = description;
-            Status = status;
-            IsTeamTournament = isTeam;
-            TeamSizeRequired = teamSize;
-        }
     }
 }

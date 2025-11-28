@@ -19,12 +19,11 @@ namespace LogicLayer.Models
         public List<int> TeamIds { get; set; } = new();
         public List<Team> Teams { get; set; } = new();
 
-        // UI helpers
-        public int PlayersCount => Players.Count;
-        public int TeamsCount => Teams.Count;
-        public int MatchesCount => Matches.Count;
-
-        public bool CanLeave { get; set; }
+        // --- UI & Admin Panel fields loaded from Repo ---
+        public int PlayersCount { get; set; }
+        public int TeamsCount { get; set; }
+        public int MatchesCount { get; set; }
+        public bool CanLeave { get; set; } = false;
 
         public Tournament() { }
     }

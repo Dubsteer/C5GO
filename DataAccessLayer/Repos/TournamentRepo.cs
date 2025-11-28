@@ -3,6 +3,7 @@ using LogicLayer.Enums;
 using LogicLayer.IRepos;
 using LogicLayer.Models;
 using MySql.Data.MySqlClient;
+using System;
 using System.Collections.Generic;
 
 namespace DataLayer.Repos
@@ -22,17 +23,19 @@ namespace DataLayer.Repos
                 conn.Open();
         }
 
-        // ============================================
+        // ===========================================================
         // GET ALL
-        // ============================================
+        // ===========================================================
         public List<Tournament> GetAllTournaments()
         {
             EnsureConnection();
 
             var list = new List<Tournament>();
+
             var cmd = new MySqlCommand(
                 @"SELECT id, name, description, status_int, is_team, team_size_required 
-                  FROM tournament", conn.GetInnerConn());
+                  FROM tournament",
+                conn.GetInnerConn());
 
             using var r = cmd.ExecuteReader();
 
@@ -50,13 +53,23 @@ namespace DataLayer.Repos
 
                 list.Add(t);
             }
+            r.Close(); // CLOSE READER so new queries can run!!
+
+            // --- Load counts for each tournament ---
+            foreach (var t in list)
+            {
+                t.PlayersCount = GetPlayersCount(t.Id);
+                t.TeamsCount = GetTeamsCount(t.Id);
+                t.MatchesCount = GetMatchesCount(t.Id);
+                t.CanLeave = false;
+            }
 
             return list;
         }
 
-        // ============================================
+        // ===========================================================
         // GET BY ID
-        // ============================================
+        // ===========================================================
         public Tournament GetTournamentById(int id)
         {
             EnsureConnection();
@@ -69,10 +82,9 @@ namespace DataLayer.Repos
             cmd.Parameters.AddWithValue("@id", id);
 
             using var r = cmd.ExecuteReader();
-
             if (!r.Read()) return null;
 
-            return new Tournament
+            var t = new Tournament
             {
                 Id = r.GetInt32("id"),
                 Name = r.GetString("name"),
@@ -81,11 +93,20 @@ namespace DataLayer.Repos
                 IsTeamTournament = r.GetBoolean("is_team"),
                 TeamSizeRequired = r.GetInt32("team_size_required")
             };
+            r.Close();
+
+            // Load counts
+            t.PlayersCount = GetPlayersCount(t.Id);
+            t.TeamsCount = GetTeamsCount(t.Id);
+            t.MatchesCount = GetMatchesCount(t.Id);
+            t.CanLeave = false;
+
+            return t;
         }
 
-        // ============================================
+        // ===========================================================
         // ADD / UPDATE / DELETE
-        // ============================================
+        // ===========================================================
         public void AddTournament(Tournament t)
         {
             EnsureConnection();
@@ -129,25 +150,65 @@ namespace DataLayer.Repos
         {
             EnsureConnection();
 
+            // Remove solo matches
             new MySqlCommand("DELETE FROM matches WHERE tournamentId=@id", conn.GetInnerConn())
             { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
 
+            // Remove old match table
             new MySqlCommand("DELETE FROM `match` WHERE tournamentId=@id", conn.GetInnerConn())
             { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
 
+            // Remove solo applications
             new MySqlCommand("DELETE FROM applications WHERE tournamentId=@id", conn.GetInnerConn())
             { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
 
+            // Remove team applications
             new MySqlCommand("DELETE FROM team_applications WHERE tournamentId=@id", conn.GetInnerConn())
             { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
 
+            // Remove tournament itself
             new MySqlCommand("DELETE FROM tournament WHERE id=@id", conn.GetInnerConn())
             { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
         }
 
-        // ============================================
+        // ===========================================================
+        // COUNTS
+        // ===========================================================
+        private int GetPlayersCount(int tournamentId)
+        {
+            var cmd = new MySqlCommand(
+                "SELECT COUNT(*) FROM applications WHERE tournamentId=@id",
+                conn.GetInnerConn());
+
+            cmd.Parameters.AddWithValue("@id", tournamentId);
+            return Convert.ToInt32(cmd.ExecuteScalar());
+        }
+
+        private int GetTeamsCount(int tournamentId)
+        {
+            var cmd = new MySqlCommand(
+                "SELECT COUNT(*) FROM team_applications WHERE tournamentId=@id",
+                conn.GetInnerConn());
+
+            cmd.Parameters.AddWithValue("@id", tournamentId);
+            return Convert.ToInt32(cmd.ExecuteScalar());
+        }
+
+        private int GetMatchesCount(int tournamentId)
+        {
+            var cmd = new MySqlCommand(
+                @"SELECT 
+                      (SELECT COUNT(*) FROM matches WHERE tournamentId=@id) +
+                      (SELECT COUNT(*) FROM team_matches WHERE tournamentId=@id)",
+                conn.GetInnerConn());
+
+            cmd.Parameters.AddWithValue("@id", tournamentId);
+            return Convert.ToInt32(cmd.ExecuteScalar());
+        }
+
+        // ===========================================================
         // SOLO
-        // ============================================
+        // ===========================================================
         public void AddTournamentApp(Player p, Tournament t)
         {
             EnsureConnection();
@@ -211,9 +272,9 @@ namespace DataLayer.Repos
             return list;
         }
 
-        // ============================================
+        // ===========================================================
         // TEAMS
-        // ============================================
+        // ===========================================================
         public void AddTeamTournamentApp(int teamId, int tournamentId)
         {
             EnsureConnection();

@@ -25,20 +25,26 @@ namespace DesktopApp.UserControls
             var matchManager = new MatchManager(matchRepo);
 
             var tournamentRepo = new TournamentRepo(connection);
-            tournamentManager = new TournamentManager(tournamentRepo, matchManager);
+
+            // NEW → Team match repo + manager
+            var teamMatchRepo = new TeamMatchRepo(connection);
+            var teamMatchManager = new TeamMatchManager(teamMatchRepo);
+
+            // FIXED → 3-parameter constructor
+            tournamentManager = new TournamentManager(
+                tournamentRepo,
+                matchManager,
+                teamMatchManager
+            );
 
             btnCreate.Click += btnCreate_Click;
             btnBack.Click += btnBack_Click;
 
-            // ✅ prvo dodaj Item-e!!
             cbMode.Items.Clear();
             cbMode.Items.Add("Solo");
             cbMode.Items.Add("Team");
-
-            // 🔥 DEFAULT = SOLO
             cbMode.SelectedIndex = 0;
 
-            // Solo / Team switch
             cbMode.SelectedIndexChanged += (s, e) =>
             {
                 bool isTeam = cbMode.SelectedItem.ToString() == "Team";
@@ -51,6 +57,7 @@ namespace DesktopApp.UserControls
 
             VisibleChanged += AddTournament_VisibleChanged;
         }
+
 
 
         private void AddTournament_VisibleChanged(object sender, EventArgs e)

@@ -29,16 +29,26 @@ namespace DesktopApp.UserControls
             matchManager = new MatchManager(matchRepo);
 
             tournamentRepo = new TournamentRepo(connection);
-            tournamentManager = new TournamentManager(tournamentRepo, matchManager);
+
+            // NEW → Add team match repo + manager
+            var teamMatchRepo = new TeamMatchRepo(connection);
+            var teamMatchManager = new TeamMatchManager(teamMatchRepo);
+
+            // FIXED → pass all 3 managers
+            tournamentManager = new TournamentManager(
+                tournamentRepo,
+                matchManager,
+                teamMatchManager
+            );
 
             if (!DesignMode)
                 VisibleChanged += ViewListOfTournaments_VisibleChanged;
 
             btnCreateTournament.Click += btnCreateTournament_Click;
             btnDelete.Click += btnDeleteTournament_Click;
-
             dgvTournaments.CellDoubleClick += dgvTournaments_CellDoubleClick;
         }
+
 
         private void ViewListOfTournaments_VisibleChanged(object sender, EventArgs e)
         {

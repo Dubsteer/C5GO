@@ -13,82 +13,155 @@ namespace DesktopApp
 {
     public partial class TournamentDetails : Form
     {
+        private PlayerManager playerManager;
+        private PlayerRepo playerRepo;
+
+        private MatchManager matchManager;
+        private MatchRepo matchRepo;
+
+        private TournamentManager tournamentManager;
+        private TournamentRepo tournamentRepo;
+
+        private TeamMatchManager teamMatchManager;
+        private TeamMatchRepo teamMatchRepo;
+
+        private TeamRepo teamRepo;
+        private TeamManager teamManager;
+
+        private List<Match> matches;
+        private List<Player> players;
+
+        private Tournament currentTournament;
+        private IConnection connection;
+
         public TournamentDetails(IConnection conn, Tournament tournament)
         {
             InitializeComponent();
 
+            this.connection = conn;
+            currentTournament = tournament;
+
+            // DATA
             playerRepo = new PlayerRepo(conn);
             matchRepo = new MatchRepo(conn);
             tournamentRepo = new TournamentRepo(conn);
+            teamMatchRepo = new TeamMatchRepo(conn);
+            teamRepo = new TeamRepo(conn);
 
+            // MANAGERS
             playerManager = new PlayerManager(playerRepo);
             matchManager = new MatchManager(matchRepo);
-            tournamentManager = new TournamentManager(tournamentRepo, matchManager);
+            teamMatchManager = new TeamMatchManager(teamMatchRepo);
+            teamManager = new TeamManager(teamRepo);
 
-            currentTournament = tournament;
+            tournamentManager = new TournamentManager(
+                tournamentRepo,
+                matchManager,
+                teamMatchManager
+            );
 
+            // HEADER TEXT
+            lblTournamentName.Text = $"Tournament: {tournament.Name}";
+            lblTournamentStatus.Text = $"Status: {tournament.Status}";
+            lblTournamentType.Text = tournament.IsTeamTournament ? "Type: Team" : "Type: Solo";
+
+            // LOAD
             players = tournamentManager.GetAllPlayersInTournament(tournament);
             matches = tournamentManager.GetAllMatchesInTournament(tournament);
 
-            cbMatchStatus.Text = "All";
-
-            RefreshDGV();
+            SetupUIBasedOnTournamentType();
         }
 
-        private PlayerManager playerManager;
-        private PlayerRepo playerRepo;
-        private MatchManager matchManager;
-        private MatchRepo matchRepo;
-        private TournamentManager tournamentManager;
-        private TournamentRepo tournamentRepo;
-
-        private List<Match> matches;
-        private List<Player> players;
-        private Tournament currentTournament;
-
-        public void RefreshDGV()
+        private void SetupUIBasedOnTournamentType()
         {
-            dgvListOfMatches.DataSource = null;
-            dgvListOfMatches.DataSource = matches;
-
-            dgvListOfPlayers.DataSource = null;
-            dgvListOfPlayers.DataSource = players;
-        }
-
-        private void btnEditMatch_Click(object sender, EventArgs e)
-        {
-            Form match = new ListOfMatches(matchManager, tournamentManager, currentTournament);
-            match.Show();
-        }
-
-        private void btnRunTournament_Click(object sender, EventArgs e)
-        {
-            if (currentTournament.Status == LogicLayer.Enums.Status.Closed)
+            if (currentTournament.IsTeamTournament)
             {
-                MessageBox.Show("Tournament is closed.");
-                return;
+                // TEAM UI
+                tabPlayersTeams.Text = "Teams";
+                tabMatches.Text = "Team Matches";
+
+                dgvTeams.Visible = true;
+                dgvTeamMatches.Visible = true;
+
+                dgvListOfPlayers.Visible = false;
+                dgvListOfMatches.Visible = false;
+
+                lblFilterPlayers.Visible = false;
+                rdAZ.Visible = false;
+                rdZA.Visible = false;
+
+                lblFilterMatches.Visible = false;
+                cbMatchStatus.Visible = false;
+
+                btnGenerateBracket.Text = "Generate Team Bracket";
+
+                // LOAD TEAMS
+                var teamIds = tournamentManager.GetTeamsInTournament(currentTournament);
+
+                var teamsDisplay = new List<object>();
+
+                foreach (var id in teamIds)
+                {
+                    var t = teamManager.GetTeam(id);
+                    teamsDisplay.Add(new
+                    {
+                        Id = t.Id,
+                        Name = t.Name,
+                        MembersCount = t.Members?.Count ?? 0
+                    });
+                }
+
+                dgvTeams.DataSource = teamsDisplay;
+
+                dgvTeamMatches.DataSource =
+                    teamMatchManager.GetTeamMatchesByTournament(currentTournament.Id);
             }
-
-            var selectedPlayers = tournamentManager.GetAllPlayersInTournament(currentTournament);
-
-            if (selectedPlayers.Count < 2)
+            else
             {
-                MessageBox.Show("Not enough players.");
-                return;
-            }
+                dgvTeams.Visible = false;
+                dgvTeamMatches.Visible = false;
 
+                dgvListOfPlayers.Visible = true;
+                dgvListOfMatches.Visible = true;
+
+                lblFilterPlayers.Visible = true;
+                rdAZ.Visible = true;
+                rdZA.Visible = true;
+
+                lblFilterMatches.Visible = true;
+                cbMatchStatus.Visible = true;
+
+                dgvListOfPlayers.DataSource = players;
+                dgvListOfMatches.DataSource = matches;
+            }
+        }
+
+        private void btnGenerateBracket_Click(object sender, EventArgs e)
+        {
             try
             {
-                tournamentManager.TournamentLogic(
-                    selectedPlayers,
-                    currentTournament,
-                    datePicker.Value,
-                    (int)nUD.Value
-                );
+                if (!currentTournament.IsTeamTournament)
+                {
+                    tournamentManager.GenerateSoloBracket(players, currentTournament);
+                    MessageBox.Show("Bracket generated!");
+                    dgvListOfMatches.DataSource =
+                        tournamentManager.GetAllMatchesInTournament(currentTournament);
+                }
+                else
+                {
+                    var teamIds = tournamentManager.GetTeamsInTournament(currentTournament);
 
-                MessageBox.Show("Tournament started!");
+                    if (teamIds.Count != 8 && teamIds.Count != 12 && teamIds.Count != 16)
+                    {
+                        MessageBox.Show("Team bracket requires 8, 12, or 16 teams.");
+                        return;
+                    }
 
-                dgvListOfMatches.DataSource = tournamentManager.GetAllMatchesInTournament(currentTournament);
+                    tournamentManager.GenerateTeamBracket(teamIds, currentTournament);
+                    MessageBox.Show("Team bracket generated!");
+                    dgvTeamMatches.DataSource =
+                        teamMatchManager.GetTeamMatchesByTournament(currentTournament.Id);
+                }
             }
             catch (Exception ex)
             {
@@ -98,41 +171,88 @@ namespace DesktopApp
 
         private void rdAZ_CheckedChanged(object sender, EventArgs e)
         {
-            if (rdAZ.Checked)
+            if (rdAZ.Checked && !currentTournament.IsTeamTournament)
             {
                 players = players.OrderBy(p => p.Username).ToList();
-                RefreshDGV();
+                dgvListOfPlayers.DataSource = players;
             }
         }
 
         private void rdZA_CheckedChanged(object sender, EventArgs e)
         {
-            if (rdZA.Checked)
+            if (rdZA.Checked && !currentTournament.IsTeamTournament)
             {
                 players = players.OrderByDescending(p => p.Username).ToList();
-                RefreshDGV();
+                dgvListOfPlayers.DataSource = players;
             }
         }
 
         private void cbMatchStatus_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (cbMatchStatus.SelectedItem == null)
+            if (currentTournament.IsTeamTournament)
                 return;
 
             if (cbMatchStatus.SelectedItem.ToString() == "All")
             {
-                matches = tournamentManager.GetAllMatchesInTournament(currentTournament);
+                dgvListOfMatches.DataSource =
+                    tournamentManager.GetAllMatchesInTournament(currentTournament);
             }
             else
             {
                 string selected = cbMatchStatus.Text;
-                matches = tournamentManager
-                    .GetAllMatchesInTournament(currentTournament)
+
+                dgvListOfMatches.DataSource =
+                    tournamentManager.GetAllMatchesInTournament(currentTournament)
                     .Where(m => m.Status.ToString() == selected)
                     .ToList();
             }
+        }
 
-            dgvListOfMatches.DataSource = matches;
+        private void btnEditMatch_Click(object sender, EventArgs e)
+        {
+            if (!currentTournament.IsTeamTournament)
+                new ListOfMatches(matchManager, tournamentManager, currentTournament).Show();
+            else
+                MessageBox.Show("Team match manual editing is done in bracket view.");
+        }
+
+        private void btnViewBracket_Click(object sender, EventArgs e)
+        {
+            if (!currentTournament.IsTeamTournament)
+            {
+                MessageBox.Show("Only team tournaments have bracket view.");
+                return;
+            }
+
+            var bracket = new TeamBracketView(
+                currentTournament,
+                teamMatchManager,
+                teamManager
+            );
+
+            bracket.Show();
+        }
+
+        // 🔥 NEW BUTTON: opens the full team editor
+        private void btnManageTeams_Click(object sender, EventArgs e)
+        {
+            if (!currentTournament.IsTeamTournament)
+            {
+                MessageBox.Show("Only team tournaments have team management.");
+                return;
+            }
+
+            TeamTournamentEditorForm form = new TeamTournamentEditorForm(
+                currentTournament,
+                teamManager,
+                tournamentManager,
+                connection
+            );
+
+            form.ShowDialog();
+
+            // Refresh UI after editing
+            SetupUIBasedOnTournamentType();
         }
     }
 }

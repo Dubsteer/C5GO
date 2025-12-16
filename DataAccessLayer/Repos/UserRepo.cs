@@ -54,7 +54,9 @@ namespace DataLayer.Repos
             cmd.Parameters.AddWithValue("@EMAIL", user.Gmail);
             cmd.Parameters.AddWithValue("@PASSWORD", user.Password);
             cmd.Parameters.AddWithValue("@IS_MODERATOR", user.IsAdmin);
-            cmd.Parameters.AddWithValue("@STEAM_ID", user.SteamId ?? "00000000");
+            cmd.Parameters.AddWithValue("@STEAM_ID",
+    string.IsNullOrWhiteSpace(user.SteamId) ? null : user.SteamId);
+
 
             try
             {
@@ -272,5 +274,48 @@ namespace DataLayer.Repos
 
             return users;
         }
+
+        public bool UsernameExists(string username)
+        {
+            EnsureConnection();
+
+            var cmd = new MySqlCommand(
+                "SELECT EXISTS(SELECT 1 FROM user WHERE username = @USERNAME)",
+                conn.GetInnerConn());
+
+            cmd.Parameters.AddWithValue("@USERNAME", username);
+
+            return Convert.ToInt32(cmd.ExecuteScalar()) == 1;
+        }
+
+        public bool EmailExists(string email)
+        {
+            EnsureConnection();
+
+            var cmd = new MySqlCommand(
+                "SELECT EXISTS(SELECT 1 FROM user WHERE email = @EMAIL)",
+                conn.GetInnerConn());
+
+            cmd.Parameters.AddWithValue("@EMAIL", email);
+
+            return Convert.ToInt32(cmd.ExecuteScalar()) == 1;
+        }
+
+        public bool SteamIdExists(string steamId)
+        {
+            if (string.IsNullOrWhiteSpace(steamId))
+                return false;
+
+            EnsureConnection();
+
+            var cmd = new MySqlCommand(
+                "SELECT EXISTS(SELECT 1 FROM user WHERE steam_id = @STEAM_ID)",
+                conn.GetInnerConn());
+
+            cmd.Parameters.AddWithValue("@STEAM_ID", steamId);
+
+            return Convert.ToInt32(cmd.ExecuteScalar()) == 1;
+        }
+
     }
 }

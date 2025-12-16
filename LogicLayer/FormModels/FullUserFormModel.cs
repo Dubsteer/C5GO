@@ -5,31 +5,41 @@ namespace LogicLayer.FormModels
 {
     public class FullUserFormModel : LoginFormModel
     {
-        [Required]
+        [Required(ErrorMessage = "First name is required")]
         [DisplayName("First name")]
-        [StringLength(25, ErrorMessage = "First name length must not exceed {1} characters.")]
+        [StringLength(25, ErrorMessage = "First name must not exceed {1} characters")]
         public string Firstname { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Last name is required")]
         [DisplayName("Last name")]
-        [StringLength(35, ErrorMessage = "Last name length must not exceed {1} characters.")]
+        [StringLength(35, ErrorMessage = "Last name must not exceed {1} characters")]
         public string Lastname { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Age is required")]
         [DisplayName("Age")]
-        [Range(14, 106, ErrorMessage = "Age must be between 14 and 106.")]
-        public int Age { get; set; }
+        [Range(14, 106, ErrorMessage = "Age must be between 14 and 106")]
+        public int? Age { get; set; }
 
-        [Required]
-        [EmailAddress]
+        [Required(ErrorMessage = "Username is required")]
+        public string Username { get; set; }
+
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address")]
         [DisplayName("Email")]
-        [RegularExpression(@"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$",
-            ErrorMessage = "Invalid email format.")]
         public string Gmail { get; set; }
+
+        [Required(ErrorMessage = "Password is required")]
+        public string Password { get; set; }
 
         public FullUserFormModel() { }
 
-        public FullUserFormModel(string firstname, string lastname, int age, string username, string gmail, string password)
+        public FullUserFormModel(
+            string firstname,
+            string lastname,
+            int age,
+            string username,
+            string gmail,
+            string password)
             : base(username, password)
         {
             Firstname = firstname;

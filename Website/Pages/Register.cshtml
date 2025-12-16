@@ -15,8 +15,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        padding-top: 50px;
-        padding-bottom: 50px;
+        padding: 50px 0;
     }
 
     .auth-card {
@@ -26,21 +25,19 @@
         border-radius: 12px;
         border: 1px solid #2d333b;
         box-shadow: 0 0 10px rgba(99,102,241,0.25);
-        margin-top: 30px;
     }
 
         .auth-card h2 {
             text-align: center;
             margin-bottom: 25px;
             font-weight: 700;
-            color: #fff;
         }
 
     .auth-input {
         width: 100%;
         padding: 10px;
         margin-top: 6px;
-        margin-bottom: 15px;
+        margin-bottom: 5px;
         background: #0d1117;
         border: 1px solid #2d333b;
         color: #fff;
@@ -52,6 +49,13 @@
             border-color: #6366f1;
         }
 
+    .field-error {
+        color: #f87171;
+        font-size: 13px;
+        margin-bottom: 10px;
+        display: block;
+    }
+
     .auth-btn {
         width: 100%;
         padding: 12px;
@@ -62,8 +66,7 @@
         font-size: 16px;
         font-weight: 600;
         cursor: pointer;
-        transition: 0.2s;
-        margin-top: 5px;
+        margin-top: 10px;
     }
 
         .auth-btn:hover {
@@ -80,10 +83,6 @@
         color: #58a6ff;
         text-decoration: none;
     }
-
-        a:hover {
-            text-decoration: underline;
-        }
 </style>
 
 <div class="auth-container">
@@ -91,25 +90,31 @@
 
         <h2>Create Account</h2>
 
-        <form method="post">
+        <form method="post" novalidate>
 
             <label>First name</label>
             <input asp-for="FullUserFormModel.Firstname" class="auth-input" />
+            <span asp-validation-for="FullUserFormModel.Firstname" class="field-error"></span>
 
             <label>Last name</label>
             <input asp-for="FullUserFormModel.Lastname" class="auth-input" />
+            <span asp-validation-for="FullUserFormModel.Lastname" class="field-error"></span>
 
             <label>Age</label>
-            <input asp-for="FullUserFormModel.Age" type="number" min="14" max="106" class="auth-input" />
+            <input asp-for="FullUserFormModel.Age" type="number" class="auth-input" />
+            <span asp-validation-for="FullUserFormModel.Age" class="field-error"></span>
 
             <label>Username</label>
             <input asp-for="FullUserFormModel.Username" class="auth-input" />
+            <span asp-validation-for="FullUserFormModel.Username" class="field-error"></span>
 
             <label>Email</label>
             <input asp-for="FullUserFormModel.Gmail" class="auth-input" />
+            <span asp-validation-for="FullUserFormModel.Gmail" class="field-error"></span>
 
             <label>Password</label>
             <input asp-for="FullUserFormModel.Password" type="password" class="auth-input" />
+            <span asp-validation-for="FullUserFormModel.Password" class="field-error"></span>
 
             <input type="submit" class="auth-btn" value="Create your account" />
         </form>
@@ -118,7 +123,7 @@
             Already have an account? <a href="/Login">Log In</a>
         </div>
 
-        @section scripts{
+        @section scripts {
             <partial name="_ValidationScriptsPartial" />
         }
     </div>

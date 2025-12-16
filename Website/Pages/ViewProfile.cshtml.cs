@@ -14,12 +14,15 @@ namespace Website.Pages
         public Player Player { get; set; }
         public List<Match> Matches { get; set; } = new();
 
+        public bool RequireSteam { get; set; }
+
         private readonly UserManager _userManager;
         private readonly PlayerManager _playerManager;
         private readonly MatchManager _matchManager;
 
         [BindProperty]
-        [StringLength(8, MinimumLength = 8, ErrorMessage = "Steam ID must be 8 characters.")]
+        [Required(ErrorMessage = "Steam ID is required")]
+        [StringLength(8, MinimumLength = 8, ErrorMessage = "Steam ID must be exactly 8 characters")]
         public string SteamId { get; set; }
 
         public ViewProfileModel(UserManager u, PlayerManager p, MatchManager m)
@@ -41,12 +44,15 @@ namespace Website.Pages
             if (id == null) return Redirect("/Login");
 
             PageUser = _userManager.GetUserById(id.Value);
-
             Player = _playerManager.GetPlayer(PageUser);
-
-            Matches = Player != null ? _matchManager.GetPastMatches(PageUser) : new List<Match>();
+            Matches = Player != null
+                ? _matchManager.GetPastMatches(PageUser)
+                : new List<Match>();
 
             SteamId = Player?.SteamId ?? "";
+
+            if (TempData.ContainsKey("RequireSteam"))
+                RequireSteam = true;
 
             return Page();
         }
@@ -67,17 +73,23 @@ namespace Website.Pages
             if (!ModelState.IsValid)
                 return Page();
 
-            // 1. Ažuriramo Steam ID user-u
+            // UNIQUE SteamID check
+            if (_userManager.SteamIdExists(SteamId))
+            {
+                ModelState.AddModelError(
+                    "SteamId",
+                    "This Steam ID is already in use by another player."
+                );
+                return Page();
+            }
+
+            // Save SteamID
             PageUser.SteamId = SteamId;
 
-            // 2. Napravimo Player objekat iz user-a
             var newPlayer = new Player(PageUser);
-
-            // 3. Sačuvamo u bazi kao "player"
             _playerManager.InitializeRole(newPlayer);
 
             return Redirect("/ViewProfile");
         }
-
     }
 }

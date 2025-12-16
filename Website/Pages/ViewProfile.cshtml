@@ -7,17 +7,14 @@
 
 <div>
 
-    <!-- EDIT PROFILE BUTTON -->
     <div class="text-end mb-3">
         <a asp-page="/EditProfile" class="btn-main">
             Edit Profile ✏️
         </a>
     </div>
 
-    <!-- USERNAME -->
     <h3 class="profile-value">@Model.PageUser.Username</h3>
 
-    <!-- BASIC INFO -->
     <div>
         <span class="profile-label">First Name</span>
         <div class="profile-value">@Model.PageUser.Firstname</div>
@@ -34,29 +31,50 @@
 
     <hr class="section-divider" />
 
-    <!-- PLAYER SETUP -->
     <h4 class="text-info">Player Setup</h4>
+
+    @if (Model.RequireSteam)
+    {
+        <div style="
+                background:#1e3a8a;
+                border:1px solid #60a5fa;
+                color:#dbeafe;
+                padding:12px;
+                border-radius:8px;
+                margin-bottom:15px;
+                font-weight:600;">
+            ⚠️ To join a tournament, you must enter your Steam ID.
+            <br />
+            You can find your Steam ID on your Steam profile.
+        </div>
+    }
 
     @if (Model.Player == null)
     {
         <form method="post" class="mt-3">
 
             <span class="profile-label">Steam ID</span>
-            <input asp-for="SteamId" class="form-control" style="max-width:300px;" placeholder="Enter your Steam ID" />
+            <input asp-for="SteamId"
+                   class="form-control"
+                   style="max-width:300px;"
+                   placeholder="Enter your Steam ID" />
             <span asp-validation-for="SteamId" class="text-danger"></span>
 
-            <button type="submit" class="btn-main mt-3">Save & Become Player</button>
+            <button type="submit" class="btn-main mt-3">
+                Save & Become Player
+            </button>
         </form>
     }
     else
     {
         <div class="profile-value">@Model.Player.SteamId</div>
-        <span style="color:lightgreen;font-weight:600;">✔ You are already a Player</span>
+        <span style="color:lightgreen;font-weight:600;">
+            ✔ You are already a Player
+        </span>
     }
 
     <hr class="section-divider" />
 
-    <!-- MATCH HISTORY -->
     <h4 class="text-info">Match History</h4>
 
     @if (!Model.Matches.Any())
@@ -86,16 +104,14 @@
                                 if (m.User1 != null && m.User1.Username == username)
                                 {
                                     @m.Player1Score
-                                    ;
                                 }
                                 else if (m.User2 != null && m.User2.Username == username)
                                 {
                                     @m.Player2Score
-                                    ;
                                 }
                                 else
                                 {
-                                    @:"-";
+                                    @:"-"
                                 }
                             }
                         </td>

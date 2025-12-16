@@ -57,7 +57,7 @@ namespace Website.Pages
                 oldUser.Id,
                 FullUserFormModel.Firstname,
                 FullUserFormModel.Lastname,
-                FullUserFormModel.Age,
+                FullUserFormModel.Age.Value,
                 FullUserFormModel.Username,
                 FullUserFormModel.Gmail,
                 finalPassword,

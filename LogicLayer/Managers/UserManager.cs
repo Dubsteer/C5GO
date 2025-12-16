@@ -1,4 +1,5 @@
-﻿using LogicLayer.IRepos;
+﻿using LogicLayer.Exceptions;
+using LogicLayer.IRepos;
 using LogicLayer.Models;
 using System.Collections.Generic;
 using System.Linq;
@@ -62,13 +63,22 @@ namespace LogicLayer.Managers
 
         public void CreateUser(User user)
         {
+            if (userRepo.UsernameExists(user.Username))
+                throw new UsernameAlreadyInUseException();
+
+            if (userRepo.EmailExists(user.Gmail))
+                throw new EmailAlreadyInUseException();
+
+            if (!string.IsNullOrWhiteSpace(user.SteamId) &&
+                userRepo.SteamIdExists(user.SteamId))
+                throw new System.Exception("SteamID already in use");
+
             if (!user.Password.StartsWith("$2"))
-            {
                 user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
-            }
 
             userRepo.CreateUser(user);
         }
+
 
         public bool CheckIfUsernameExists(string username, int selfId)
         {
@@ -79,5 +89,10 @@ namespace LogicLayer.Managers
         {
             return userRepo.SearchUser(term);
         }
+        public bool SteamIdExists(string steamId)
+        {
+            return userRepo.SteamIdExists(steamId);
+        }
+
     }
 }

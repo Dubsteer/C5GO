@@ -47,7 +47,7 @@ namespace Website.Pages
                 var uid = int.Parse(User.FindFirst("id").Value);
                 var user = userManager.GetUserById(uid);
 
-                if (string.IsNullOrWhiteSpace(user.SteamId) || user.SteamId == "0")
+                if (string.IsNullOrWhiteSpace(user.SteamId))
                 {
                     CurrentPlayer = null;
                     MyTeam = null;
@@ -79,11 +79,9 @@ namespace Website.Pages
 
             foreach (var t in Tournaments)
             {
-                // SOLO
                 t.Players = tournamentManager.GetAllPlayersInTournament(t);
                 t.Matches = tournamentManager.GetAllMatchesInTournament(t);
 
-                // TEAM
                 t.TeamIds = tournamentManager.GetTeamsInTournament(t);
                 t.Teams = new List<Team>();
 
@@ -94,27 +92,19 @@ namespace Website.Pages
                         t.Teams.Add(team);
                 }
 
-                // Status update
                 tournamentManager.UpdateTournamentStatus(t);
 
-                // CAN LEAVE?
                 if (CurrentPlayer != null)
                 {
                     if (!t.IsTeamTournament)
-                    {
                         t.CanLeave = t.Players.Any(p => p.Id == CurrentPlayer.Id);
-                    }
                     else if (MyTeam != null)
-                    {
                         t.CanLeave = t.TeamIds.Contains(MyTeam.Id);
-                    }
                 }
             }
 
-            // IS ADMIN?
             IsAdmin = CurrentPlayer != null && CurrentPlayer.IsAdmin;
 
-            // FILTERING
             Tournaments = filter switch
             {
                 "solo" => Tournaments.Where(t => !t.IsTeamTournament).ToList(),
@@ -131,7 +121,10 @@ namespace Website.Pages
             LoadCurrent();
 
             if (!IsPlayer)
+            {
+                TempData["RequireSteam"] = true; // ? KEY LINE
                 return RedirectToPage("/ViewProfile");
+            }
 
             try
             {
@@ -143,129 +136,6 @@ namespace Website.Pages
                     tournamentManager.AddTournamentApp(CurrentPlayer, t);
                     TempData["Message"] = "Successfully joined!";
                 }
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = ex.Message;
-            }
-
-            return RedirectToPage("/Tournaments");
-        }
-
-        // TEAM APPLY
-        public IActionResult OnPostApplyTeam(int id)
-        {
-            LoadCurrent();
-
-            if (!IsPlayer)
-                return RedirectToPage("/ViewProfile");
-
-            if (MyTeam == null)
-                return RedirectToPage("/Teams/Teams");
-
-            if (MyTeam.Captain.Id != CurrentPlayer.Id)
-                return Unauthorized();
-
-            try
-            {
-                var t = tournamentManager.GetTournamentById(id);
-
-                var teamIds = tournamentManager.GetTeamsInTournament(t);
-                if (teamIds.Contains(MyTeam.Id))
-                    throw new Exception("Team already registered.");
-
-                if (MyTeam.Members.Count != t.TeamSizeRequired)
-                    throw new Exception($"Team must have exactly {t.TeamSizeRequired} players.");
-
-                tournamentManager.AddTeamToTournament(MyTeam.Id, id);
-                TempData["Message"] = "Team joined!";
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = ex.Message;
-            }
-
-            return RedirectToPage("/Tournaments");
-        }
-
-        // LEAVE SOLO
-        public IActionResult OnPostLeave(int id)
-        {
-            LoadCurrent();
-
-            if (!IsPlayer)
-                return RedirectToPage("/ViewProfile");
-
-            try
-            {
-                var t = tournamentManager.GetTournamentById(id);
-                tournamentManager.RemovePlayerFromTournament(CurrentPlayer, t);
-                TempData["Message"] = "Left tournament.";
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = ex.Message;
-            }
-
-            return RedirectToPage("/Tournaments");
-        }
-
-        // LEAVE TEAM
-        public IActionResult OnPostLeaveTeam(int id)
-        {
-            LoadCurrent();
-
-            if (MyTeam == null || MyTeam.Captain.Id != CurrentPlayer.Id)
-                return Unauthorized();
-
-            try
-            {
-                tournamentManager.RemoveTeamFromTournament(MyTeam.Id, id);
-                TempData["Message"] = "Team left tournament.";
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = ex.Message;
-            }
-
-            return RedirectToPage("/Tournaments");
-        }
-
-        // ADMIN CLOSE
-        public IActionResult OnPostClose(int id)
-        {
-            LoadCurrent();
-
-            if (!IsPlayer || !CurrentPlayer.IsAdmin)
-                return Unauthorized();
-
-            try
-            {
-                var t = tournamentManager.GetTournamentById(id);
-                tournamentManager.SetStatus(t, LogicLayer.Enums.Status.Closed);
-                TempData["Message"] = "Closed.";
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = ex.Message;
-            }
-
-            return RedirectToPage("/Tournaments");
-        }
-
-        // DELETE
-        public IActionResult OnPostDelete(int id)
-        {
-            LoadCurrent();
-
-            if (!IsPlayer || !CurrentPlayer.IsAdmin)
-                return Unauthorized();
-
-            try
-            {
-                var t = tournamentManager.GetTournamentById(id);
-                tournamentManager.RemoveTournament(t);
-                TempData["Message"] = "Deleted.";
             }
             catch (Exception ex)
             {

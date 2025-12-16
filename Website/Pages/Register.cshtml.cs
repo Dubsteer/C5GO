@@ -14,9 +14,6 @@ namespace Website.Pages
         public FullUserFormModel FullUserFormModel { get; set; }
 
         private readonly UserManager userManager;
-        public List<User> Users { get; set; }
-        public User newUser { get; set; }
-
 
         public RegisterModel(UserManager userManager)
         {
@@ -27,44 +24,49 @@ namespace Website.Pages
         {
             if (User.Identity.IsAuthenticated)
                 return Redirect("/");
-            else
-                return Page();
+
+            return Page();
         }
 
         public IActionResult OnPost()
         {
+            if (!ModelState.IsValid)
+                return Page();
 
-            User user = new User();
+            var user = new User(
+                FullUserFormModel.Firstname,
+                FullUserFormModel.Lastname,
+                FullUserFormModel.Age.Value,
+                FullUserFormModel.Username,
+                FullUserFormModel.Gmail,
+                FullUserFormModel.Password,
+                false
+            );
 
-            if (ModelState.IsValid)
+            try
             {
-
-                 user = new User(
-                    FullUserFormModel.Firstname,
-                    FullUserFormModel.Lastname,
-                    FullUserFormModel.Age,
-                    FullUserFormModel.Username,
-                    FullUserFormModel.Gmail,
-                    FullUserFormModel.Password,
-                    false
+                userManager.CreateUser(user);
+            }
+            catch (UsernameAlreadyInUseException)
+            {
+                ModelState.AddModelError(
+                    "FullUserFormModel.Username",
+                    "This username is already taken."
                 );
-
-                try
-                {
-                    userManager.CreateUser(user);
-                }
-                catch (UsernameAlreadyInUseException ex)
-                {
-                    ViewData["Error"] = ex.Message;
-                    Debug.WriteLine(ex.Message);
-                    return Page();
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(ex.Message);
-                    // internal server error
-                    return StatusCode(500);
-                }
+                return Page();
+            }
+            catch (EmailAlreadyInUseException)
+            {
+                ModelState.AddModelError(
+                    "FullUserFormModel.Gmail",
+                    "This email is already registered."
+                );
+                return Page();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                return StatusCode(500);
             }
 
             return Redirect("/");

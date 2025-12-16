@@ -21,12 +21,10 @@
         margin-bottom: 25px;
         box-shadow: 0 0 6px rgba(0,0,0,0.25);
         transition: 0.2s;
-        cursor: pointer;
         position: relative;
     }
 
     .card-box:hover {
-        transform: scale(1.02);
         border-color: #4da3ff;
     }
 
@@ -40,7 +38,7 @@
         padding: 6px 12px;
         margin-right: 5px;
         position: relative;
-        z-index: 5;
+        z-index: 2;
     }
 
     .tag {
@@ -56,6 +54,19 @@
     .tag-status-open { background: #22c55e; color: black; }
     .tag-status-running { background: #eab308; color: black; }
     .tag-status-closed { background: #ef4444; color: white; }
+
+    .t-desc {
+        color: #9ca3af;
+        font-size: 14px;
+        margin-top: 6px;
+        margin-bottom: 10px;
+        line-height: 1.4;
+
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
 </style>
 
 <div class="container mt-4">
@@ -64,17 +75,14 @@
 
     <!-- FILTER -->
     <div class="text-center mb-4">
-
         <a href="/Tournaments?filter=all"
            class="btn btn-small @(Model.Filter == "all" ? "btn-success" : "btn-secondary")">
             All
         </a>
-
         <a href="/Tournaments?filter=solo"
            class="btn btn-small @(Model.Filter == "solo" ? "btn-success" : "btn-secondary")">
             Solo
         </a>
-
         <a href="/Tournaments?filter=team"
            class="btn btn-small @(Model.Filter == "team" ? "btn-success" : "btn-secondary")">
             Team
@@ -84,15 +92,14 @@
     <div class="row">
         @foreach (var t in Model.Tournaments)
         {
-            <div class="col-md-4">
+            <div class="col-lg-4 col-md-6">
                 <div class="card-box">
 
                     <a class="full-link" href="/Tournaments/Details/@t.Id"></a>
 
                     <h3>@t.Name</h3>
-                    <p>@t.Description</p>
+                    <p class="t-desc">@t.Description</p>
 
-                    <!-- TYPE TAG -->
                     @if (t.IsTeamTournament)
                     {
                         <span class="tag tag-team">Team @t.TeamSizeRequired v @t.TeamSizeRequired</span>
@@ -102,7 +109,6 @@
                         <span class="tag tag-solo">Solo</span>
                     }
 
-                    <!-- STATUS TAG -->
                     <div class="mt-2">
                         @if (t.Status == LogicLayer.Enums.Status.Open)
                         {
@@ -118,7 +124,6 @@
                         }
                     </div>
 
-                    <!-- INFO -->
                     <div class="mt-3">
                         @if (!t.IsTeamTournament)
                         {
@@ -132,54 +137,28 @@
                         }
                     </div>
 
-                    <!-- BUTTONS -->
                     <div class="mt-3">
-
-                        <!-- LEAVE -->
                         @if (t.CanLeave)
                         {
-                            if (!t.IsTeamTournament)
-                            {
-                                <form method="post" asp-page-handler="Leave" asp-route-id="@t.Id" style="display:inline;">
-                                    <button type="submit" class="btn btn-warning btn-small">Leave</button>
-                                </form>
-                            }
-                            else
-                            {
-                                <form method="post" asp-page-handler="LeaveTeam" asp-route-id="@t.Id" style="display:inline;">
-                                    <button type="submit" class="btn btn-warning btn-small">Leave Team</button>
-                                </form>
-                            }
+                            <form method="post" asp-page-handler="Leave" asp-route-id="@t.Id" style="display:inline;">
+                                <button class="btn btn-warning btn-small">Leave</button>
+                            </form>
                         }
-                        else
+                        else if (t.Status == LogicLayer.Enums.Status.Open)
                         {
-                            <!-- JOIN -->
-                            if (t.Status == LogicLayer.Enums.Status.Open)
-                            {
-                                if (!t.IsTeamTournament)
-                                {
-                                    <form method="post" asp-page-handler="ApplySolo" asp-route-id="@t.Id" style="display:inline;">
-                                        <button type="submit" class="btn btn-success btn-small">Join</button>
-                                    </form>
-                                }
-                                else
-                                {
-                                    <form method="post" asp-page-handler="ApplyTeam" asp-route-id="@t.Id" style="display:inline;">
-                                        <button type="submit" class="btn btn-success btn-small">Join (Team)</button>
-                                    </form>
-                                }
-                            }
+                            <form method="post" asp-page-handler="ApplySolo" asp-route-id="@t.Id" style="display:inline;">
+                                <button class="btn btn-success btn-small">Join</button>
+                            </form>
                         }
 
-                        <!-- ADMIN DELETE -->
                         @if (Model.IsAdmin)
                         {
                             <form method="post" asp-page-handler="Delete" asp-route-id="@t.Id" style="display:inline;">
                                 <button class="btn btn-danger btn-small">Delete</button>
                             </form>
                         }
-
                     </div>
+
                 </div>
             </div>
         }

@@ -5,44 +5,47 @@
     Layout = "_ProfileLayout";
 }
 
-<div>
+<div class="container px-2 px-md-0">
 
+    <!-- EDIT PROFILE -->
     <div class="text-end mb-3">
-        <a asp-page="/EditProfile" class="btn-main">
+        <a asp-page="/EditProfile" class="btn btn-primary w-100 w-md-auto">
             Edit Profile ✏️
         </a>
     </div>
 
-    <h3 class="profile-value">@Model.PageUser.Username</h3>
+    <h3 class="profile-value text-center text-md-start">
+        @Model.PageUser.Username
+    </h3>
 
-    <div>
-        <span class="profile-label">First Name</span>
-        <div class="profile-value">@Model.PageUser.Firstname</div>
-
-        <span class="profile-label">Last Name</span>
-        <div class="profile-value">@Model.PageUser.Lastname</div>
-
-        <span class="profile-label">Email</span>
-        <div class="profile-value">@Model.PageUser.Gmail</div>
-
-        <span class="profile-label">Age</span>
-        <div class="profile-value">@Model.PageUser.Age</div>
+    <!-- BASIC INFO -->
+    <div class="row mt-3">
+        <div class="col-12 col-md-6 mb-2">
+            <span class="profile-label">First Name</span>
+            <div class="profile-value">@Model.PageUser.Firstname</div>
+        </div>
+        <div class="col-12 col-md-6 mb-2">
+            <span class="profile-label">Last Name</span>
+            <div class="profile-value">@Model.PageUser.Lastname</div>
+        </div>
+        <div class="col-12 col-md-6 mb-2">
+            <span class="profile-label">Email</span>
+            <div class="profile-value">@Model.PageUser.Gmail</div>
+        </div>
+        <div class="col-12 col-md-6 mb-2">
+            <span class="profile-label">Age</span>
+            <div class="profile-value">@Model.PageUser.Age</div>
+        </div>
     </div>
 
     <hr class="section-divider" />
 
+    <!-- PLAYER SETUP -->
     <h4 class="text-info">Player Setup</h4>
 
     @if (Model.RequireSteam)
     {
-        <div style="
-                background:#1e3a8a;
-                border:1px solid #60a5fa;
-                color:#dbeafe;
-                padding:12px;
-                border-radius:8px;
-                margin-bottom:15px;
-                font-weight:600;">
+        <div class="alert alert-info fw-semibold">
             ⚠️ To join a tournament, you must enter your Steam ID.
             <br />
             You can find your Steam ID on your Steam profile.
@@ -53,14 +56,14 @@
     {
         <form method="post" class="mt-3">
 
-            <span class="profile-label">Steam ID</span>
+            <label class="profile-label">Steam ID</label>
             <input asp-for="SteamId"
-                   class="form-control"
-                   style="max-width:300px;"
+                   class="form-control w-100 w-md-50"
                    placeholder="Enter your Steam ID" />
             <span asp-validation-for="SteamId" class="text-danger"></span>
 
-            <button type="submit" class="btn-main mt-3">
+            <button type="submit"
+                    class="btn btn-success mt-3 w-100 w-md-auto">
                 Save & Become Player
             </button>
         </form>
@@ -68,13 +71,14 @@
     else
     {
         <div class="profile-value">@Model.Player.SteamId</div>
-        <span style="color:lightgreen;font-weight:600;">
+        <span class="text-success fw-semibold">
             ✔ You are already a Player
         </span>
     }
 
     <hr class="section-divider" />
 
+    <!-- MATCH HISTORY -->
     <h4 class="text-info">Match History</h4>
 
     @if (!Model.Matches.Any())
@@ -83,42 +87,44 @@
     }
     else
     {
-        <table class="table table-dark table-striped mt-3">
-            <thead>
-                <tr>
-                    <th>Tournament ID</th>
-                    <th>Date</th>
-                    <th>Your Score</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var m in Model.Matches)
-                {
+        <div class="table-responsive">
+            <table class="table table-dark table-striped mt-3">
+                <thead>
                     <tr>
-                        <td>@m.TournamentId</td>
-                        <td>@m.MatchDate.ToShortDateString()</td>
-                        <td>
-                            @{
-                                var username = Model.PageUser.Username;
-
-                                if (m.User1 != null && m.User1.Username == username)
-                                {
-                                    @m.Player1Score
-                                }
-                                else if (m.User2 != null && m.User2.Username == username)
-                                {
-                                    @m.Player2Score
-                                }
-                                else
-                                {
-                                    @:"-"
-                                }
-                            }
-                        </td>
+                        <th>Tournament ID</th>
+                        <th>Date</th>
+                        <th>Your Score</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var m in Model.Matches)
+                    {
+                        <tr>
+                            <td>@m.TournamentId</td>
+                            <td>@m.MatchDate.ToShortDateString()</td>
+                            <td>
+                                @{
+                                    var username = Model.PageUser.Username;
+
+                                    if (m.User1 != null && m.User1.Username == username)
+                                    {
+                                        @m.Player1Score
+                                    }
+                                    else if (m.User2 != null && m.User2.Username == username)
+                                    {
+                                        @m.Player2Score
+                                    }
+                                    else
+                                    {
+                                        @:"-"
+                                    }
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     }
 
 </div>

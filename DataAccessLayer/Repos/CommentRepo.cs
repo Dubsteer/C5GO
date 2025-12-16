@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using LogicLayer;
 using LogicLayer.IRepos;
 using LogicLayer.Models;
@@ -137,6 +136,11 @@ namespace DataLayer.Repos
 
         public void DeleteComment(Comment comment)
         {
+            // optional: cascade delete replies of the comment first if DB doesn't have FK cascade
+            var cmd0 = new MySqlCommand("DELETE FROM commentreply WHERE comment_id=@cid", conn.GetInnerConn());
+            cmd0.Parameters.AddWithValue("@cid", comment.Id);
+            cmd0.ExecuteNonQuery();
+
             var cmd = new MySqlCommand("DELETE FROM comment WHERE id=@id", conn.GetInnerConn());
             cmd.Parameters.AddWithValue("@id", comment.Id);
             cmd.ExecuteNonQuery();
@@ -178,7 +182,7 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        // GET ALL REPLIES FOR COMMENT
+        // GET ALL REPLIES FOR COMMENT (✅ return with full User)
         public List<CommentReply> GetAllRepliesByCommentId(int commentId)
         {
             var cmd = new MySqlCommand(@"
@@ -187,7 +191,9 @@ namespace DataLayer.Repos
                     cr.content,
                     cr.posted_on,
                     cr.comment_id,
-                    u.username
+                    cr.user_id,
+                    u.first_name, u.last_name, u.age, u.username, u.email,
+                    u.password, u.is_moderator, u.steam_id
                 FROM commentreply cr
                 JOIN user u ON u.id = cr.user_id
                 WHERE cr.comment_id=@cid
@@ -201,16 +207,80 @@ namespace DataLayer.Repos
             using var r = cmd.ExecuteReader();
             while (r.Read())
             {
+                var user = new User(
+                    r.GetInt32("user_id"),
+                    r.GetString("first_name"),
+                    r.GetString("last_name"),
+                    r.IsDBNull(r.GetOrdinal("age")) ? 0 : r.GetInt32("age"),
+                    r.GetString("username"),
+                    r.GetString("email"),
+                    r.GetString("password"),
+                    r.GetBoolean("is_moderator"),
+                    r.GetString("steam_id")
+                );
+
                 list.Add(new CommentReply(
                     r.GetInt32("id"),
                     r.GetString("content"),
                     r.GetDateTime("posted_on"),
                     r.GetInt32("comment_id"),
-                    r.GetString("username")
+                    user
                 ));
             }
 
             return list;
+        }
+
+        // ✅ NEW: GET REPLY BY ID (for delete permission check)
+        public CommentReply GetReplyById(int replyId)
+        {
+            var cmd = new MySqlCommand(@"
+                SELECT 
+                    cr.id,
+                    cr.content,
+                    cr.posted_on,
+                    cr.comment_id,
+                    cr.user_id,
+                    u.first_name, u.last_name, u.age, u.username, u.email,
+                    u.password, u.is_moderator, u.steam_id
+                FROM commentreply cr
+                JOIN user u ON u.id = cr.user_id
+                WHERE cr.id=@rid
+                LIMIT 1
+            ", conn.GetInnerConn());
+
+            cmd.Parameters.AddWithValue("@rid", replyId);
+
+            using var r = cmd.ExecuteReader();
+            if (!r.Read()) return null;
+
+            var user = new User(
+                r.GetInt32("user_id"),
+                r.GetString("first_name"),
+                r.GetString("last_name"),
+                r.IsDBNull(r.GetOrdinal("age")) ? 0 : r.GetInt32("age"),
+                r.GetString("username"),
+                r.GetString("email"),
+                r.GetString("password"),
+                r.GetBoolean("is_moderator"),
+                r.GetString("steam_id")
+            );
+
+            return new CommentReply(
+                r.GetInt32("id"),
+                r.GetString("content"),
+                r.GetDateTime("posted_on"),
+                r.GetInt32("comment_id"),
+                user
+            );
+        }
+
+        // ✅ NEW: DELETE REPLY
+        public void DeleteReply(CommentReply reply)
+        {
+            var cmd = new MySqlCommand("DELETE FROM commentreply WHERE id=@id", conn.GetInnerConn());
+            cmd.Parameters.AddWithValue("@id", reply.Id);
+            cmd.ExecuteNonQuery();
         }
 
         public bool CheckIfCommentExists(string text)

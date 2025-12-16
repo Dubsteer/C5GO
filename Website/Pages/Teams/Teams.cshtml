@@ -24,22 +24,34 @@
         border-radius: 12px;
         padding: 22px;
         border: 1px solid #2d333b;
-        transition: transform .20s ease, box-shadow .20s ease;
+        transition: 0.2s;
         min-height: 220px;
-        margin-bottom: 35px;
-        color: #ffffff !important;
+        position: relative;
     }
 
         .team-card:hover {
-            transform: scale(1.03);
-            box-shadow: 0px 0px 10px rgba(99, 102, 241, 0.4);
             border-color: #6366f1;
+            box-shadow: 0 0 10px rgba(99,102,241,0.4);
         }
+
+    .full-link {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+    }
 
     .user-link {
         color: #58a6ff !important;
         font-weight: 600;
         text-decoration: none;
+        position: relative;
+        z-index: 2;
+    }
+
+    .team-actions {
+        position: relative;
+        z-index: 2;
+        margin-top: 12px;
     }
 </style>
 
@@ -47,97 +59,50 @@
 
     <h1 class="text-center">Teams</h1>
 
-    <!-- ALERTS -->
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger text-center">
-            @TempData["Error"]
-        </div>
+        <div class="alert alert-danger text-center">@TempData["Error"]</div>
     }
 
     @if (TempData["Message"] != null)
     {
-        <div class="alert alert-success text-center">
-            @TempData["Message"]
-        </div>
-    }
-
-    @if (Model.MyTeam == null)
-    {
-        <div class="text-center mb-4">
-            <form method="post" asp-page-handler="CreateTeam" class="d-inline-block">
-                <input type="text" name="teamName" placeholder="Team name"
-                       class="form-control d-inline-block"
-                       style="width: 200px;" required />
-                <button class="btn btn-success ms-2">Create Team</button>
-            </form>
-        </div>
-    }
-    else
-    {
-        <div class="text-center mb-4">
-            <a class="btn btn-warning" asp-page="/Teams/Details" asp-route-id="@Model.MyTeam.Id">
-                Manage My Team
-            </a>
-        </div>
+        <div class="alert alert-success text-center">@TempData["Message"]</div>
     }
 
     <div class="row g-4">
         @foreach (var t in Model.AllTeams)
         {
-            <div class="col-md-4">
+            <div class="col-lg-4 col-md-6">
                 <div class="team-card">
+
+                    <a class="full-link"
+                       asp-page="/Teams/Details"
+                       asp-route-id="@t.Id"></a>
 
                     <h3>@t.Name</h3>
 
                     <p>
                         <strong>Captain:</strong>
-                        <a asp-page="/UserProfile" asp-route-id="@t.Captain.Id" class="user-link">
+                        <a asp-page="/UserProfile"
+                           asp-route-id="@t.Captain.Id"
+                           class="user-link">
                             @t.Captain.Username
                         </a>
                     </p>
 
                     <p><strong>Members:</strong> @t.Members.Count / 5</p>
 
-                    <button class="btn btn-secondary btn-sm" type="button"
-                            onclick="document.getElementById('m_@t.Id').classList.toggle('d-none')">
-                        Show members
-                    </button>
-
-                    <div id="m_@t.Id" class="d-none mt-2">
-                        @if (t.Members.Count > 0)
+                    <div class="team-actions">
+                        @if (Model.MyTeam == null && !Model.PendingRequests.Contains(t.Id))
                         {
-                            <ul>
-                                @foreach (var p in t.Members)
-                                {
-                                    <li>
-                                        <a asp-page="/UserProfile" asp-route-id="@p.Id" class="user-link">
-                                            @p.Username
-                                        </a>
-                                    </li>
-                                }
-                            </ul>
+                            <form method="post" asp-page-handler="Join">
+                                <input type="hidden" name="teamId" value="@t.Id" />
+                                <button class="btn btn-primary btn-sm">Join Team</button>
+                            </form>
                         }
-                        else
+                        else if (Model.PendingRequests.Contains(t.Id))
                         {
-                            <p style="color:gray; font-style:italic;">No members yet.</p>
-                        }
-                    </div>
-
-                    <div class="mt-3">
-                        @if (Model.MyTeam == null)
-                        {
-                            if (!Model.PendingRequests.Contains(t.Id))
-                            {
-                                <form method="post" asp-page-handler="Join">
-                                    <input type="hidden" name="teamId" value="@t.Id" />
-                                    <button class="btn btn-primary btn-sm">Join Team</button>
-                                </form>
-                            }
-                            else
-                            {
-                                <span style="color:#aaa;">Request sent...</span>
-                            }
+                            <span style="color:#aaa;">Request sent…</span>
                         }
                     </div>
 

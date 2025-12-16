@@ -18,36 +18,8 @@
         max-width: 900px;
         margin: 40px auto;
         border: 1px solid #2d333b;
-        box-shadow: 0px 0px 10px rgba(99, 102, 241, 0.25);
     }
 
-    .post-title {
-        text-align: center;
-        color: #ffffff;
-        font-weight: 900;
-        font-size: 32px;
-        margin-bottom: 10px;
-    }
-
-    .post-meta {
-        text-align: center;
-        color: #bbbbbb;
-        font-size: 14px;
-        margin-bottom: 25px;
-    }
-
-    .post-text {
-        color: #d0d0d0;
-        font-size: 18px;
-        margin-bottom: 25px;
-        line-height: 1.6;
-    }
-
-    hr {
-        border-color: #2d333b;
-    }
-
-    /* ===== COMMENTS ===== */
     .comment-box {
         background: #1c2128;
         padding: 15px;
@@ -56,157 +28,123 @@
         margin-top: 20px;
     }
 
-    .comment-user {
-        font-weight: 700;
-        color: #e0e0e0;
-        font-size: 15px;
-    }
-
-    .comment-time {
-        color: #888;
-        font-size: 12px;
-        margin-left: 5px;
-    }
-
-    .comment-text {
-        color: #d0d0d0;
-        margin-top: 6px;
-        font-size: 15px;
-    }
-
     .reply-box {
         background: #232830;
         padding: 10px;
-        margin-top: 10px;
-        margin-left: 35px;
+        margin-top: 8px;
+        margin-left: 30px;
         border-radius: 8px;
         border: 1px solid #2d333b;
     }
 
-    .btn-toggle,
-    .btn-reply {
+    .reply-input {
+        margin-left: 30px;
+        margin-top: 10px;
+    }
+
+    .toggle-btn,
+    .delete-btn {
         background: none;
         border: none;
         color: #58a6ff;
-        margin-top: 5px;
+        font-size: 13px;
         cursor: pointer;
         padding: 0;
+        margin-left: 8px;
     }
 
     .delete-btn {
-        color: #ff6b6b;
-        background: none;
-        border: none;
-        margin-left: 10px;
-        font-size: 13px;
-        cursor: pointer;
-    }
-
-    .reply-input {
-        margin-left: 35px;
-        margin-top: 10px;
+        color: #f87171;
     }
 </style>
 
 <div class="post-wrapper">
 
-    <!-- POST TITLE -->
-    <h1 class="post-title">@Model.Post.Title</h1>
-
-    <div class="post-meta">
-        Posted @Model.Post.Posted_on.ToString("yyyy-MM-dd HH:mm")
-    </div>
-
-    <!-- POST BODY -->
-    <div class="post-text">
-        @Model.Post.Content
-    </div>
+    <h1>@Model.Post.Title</h1>
+    <p>@Model.Post.Content</p>
 
     <hr />
 
-    <!-- COMMENT FORM -->
-    @if (User.Identity.IsAuthenticated)
-    {
-        <h4 style="margin-top:20px;">Write a comment</h4>
-
-        <form method="post" asp-page-handler="SubmitComment">
-            <textarea asp-for="NewComment.CommentText" rows="3" class="form-control"></textarea>
-            <button type="submit" class="btn btn-primary mt-2">Send</button>
-        </form>
-    }
-
-    <hr />
-
-    <!-- TOGGLE COMMENTS -->
-    @if (Model.Comments.Count > 0)
-    {
-        <form method="post" asp-page-handler="ToggleComments">
-            <button class="btn-toggle">
-                @(Model.ShowAllComments ? "Hide comments" : $"Show all comments ({Model.Comments.Count})")
-            </button>
-        </form>
-    }
-
-    @{
-        var shown = Model.ShowAllComments ? Model.Comments : Model.Comments.Take(3).ToList();
-    }
-
-    <!-- COMMENTS LIST -->
-    @foreach (var com in shown)
+    @foreach (var com in Model.Comments)
     {
         <div class="comment-box">
 
-            <div>
-                <span class="comment-user">@com.User.Username</span>
-                <span class="comment-time">@com.Posted_on.ToString("MMM dd, HH:mm")</span>
+            <strong>@com.User.Username</strong>
+            <span style="opacity:.6; font-size:12px;">
+                @com.Posted_on.ToString("MMM dd, HH:mm")
+            </span>
 
-                @if (Model.CurrentUser != null &&
-                            (Model.CurrentUser.Id == com.User.Id || Model.CurrentUser.IsAdmin))
-                {
-                    <form method="post"
-                          asp-page-handler="DeleteComment"
-                          asp-route-cid="@com.Id"
-                          style="display:inline;">
-                        <button class="delete-btn">Delete</button>
-                    </form>
-                }
-        </div>
-
-        <div class="comment-text">@com.Content</div>
-
-        <!-- TOGGLE REPLIES -->
-        <form method="post" asp-page-handler="ToggleReplies" asp-route-commentId="@com.Id">
-            <button class="btn-reply">
-                @(Model.ExpandedReplies.Contains(com.Id)
-                                ? "▲ Hide replies"
-                                : $"▼ Show replies ({com.Replies.Count})")
-            </button>
-        </form>
-
-            <!-- REPLIES -->
-        @if (Model.ExpandedReplies.Contains(com.Id))
+            @if (Model.CurrentUser != null &&
+                    (Model.CurrentUser.IsAdmin || Model.CurrentUser.Id == com.User.Id))
             {
-                foreach (var r in com.Replies)
-                {
-                    <div class="reply-box">
-                        <strong>@r.Username</strong>
-                        <span class="comment-time">@r.PostedOn.ToString("MMM dd, HH:mm")</span>
-                        <div>@r.Content</div>
-                    </div>
-                }
-
-                <!-- REPLY FORM -->
-                @if (User.Identity.IsAuthenticated)
-                {
-                    <form method="post" asp-page-handler="SubmitReply" class="reply-input">
-                        <input asp-for="NewReply.replyCommentId" type="hidden" value="@com.Id" />
-                        <input asp-for="NewReply.ReplyText" type="text" class="form-control" placeholder="Reply..." />
-                        <button type="submit" class="btn btn-secondary btn-sm mt-2">Reply</button>
-                    </form>
-                }
+                <form method="post"
+                      asp-page-handler="DeleteComment"
+                      asp-route-cid="@com.Id"
+                      style="display:inline;">
+                    <button class="delete-btn">Delete</button>
+                </form>
             }
 
+            <div class="mt-2">@com.Content</div>
+
+            @{
+                var replies = com.Replies;
+                var showAll = Model.ExpandedReplies.Contains(com.Id);
+                var visibleReplies = showAll ? replies : replies.Take(2).ToList();
+            }
+
+            @foreach (var r in visibleReplies)
+            {
+                <div class="reply-box">
+                    <strong>@r.Username</strong>
+                    <span style="opacity:.6; font-size:12px;">
+                        @r.PostedOn.ToString("MMM dd, HH:mm")
+                    </span>
+
+                    @if (Model.CurrentUser != null &&
+                                (Model.CurrentUser.IsAdmin || Model.CurrentUser.Id == r.User.Id))
+                    {
+                        <form method="post"
+                              asp-page-handler="DeleteReply"
+                              asp-route-rid="@r.Id"
+                              style="display:inline;">
+                            <button class="delete-btn">Delete</button>
+                        </form>
+                    }
+
+                    <div>@r.Content</div>
+                </div>
+            }
+
+            @if (replies.Count > 2)
+            {
+                <form method="post"
+                      asp-page-handler="ToggleReplies"
+                      asp-route-commentId="@com.Id">
+                    <button class="toggle-btn">
+                        @(showAll
+                                        ? "Hide replies"
+                                        : $"Show all replies ({replies.Count})")
+            </button>
+        </form>
+                }
+
+            @if (User.Identity.IsAuthenticated)
+            {
+                <form method="post"
+                      asp-page-handler="SubmitReply"
+                      class="reply-input">
+                    <input asp-for="NewReply.replyCommentId"
+                           type="hidden"
+                           value="@com.Id" />
+                    <input asp-for="NewReply.ReplyText"
+                           class="form-control"
+                           placeholder="Write a reply..." />
+                    <button class="btn btn-secondary btn-sm mt-2">
+                        Reply
+                    </button>
+                </form>
+            }
         </div>
     }
-
 </div>

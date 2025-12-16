@@ -20,65 +20,58 @@
         /* NAVBAR */
         .custom-navbar {
             background-color: #1e3d3d;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
         .nav-logo {
-            width: 48px;
-            height: 48px;
+            width: 44px;
+            height: 44px;
             margin-right: 10px;
         }
 
         .nav-title {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
             color: #ffffff;
         }
 
-        /* CENTER NAV LINKS */
-        .center-nav {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 28px;
+        .navbar-nav .nav-link {
+            color: #e4e4e4 !important;
+            font-size: 16px;
+            font-weight: 600;
+            transition: 0.2s;
+            letter-spacing: 0.3px;
         }
 
-            .center-nav a,
-            .nav-link,
-            .nav-username {
-                color: #e4e4e4 !important;
-                font-size: 17px;
-                font-weight: 600;
-                transition: 0.2s;
-                letter-spacing: 0.3px;
+            .navbar-nav .nav-link:hover {
+                color: #00e3c2 !important;
             }
-
-                .center-nav a:hover,
-                .nav-link:hover,
-                .nav-username:hover {
-                    color: #00e3c2 !important;
-                    text-decoration: none;
-                }
 
         .nav-active {
             color: #00e3c2 !important;
             font-weight: 700 !important;
         }
 
-        /* USER BOX */
         .nav-user-box {
             display: flex;
             align-items: center;
             gap: 15px;
         }
 
+        .nav-username {
+            color: #e4e4e4;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+            .nav-username:hover {
+                color: #00e3c2;
+            }
+
         .logout-link {
             color: #ff8f8f !important;
             font-weight: 600;
-            font-size: 16px;
-            transition: 0.2s;
+            text-decoration: none;
         }
 
             .logout-link:hover {
@@ -87,8 +80,7 @@
 
         main {
             flex: 1;
-            padding-top: 40px;
-            padding-bottom: 40px;
+            padding: 40px 0;
         }
 
         footer {
@@ -104,30 +96,42 @@
 <body>
 
     <nav class="navbar navbar-expand-lg custom-navbar">
-        <div class="container position-relative">
+        <div class="container">
 
-            <!-- LOGO + TITLE -->
-            <a class="navbar-brand d-flex align-items-center" asp-area="" asp-page="/Index">
-                <img src="/Images/C5G0_logo.png" class="nav-logo">
+            <!-- LOGO -->
+            <a class="navbar-brand d-flex align-items-center" asp-page="/Index">
+                <img src="/Images/C5G0_logo.png" class="nav-logo" />
                 <span class="nav-title">C5G0</span>
             </a>
 
-            <!-- CENTER NAVIGATION -->
-            <div class="center-nav">
-                <a class="@(ViewData["Title"]?.ToString() == "Tournaments" ? "nav-active" : "")"
-                   asp-page="/Tournaments">Tournaments</a>
+            <!-- HAMBURGER -->
+            <button class="navbar-toggler text-white" type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#mainNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-                <a class="@(ViewData["Title"]?.ToString() == "Teams" ? "nav-active" : "")"
-                   asp-page="/Teams/Teams">Teams</a>
+            <!-- COLLAPSIBLE CONTENT -->
+            <div class="collapse navbar-collapse" id="mainNavbar">
 
-                <a class="@(ViewData["Title"]?.ToString() == "Posts" ? "nav-active" : "")"
-                   asp-page="/Index">Posts</a>
-            </div>
+                <!-- CENTER LINKS -->
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewData["Title"]?.ToString() == "Tournaments" ? "nav-active" : "")"
+                           asp-page="/Tournaments">Tournaments</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewData["Title"]?.ToString() == "Teams" ? "nav-active" : "")"
+                           asp-page="/Teams/Teams">Teams</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewData["Title"]?.ToString() == "Posts" ? "nav-active" : "")"
+                           asp-page="/Index">Posts</a>
+                    </li>
+                </ul>
 
-            <!-- RIGHT SIDE (LOGIN / USER PROFILE) -->
-            <div class="collapse navbar-collapse justify-content-end">
-                <ul class="navbar-nav align-items-center">
-
+                <!-- RIGHT SIDE -->
+                <ul class="navbar-nav ms-lg-auto align-items-lg-center">
                     @if (User?.Identity != null && User.Identity.IsAuthenticated)
                     {
                         <li class="nav-item nav-user-box">
@@ -148,25 +152,22 @@
                             <a class="nav-link" asp-page="/Register">Register</a>
                         </li>
                     }
-
                 </ul>
-            </div>
 
+            </div>
         </div>
     </nav>
 
-    <!-- MAIN CONTENT -->
     <main class="container">
         @RenderBody()
     </main>
 
-    <!-- FOOTER -->
     <footer>
         © 2025 Designed by Vladimir Stijepovic
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
     @RenderSection("Scripts", required: false)
+
 </body>
 </html>

@@ -14,14 +14,14 @@
     .auth-container {
         display: flex;
         justify-content: center;
-        align-items: center;
-        padding: 50px 0;
+        padding: 40px 10px;
     }
 
     .auth-card {
         background: #161b22;
-        padding: 35px;
-        width: 450px;
+        padding: 30px;
+        width: 100%;
+        max-width: 450px;
         border-radius: 12px;
         border: 1px solid #2d333b;
         box-shadow: 0 0 10px rgba(99,102,241,0.25);
@@ -113,17 +113,22 @@
             <span asp-validation-for="FullUserFormModel.Gmail" class="field-error"></span>
 
             <label>Password</label>
-            <input asp-for="FullUserFormModel.Password" type="password" class="auth-input" />
+            <input asp-for="FullUserFormModel.Password"
+                   type="password"
+                   class="auth-input" />
             <span asp-validation-for="FullUserFormModel.Password" class="field-error"></span>
 
-            <input type="submit" class="auth-btn" value="Create your account" />
+            <input type="submit"
+                   class="auth-btn"
+                   value="Create your account" />
         </form>
 
         <div class="small-text">
-            Already have an account? <a href="/Login">Log In</a>
+            Already have an account?
+            <a href="/Login">Log In</a>
         </div>
 
-        @section scripts {
+        @section Scripts {
             <partial name="_ValidationScriptsPartial" />
         }
     </div>

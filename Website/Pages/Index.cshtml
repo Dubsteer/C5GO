@@ -15,59 +15,56 @@
     h1 {
         color: #ffffff;
         font-weight: 900;
-        font-size: 36px;
+        font-size: 34px;
         text-align: center;
-        margin-bottom: 40px;
+        margin-bottom: 35px;
     }
 
-    /* ===== CLICKABLE POST CARD (FULL CARD IS LINK) ===== */
+    /* FULL CARD LINK */
     .post-link {
         text-decoration: none !important;
         color: inherit !important;
         display: block;
+        height: 100%;
     }
 
     .post-card {
         background: #161b22;
         border-radius: 12px;
-        padding: 22px;
+        padding: 20px;
         border: 1px solid #2d333b;
-        transition: transform .20s ease, box-shadow .20s ease;
-        min-height: 180px;
-        cursor: pointer;
+        height: 100%;
+        transition: border-color .2s ease, box-shadow .2s ease;
     }
 
         .post-card:hover {
-            transform: scale(1.03);
-            box-shadow: 0px 0px 10px rgba(99, 102, 241, 0.4);
             border-color: #6366f1;
+            box-shadow: 0 0 10px rgba(99,102,241,0.35);
         }
 
     .post-title {
         color: #ffffff;
-        font-size: 22px;
-        font-weight: 600;
-        margin-bottom: 12px;
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 10px;
     }
 
     .post-snippet {
-        color: #d0d0d0;
-        font-size: 15px;
-        margin-top: 10px;
+        color: #d1d5db;
+        font-size: 14px;
+        line-height: 1.5;
     }
 </style>
 
-<div class="container mt-5">
+<div class="container mt-4">
 
-    <h1> Announcements</h1>
+    <h1>Announcements</h1>
 
     <div class="row g-4">
 
         @foreach (Post post in Model.Posts)
         {
-            <div class="col-md-4">
-
-                <!-- FULL CARD CLICKABLE LIKE TOURNAMENTS -->
+            <div class="col-12 col-md-6 col-lg-4">
                 <a asp-page="/Posts/Post"
                    asp-route-id="@post.Id"
                    class="post-link">
@@ -75,17 +72,15 @@
                     <div class="post-card">
 
                         <div class="post-title">
-                            @Model.TruncateString(post.Content, 45)
+                            @Model.TruncateString(post.Title ?? post.Content, 45)
                         </div>
 
-                        <p class="post-snippet">
+                        <div class="post-snippet">
                             @Model.TruncateString(post.Content, 110)
-                        </p>
+                        </div>
 
                     </div>
-
                 </a>
-
             </div>
         }
 

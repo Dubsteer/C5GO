@@ -22,18 +22,19 @@ namespace Website.Pages.Posts
         [BindProperty] public CommentModel NewComment { get; set; }
         [BindProperty] public ReplyModel NewReply { get; set; }
 
-        public bool ShowAllComments { get; set; }
         public HashSet<int> ExpandedReplies { get; set; } = new();
 
-        public PostModel(PostManager postManager, UserManager userManager, CommentManager commentManager)
+        public PostModel(
+            PostManager postManager,
+            UserManager userManager,
+            CommentManager commentManager)
         {
             this.postManager = postManager;
             this.userManager = userManager;
             this.commentManager = commentManager;
         }
 
-        // Central loader
-        private bool LoadPostData()
+        private bool LoadData()
         {
             Post = postManager.GetPostById(Id);
             if (Post == null)
@@ -50,27 +51,18 @@ namespace Website.Pages.Posts
             return true;
         }
 
-        // GET
         public IActionResult OnGet()
         {
-            if (!LoadPostData())
+            if (!LoadData())
                 return RedirectToPage("/Error");
 
             return Page();
         }
 
-        // Toggle all comments
-        public IActionResult OnPostToggleComments()
-        {
-            LoadPostData();
-            ShowAllComments = !ShowAllComments;
-            return Page();
-        }
-
-        // Toggle replies
+        // TOGGLE REPLIES
         public IActionResult OnPostToggleReplies(int commentId)
         {
-            LoadPostData();
+            LoadData();
 
             if (ExpandedReplies.Contains(commentId))
                 ExpandedReplies.Remove(commentId);
@@ -80,10 +72,10 @@ namespace Website.Pages.Posts
             return Page();
         }
 
-        // Add comment
+        // ADD COMMENT
         public IActionResult OnPostSubmitComment()
         {
-            LoadPostData();
+            LoadData();
 
             if (CurrentUser == null)
                 return Unauthorized();
@@ -97,14 +89,13 @@ namespace Website.Pages.Posts
             );
 
             commentManager.AddComment(comment);
-
             return RedirectToPage("Post", new { Id });
         }
 
-        // Add reply
+        // ADD REPLY
         public IActionResult OnPostSubmitReply()
         {
-            LoadPostData();
+            LoadData();
 
             if (CurrentUser == null)
                 return Unauthorized();
@@ -120,14 +111,13 @@ namespace Website.Pages.Posts
             commentManager.AddReply(reply);
 
             ExpandedReplies.Add(NewReply.replyCommentId);
-
-            return RedirectToPage("Post", new { Id });
+            return Page();
         }
 
-        // Delete comment
+        // DELETE COMMENT
         public IActionResult OnPostDeleteComment(int cid)
         {
-            LoadPostData();
+            LoadData();
 
             var comment = commentManager.GetCommentById(cid);
             if (comment == null)
@@ -137,6 +127,22 @@ namespace Website.Pages.Posts
                 commentManager.DeleteComment(comment);
 
             return RedirectToPage("Post", new { Id });
+        }
+
+        // DELETE REPLY
+        public IActionResult OnPostDeleteReply(int rid)
+        {
+            LoadData();
+
+            var reply = commentManager.GetReplyById(rid);
+            if (reply == null)
+                return RedirectToPage("Post", new { Id });
+
+            if (CurrentUser.IsAdmin || CurrentUser.Id == reply.User.Id)
+                commentManager.DeleteReply(reply);
+
+            ExpandedReplies.Add(reply.CommentId);
+            return Page();
         }
     }
 }

@@ -1,40 +1,43 @@
-﻿using System.Net;
-using System.Net.Mail;
+﻿using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
+using System.Threading.Tasks;
 
 namespace LogicLayer.Services
 {
     public class EmailService
     {
-        private const string SMTP_HOST = "sandbox.smtp.mailtrap.io";
-        private const int SMTP_PORT = 2525;
+        private readonly string smtpServer = "smtp.gmail.com";
+        private readonly int smtpPort = 587;
+        private readonly string smtpUser = "dovlalegenda@gmail.com";
+        private readonly string smtpPassword = "iqye ezyx uyrb jhnf";
+        private readonly string fromEmail = "dovlalegenda@gmail.com";
 
-        private const string SMTP_USERNAME = "b098ce3727adb5";
-        private const string SMTP_PASSWORD = "3791440113e285";
-
-        private const string FROM_EMAIL = "no-reply@c5go.dev";
-
-        public void SendVerificationEmail(string toEmail, string token)
+        public async Task SendVerificationEmail(string toEmail, string token)
         {
-            var verifyLink = $"https://localhost:7026/VerifyEmail?token={token}";
+            var verifyLink =
+    $"https://membraneless-untropically-porsha.ngrok-free.dev/VerifyEmail?token={token}";
 
+            var email = new MimeMessage();
+            email.From.Add(new MailboxAddress("C5GO", fromEmail));
+            email.To.Add(MailboxAddress.Parse(toEmail));
+            email.Subject = "Verify your email";
 
-            var message = new MailMessage();
-            message.From = new MailAddress(FROM_EMAIL, "C5GO");
-            message.To.Add(toEmail);
-            message.Subject = "Verify your email";
-            message.Body =
-                "Welcome to C5GO!\n\n" +
-                "Please verify your email by clicking the link below:\n\n" +
-                verifyLink + "\n\n" +
-                "If you did not create this account, you can ignore this email.";
-
-            var smtp = new SmtpClient(SMTP_HOST, SMTP_PORT)
+            email.Body = new TextPart("plain")
             {
-                Credentials = new NetworkCredential(SMTP_USERNAME, SMTP_PASSWORD),
-                EnableSsl = true
+                Text =
+                    "Welcome to C5GO!\n\n" +
+                    "Please verify your email by clicking the link below:\n\n" +
+                    verifyLink + "\n\n" +
+                    "If you did not create this account, you can ignore this email."
             };
 
-            smtp.Send(message);
+
+            using var smtp = new SmtpClient();
+            await smtp.ConnectAsync(smtpServer, smtpPort, SecureSocketOptions.StartTls);
+            await smtp.AuthenticateAsync(smtpUser, smtpPassword);
+            await smtp.SendAsync(email);
+            await smtp.DisconnectAsync(true);
         }
     }
 }

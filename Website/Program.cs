@@ -9,6 +9,11 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 var builder = WebApplication.CreateBuilder(args);
 
 // =====================================================
+// FORCE HTTP (OBAVEZNO ZA NGROK)
+// =====================================================
+builder.WebHost.UseUrls("http://localhost:5063");
+
+// =====================================================
 // RAZOR PAGES
 // =====================================================
 builder.Services.AddRazorPages();
@@ -17,7 +22,10 @@ builder.Services.AddRazorPages();
 // AUTHENTICATION
 // =====================================================
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options => options.LoginPath = "/login");
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Login";
+    });
 
 // =====================================================
 // DATABASE CONNECTION
@@ -71,7 +79,9 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// ? NE HTTPS REDIRECTION (RUŠI NGROK)
+ //app.UseHttpsRedirection();
+
 app.UseStaticFiles();
 app.UseRouting();
 

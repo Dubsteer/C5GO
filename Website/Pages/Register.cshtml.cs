@@ -6,6 +6,7 @@ using LogicLayer.Models;
 using LogicLayer.Exceptions;
 using LogicLayer.Services;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Website.Pages
 {
@@ -31,7 +32,7 @@ namespace Website.Pages
             return Page();
         }
 
-        public IActionResult OnPost()
+        public async Task<IActionResult> OnPost()
         {
             if (!ModelState.IsValid)
                 return Page();
@@ -48,11 +49,11 @@ namespace Website.Pages
 
             try
             {
-                // 1?? CREATE USER (token is generated inside UserManager)
+                // CREATE USER + TOKEN
                 userManager.CreateUser(user);
 
-                // 2?? SEND VERIFICATION EMAIL
-                emailService.SendVerificationEmail(
+                // SEND VERIFICATION EMAIL
+                await emailService.SendVerificationEmail(
                     user.Gmail,
                     user.EmailToken
                 );
@@ -73,13 +74,12 @@ namespace Website.Pages
                 );
                 return Page();
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
                 Debug.WriteLine(ex.Message);
                 return StatusCode(500);
             }
 
-            // 3?? REDIRECT TO INFO PAGE
             return Redirect("/RegisterSuccess");
         }
     }

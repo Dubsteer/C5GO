@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using LogicLayer.FormModels;
 using LogicLayer.Managers;
 using LogicLayer.Models;
-using System.Diagnostics;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
@@ -15,7 +14,7 @@ namespace Website.Pages
         [BindProperty]
         public LoginFormModel LoginFormModel { get; set; }
 
-        public readonly UserManager userManager;
+        private readonly UserManager userManager;
 
         public LoginModel(UserManager userManager)
         {
@@ -25,7 +24,7 @@ namespace Website.Pages
         public IActionResult OnGet()
         {
             if (User.Identity.IsAuthenticated)
-                return new RedirectToPageResult("Index");
+                return RedirectToPage("Index");
 
             return Page();
         }
@@ -35,39 +34,45 @@ namespace Website.Pages
             if (!ModelState.IsValid)
                 return Page();
 
-            User? user;
+            // ? GetLoginUser sada NE baca exception
+            User? user = userManager.GetLoginUser(
+                LoginFormModel.Username,
+                LoginFormModel.Password
+            );
 
-            try
+            if (user == null)
             {
-                user = userManager.GetLoginUser(LoginFormModel.Username, LoginFormModel.Password);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                return StatusCode(500);
-            }
+                // ? JEDNA poruka za oba slu?aja:
+                // - pogrešni kredencijali
+                // - email nije verifikovan
+                ViewData["Error"] =
+                    "Invalid credentials or email not verified. Please check your email.";
 
-            if (user is null)
-            {
-                ViewData["Error"] = "No user found with provided credentials.";
                 LoginFormModel = new LoginFormModel();
                 ModelState.Clear();
                 return Page();
             }
 
-            // SUCCESS ? add all claims
+            // ? LOGIN USPJEŠAN
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Username),
-                new Claim("username", user.Username),   // ?? NEOPHODNO ZA NAVBAR
+                new Claim("username", user.Username),
                 new Claim("id", user.Id.Value.ToString()),
                 new Claim("isAdmin", user.IsAdmin.ToString())
             };
 
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            HttpContext.SignInAsync(new ClaimsPrincipal(claimsIdentity));
+            var claimsIdentity = new ClaimsIdentity(
+                claims,
+                CookieAuthenticationDefaults.AuthenticationScheme
+            );
 
-            return new RedirectToPageResult("Index");
+            HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimsIdentity)
+            );
+
+            return RedirectToPage("Index");
         }
     }
 }

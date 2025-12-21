@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using LogicLayer.Managers;
 
 namespace LogicLayer.Models
 {
@@ -30,15 +27,32 @@ namespace LogicLayer.Models
 
         public bool IsAdmin { get; set; }
 
-        public string SteamId { get; set; } = "0";
+        // ✅ FIX: SteamId više NEMA default "0"
+        // Ako user ne unese SteamID → NULL
+        public string? SteamId { get; set; }
 
         public int CommentAuthorId { get; set; }
 
         public IReadOnlyList<Match> Matches { get; private set; }
 
+        // =========================
+        // EMAIL VERIFICATION
+        // =========================
+        public bool EmailConfirmed { get; set; }
+        public string EmailToken { get; set; }
+        public DateTime? TokenCreatedAt { get; set; }
+
         public User() { }
 
-        public User(string firstname, string lastname, int age, string username, string gmail, string password, bool isAdmin)
+        public User(
+            string firstname,
+            string lastname,
+            int age,
+            string username,
+            string gmail,
+            string password,
+            bool isAdmin
+        )
         {
             Firstname = firstname;
             Lastname = lastname;
@@ -47,10 +61,19 @@ namespace LogicLayer.Models
             Gmail = gmail;
             Password = password;
             IsAdmin = isAdmin;
-            SteamId = "0";
+            SteamId = null; // ✅ FIX
         }
 
-        public User(int? id, string firstname, string lastname, int age, string username, string gmail, string password, bool isAdmin)
+        public User(
+            int? id,
+            string firstname,
+            string lastname,
+            int age,
+            string username,
+            string gmail,
+            string password,
+            bool isAdmin
+        )
         {
             Id = id;
             Firstname = firstname;
@@ -60,10 +83,20 @@ namespace LogicLayer.Models
             Gmail = gmail;
             Password = password;
             IsAdmin = isAdmin;
-            SteamId = "0";
+            SteamId = null; // ✅ FIX
         }
 
-        public User(int? id, string firstname, string lastname, int age, string username, string gmail, string password, bool isAdmin, string steamId)
+        public User(
+            int? id,
+            string firstname,
+            string lastname,
+            int age,
+            string username,
+            string gmail,
+            string password,
+            bool isAdmin,
+            string? steamId
+        )
         {
             Id = id;
             Firstname = firstname;
@@ -73,10 +106,20 @@ namespace LogicLayer.Models
             Gmail = gmail;
             Password = password;
             IsAdmin = isAdmin;
-            SteamId = steamId ?? "0";
+            SteamId = steamId; // može biti NULL ili stvarni SteamID
         }
 
-        public User(int? id, string firstname, string lastname, int age, string username, string gmail, string password, bool isAdmin, List<Match> matches)
+        public User(
+            int? id,
+            string firstname,
+            string lastname,
+            int age,
+            string username,
+            string gmail,
+            string password,
+            bool isAdmin,
+            List<Match> matches
+        )
         {
             Id = id;
             Firstname = firstname;
@@ -86,7 +129,7 @@ namespace LogicLayer.Models
             Gmail = gmail;
             Password = password;
             IsAdmin = isAdmin;
-            SteamId = "0";
+            SteamId = null; // ✅ FIX
             Matches = matches ?? new List<Match>();
         }
 

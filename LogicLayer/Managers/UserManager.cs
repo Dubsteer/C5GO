@@ -1,6 +1,7 @@
 ﻿using LogicLayer.Exceptions;
 using LogicLayer.IRepos;
 using LogicLayer.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -15,17 +16,22 @@ namespace LogicLayer.Managers
             this.userRepo = userRepo;
         }
 
+        // =====================================================
+        // READ
+        // =====================================================
         public List<User> GetAllUsers()
         {
             return userRepo.GetAllUsers();
         }
 
-        // FIX — REAL DB CALL
         public User? GetUserById(int id)
         {
             return userRepo.GetUserById(id);
         }
 
+        // =====================================================
+        // LOGIN
+        // =====================================================
         public User? GetLoginUser(string username, string password)
         {
             var user = userRepo.GetAllUsers()
@@ -34,33 +40,25 @@ namespace LogicLayer.Managers
             if (user == null)
                 return null;
 
-            if (user.Password == password)
-                return user;
+            bool passwordOk =
+                user.Password == password ||
+                (user.Password.StartsWith("$2") &&
+                 BCrypt.Net.BCrypt.Verify(password, user.Password));
 
-            if (user.Password.StartsWith("$2"))
-            {
-                if (BCrypt.Net.BCrypt.Verify(password, user.Password))
-                    return user;
-            }
+            if (!passwordOk)
+                return null;
 
-            return null;
+            // ❗❗❗ NEMA EXCEPTIONA
+            if (!user.EmailConfirmed)
+                return null;
+
+            return user;
         }
 
-        public void UpdateUser(User user)
-        {
-            var all = userRepo.GetAllUsers();
 
-            if (all.Any(u => u.Username == user.Username && u.Id != user.Id))
-                throw new System.Exception("Username already exists!");
-
-            userRepo.UpdateUser(user);
-        }
-
-        public void DeleteUser(User user)
-        {
-            userRepo.DeleteUser(user);
-        }
-
+        // =====================================================
+        // CREATE (REGISTER)
+        // =====================================================
         public void CreateUser(User user)
         {
             if (userRepo.UsernameExists(user.Username))
@@ -71,15 +69,65 @@ namespace LogicLayer.Managers
 
             if (!string.IsNullOrWhiteSpace(user.SteamId) &&
                 userRepo.SteamIdExists(user.SteamId))
-                throw new System.Exception("SteamID already in use");
+                throw new Exception("SteamID already in use");
 
+            // PASSWORD HASH
             if (!user.Password.StartsWith("$2"))
                 user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+
+            // EMAIL VERIFICATION SETUP
+            user.EmailConfirmed = false;
+            user.EmailToken = Guid.NewGuid().ToString();
+            user.TokenCreatedAt = DateTime.Now;
 
             userRepo.CreateUser(user);
         }
 
+        // =====================================================
+        // EMAIL VERIFICATION
+        // =====================================================
+        public User? GetUserByEmailToken(string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+                return null;
 
+            return userRepo.GetUserByEmailToken(token);
+        }
+
+        public void ConfirmEmail(string token)
+        {
+            var user = userRepo.GetUserByEmailToken(token);
+
+            if (user == null)
+                throw new Exception("Invalid or expired verification token.");
+
+            if (user.EmailConfirmed)
+                return; // already confirmed
+
+            userRepo.ConfirmEmail(user.Id.Value);
+        }
+
+        // =====================================================
+        // UPDATE / DELETE
+        // =====================================================
+        public void UpdateUser(User user)
+        {
+            var all = userRepo.GetAllUsers();
+
+            if (all.Any(u => u.Username == user.Username && u.Id != user.Id))
+                throw new Exception("Username already exists!");
+
+            userRepo.UpdateUser(user);
+        }
+
+        public void DeleteUser(User user)
+        {
+            userRepo.DeleteUser(user);
+        }
+
+        // =====================================================
+        // HELPERS
+        // =====================================================
         public bool CheckIfUsernameExists(string username, int selfId)
         {
             return userRepo.CheckIfUsernameExists(username, selfId);
@@ -89,10 +137,10 @@ namespace LogicLayer.Managers
         {
             return userRepo.SearchUser(term);
         }
+
         public bool SteamIdExists(string steamId)
         {
             return userRepo.SteamIdExists(steamId);
         }
-
     }
 }

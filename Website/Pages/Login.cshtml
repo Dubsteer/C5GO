@@ -89,6 +89,13 @@
 
         <h2>Log In</h2>
 
+        @if (ViewData["Error"] != null)
+        {
+            <div style="color:#f87171; text-align:center; margin-bottom:15px;">
+                @ViewData["Error"]
+            </div>
+        }
+
         <form method="post">
             <label>Username</label>
             <input asp-for="LoginFormModel.Username" class="auth-input" />

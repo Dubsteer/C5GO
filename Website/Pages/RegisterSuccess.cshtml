@@ -1,0 +1,54 @@
+﻿@page
+@model Website.Pages.RegisterSuccessModel
+@{
+    ViewData["Title"] = "Registration successful";
+}
+
+<style>
+    body {
+        background-color: #0d1117;
+        color: white;
+        font-family: "Segoe UI", Roboto, sans-serif;
+    }
+
+    .success-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+    }
+
+    .success-card {
+        background: #161b22;
+        padding: 40px;
+        border-radius: 12px;
+        border: 1px solid #2d333b;
+        max-width: 420px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 0 12px rgba(99,102,241,0.25);
+    }
+
+    .success-card h2 {
+        color: #22c55e;
+        margin-bottom: 15px;
+    }
+
+    a {
+        color: #58a6ff;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 20px;
+    }
+</style>
+
+<div class="success-container">
+    <div class="success-card">
+        <h2>✅ Account created</h2>
+        <p>
+            We’ve sent a verification email to your address.<br />
+            Please verify your email before logging in.
+        </p>
+        <a href="/Login">Go to Login</a>
+    </div>
+</div>

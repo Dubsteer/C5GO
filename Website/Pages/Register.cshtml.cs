@@ -4,6 +4,7 @@ using LogicLayer.FormModels;
 using LogicLayer.Managers;
 using LogicLayer.Models;
 using LogicLayer.Exceptions;
+using LogicLayer.Services;
 using System.Diagnostics;
 
 namespace Website.Pages
@@ -14,10 +15,12 @@ namespace Website.Pages
         public FullUserFormModel FullUserFormModel { get; set; }
 
         private readonly UserManager userManager;
+        private readonly EmailService emailService;
 
-        public RegisterModel(UserManager userManager)
+        public RegisterModel(UserManager userManager, EmailService emailService)
         {
             this.userManager = userManager;
+            this.emailService = emailService;
         }
 
         public IActionResult OnGet()
@@ -45,7 +48,14 @@ namespace Website.Pages
 
             try
             {
+                // 1?? CREATE USER (token is generated inside UserManager)
                 userManager.CreateUser(user);
+
+                // 2?? SEND VERIFICATION EMAIL
+                emailService.SendVerificationEmail(
+                    user.Gmail,
+                    user.EmailToken
+                );
             }
             catch (UsernameAlreadyInUseException)
             {
@@ -69,7 +79,8 @@ namespace Website.Pages
                 return StatusCode(500);
             }
 
-            return Redirect("/");
+            // 3?? REDIRECT TO INFO PAGE
+            return Redirect("/RegisterSuccess");
         }
     }
 }

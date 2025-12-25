@@ -4,6 +4,7 @@ using LogicLayer;
 using LogicLayer.IRepos;
 using LogicLayer.Models;
 using MySql.Data.MySqlClient;
+using System.Data;
 
 namespace DataLayer.Repos
 {
@@ -16,9 +17,19 @@ namespace DataLayer.Repos
             this.conn = conn;
         }
 
+        private void EnsureOpen()
+        {
+            if (conn.GetInnerConn().State != ConnectionState.Open)
+                conn.Open();
+        }
+
+        // =========================
         // ADD COMMENT
+        // =========================
         public void AddComment(Comment comment)
         {
+            EnsureOpen();
+
             var cmd = new MySqlCommand(@"
                 INSERT INTO comment (authorid, content, posted_on, post_id)
                 VALUES (@aid, @content, @posted, @pid)
@@ -32,9 +43,13 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
+        // =========================
         // GET ALL COMMENTS FOR POST
+        // =========================
         public List<Comment> GetAllCommentsByPostId(int postId)
         {
+            EnsureOpen();
+
             var cmd = new MySqlCommand(@"
                 SELECT 
                     c.id, c.authorid, c.content, c.posted_on, c.post_id,
@@ -57,12 +72,12 @@ namespace DataLayer.Repos
                     r.GetInt32("authorid"),
                     r.GetString("first_name"),
                     r.GetString("last_name"),
-                    r.IsDBNull(r.GetOrdinal("age")) ? 0 : r.GetInt32("age"),
+                    r.IsDBNull("age") ? 0 : r.GetInt32("age"),
                     r.GetString("username"),
                     r.GetString("email"),
                     r.GetString("password"),
                     r.GetBoolean("is_moderator"),
-                    r.GetString("steam_id")
+                    r.IsDBNull("steam_id") ? "0" : r.GetString("steam_id")
                 );
 
                 comments.Add(new Comment(
@@ -77,8 +92,13 @@ namespace DataLayer.Repos
             return comments;
         }
 
+        // =========================
+        // GET COMMENT BY USER
+        // =========================
         public Comment GetCommentByUserId(int userId)
         {
+            EnsureOpen();
+
             var cmd = new MySqlCommand(@"
                 SELECT * FROM comment 
                 WHERE authorid = @uid
@@ -100,9 +120,17 @@ namespace DataLayer.Repos
             );
         }
 
+        // =========================
+        // GET COMMENT BY ID
+        // =========================
         public Comment GetCommentById(int id)
         {
-            var cmd = new MySqlCommand("SELECT * FROM comment WHERE id=@id", conn.GetInnerConn());
+            EnsureOpen();
+
+            var cmd = new MySqlCommand(
+                "SELECT * FROM comment WHERE id=@id",
+                conn.GetInnerConn());
+
             cmd.Parameters.AddWithValue("@id", id);
 
             using var r = cmd.ExecuteReader();
@@ -117,8 +145,13 @@ namespace DataLayer.Repos
             );
         }
 
+        // =========================
+        // UPDATE COMMENT
+        // =========================
         public void UpdateComment(Comment comment)
         {
+            EnsureOpen();
+
             var cmd = new MySqlCommand(@"
                 UPDATE comment SET
                 authorid=@aid, content=@content, posted_on=@posted, post_id=@pid
@@ -134,21 +167,39 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
+        // =========================
+        // DELETE COMMENT
+        // =========================
         public void DeleteComment(Comment comment)
         {
-            // optional: cascade delete replies of the comment first if DB doesn't have FK cascade
-            var cmd0 = new MySqlCommand("DELETE FROM commentreply WHERE comment_id=@cid", conn.GetInnerConn());
+            EnsureOpen();
+
+            var cmd0 = new MySqlCommand(
+                "DELETE FROM commentreply WHERE comment_id=@cid",
+                conn.GetInnerConn());
+
             cmd0.Parameters.AddWithValue("@cid", comment.Id);
             cmd0.ExecuteNonQuery();
 
-            var cmd = new MySqlCommand("DELETE FROM comment WHERE id=@id", conn.GetInnerConn());
+            var cmd = new MySqlCommand(
+                "DELETE FROM comment WHERE id=@id",
+                conn.GetInnerConn());
+
             cmd.Parameters.AddWithValue("@id", comment.Id);
             cmd.ExecuteNonQuery();
         }
 
+        // =========================
+        // GET ALL COMMENTS
+        // =========================
         public List<Comment> GetAllComments()
         {
-            var cmd = new MySqlCommand("SELECT * FROM comment", conn.GetInnerConn());
+            EnsureOpen();
+
+            var cmd = new MySqlCommand(
+                "SELECT * FROM comment",
+                conn.GetInnerConn());
+
             List<Comment> list = new();
 
             using var r = cmd.ExecuteReader();
@@ -166,9 +217,13 @@ namespace DataLayer.Repos
             return list;
         }
 
+        // =========================
         // ADD REPLY
+        // =========================
         public void AddReply(CommentReply reply)
         {
+            EnsureOpen();
+
             var cmd = new MySqlCommand(@"
                 INSERT INTO commentreply (content, posted_on, comment_id, user_id)
                 VALUES (@content, @posted, @cid, @uid)
@@ -182,16 +237,16 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        // GET ALL REPLIES FOR COMMENT (✅ return with full User)
+        // =========================
+        // GET REPLIES FOR COMMENT
+        // =========================
         public List<CommentReply> GetAllRepliesByCommentId(int commentId)
         {
+            EnsureOpen();
+
             var cmd = new MySqlCommand(@"
                 SELECT 
-                    cr.id,
-                    cr.content,
-                    cr.posted_on,
-                    cr.comment_id,
-                    cr.user_id,
+                    cr.id, cr.content, cr.posted_on, cr.comment_id, cr.user_id,
                     u.first_name, u.last_name, u.age, u.username, u.email,
                     u.password, u.is_moderator, u.steam_id
                 FROM commentreply cr
@@ -211,12 +266,12 @@ namespace DataLayer.Repos
                     r.GetInt32("user_id"),
                     r.GetString("first_name"),
                     r.GetString("last_name"),
-                    r.IsDBNull(r.GetOrdinal("age")) ? 0 : r.GetInt32("age"),
+                    r.IsDBNull("age") ? 0 : r.GetInt32("age"),
                     r.GetString("username"),
                     r.GetString("email"),
                     r.GetString("password"),
                     r.GetBoolean("is_moderator"),
-                    r.GetString("steam_id")
+                    r.IsDBNull("steam_id") ? "0" : r.GetString("steam_id")
                 );
 
                 list.Add(new CommentReply(
@@ -231,16 +286,16 @@ namespace DataLayer.Repos
             return list;
         }
 
-        // ✅ NEW: GET REPLY BY ID (for delete permission check)
+        // =========================
+        // GET REPLY BY ID
+        // =========================
         public CommentReply GetReplyById(int replyId)
         {
+            EnsureOpen();
+
             var cmd = new MySqlCommand(@"
                 SELECT 
-                    cr.id,
-                    cr.content,
-                    cr.posted_on,
-                    cr.comment_id,
-                    cr.user_id,
+                    cr.id, cr.content, cr.posted_on, cr.comment_id, cr.user_id,
                     u.first_name, u.last_name, u.age, u.username, u.email,
                     u.password, u.is_moderator, u.steam_id
                 FROM commentreply cr
@@ -258,12 +313,12 @@ namespace DataLayer.Repos
                 r.GetInt32("user_id"),
                 r.GetString("first_name"),
                 r.GetString("last_name"),
-                r.IsDBNull(r.GetOrdinal("age")) ? 0 : r.GetInt32("age"),
+                r.IsDBNull("age") ? 0 : r.GetInt32("age"),
                 r.GetString("username"),
                 r.GetString("email"),
                 r.GetString("password"),
                 r.GetBoolean("is_moderator"),
-                r.GetString("steam_id")
+                r.IsDBNull("steam_id") ? "0" : r.GetString("steam_id")
             );
 
             return new CommentReply(
@@ -275,20 +330,31 @@ namespace DataLayer.Repos
             );
         }
 
-        // ✅ NEW: DELETE REPLY
+        // =========================
+        // DELETE REPLY
+        // =========================
         public void DeleteReply(CommentReply reply)
         {
-            var cmd = new MySqlCommand("DELETE FROM commentreply WHERE id=@id", conn.GetInnerConn());
+            EnsureOpen();
+
+            var cmd = new MySqlCommand(
+                "DELETE FROM commentreply WHERE id=@id",
+                conn.GetInnerConn());
+
             cmd.Parameters.AddWithValue("@id", reply.Id);
             cmd.ExecuteNonQuery();
         }
 
+        // =========================
+        // EXISTS CHECK
+        // =========================
         public bool CheckIfCommentExists(string text)
         {
+            EnsureOpen();
+
             var cmd = new MySqlCommand(
-                "SELECT EXISTS(SELECT * FROM comment WHERE content = @txt)",
-                conn.GetInnerConn()
-            );
+                "SELECT EXISTS(SELECT 1 FROM comment WHERE content=@txt)",
+                conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@txt", text);
             return Convert.ToInt32(cmd.ExecuteScalar()) == 1;

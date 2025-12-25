@@ -53,9 +53,8 @@ namespace DataLayer.Repos
 
                 list.Add(t);
             }
-            r.Close(); // CLOSE READER so new queries can run!!
+            r.Close();
 
-            // --- Load counts for each tournament ---
             foreach (var t in list)
             {
                 t.PlayersCount = GetPlayersCount(t.Id);
@@ -95,7 +94,6 @@ namespace DataLayer.Repos
             };
             r.Close();
 
-            // Load counts
             t.PlayersCount = GetPlayersCount(t.Id);
             t.TeamsCount = GetTeamsCount(t.Id);
             t.MatchesCount = GetMatchesCount(t.Id);
@@ -150,32 +148,29 @@ namespace DataLayer.Repos
         {
             EnsureConnection();
 
-            // Remove solo matches
             new MySqlCommand("DELETE FROM matches WHERE tournamentId=@id", conn.GetInnerConn())
             { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
 
-            // Remove old match table
             new MySqlCommand("DELETE FROM `match` WHERE tournamentId=@id", conn.GetInnerConn())
             { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
 
-            // Remove solo applications
             new MySqlCommand("DELETE FROM applications WHERE tournamentId=@id", conn.GetInnerConn())
             { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
 
-            // Remove team applications
             new MySqlCommand("DELETE FROM team_applications WHERE tournamentId=@id", conn.GetInnerConn())
             { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
 
-            // Remove tournament itself
             new MySqlCommand("DELETE FROM tournament WHERE id=@id", conn.GetInnerConn())
             { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
         }
 
         // ===========================================================
-        // COUNTS
+        // COUNTS  ✅ POPRAVLJENO
         // ===========================================================
         private int GetPlayersCount(int tournamentId)
         {
+            EnsureConnection();
+
             var cmd = new MySqlCommand(
                 "SELECT COUNT(*) FROM applications WHERE tournamentId=@id",
                 conn.GetInnerConn());
@@ -186,6 +181,8 @@ namespace DataLayer.Repos
 
         private int GetTeamsCount(int tournamentId)
         {
+            EnsureConnection();
+
             var cmd = new MySqlCommand(
                 "SELECT COUNT(*) FROM team_applications WHERE tournamentId=@id",
                 conn.GetInnerConn());
@@ -196,6 +193,8 @@ namespace DataLayer.Repos
 
         private int GetMatchesCount(int tournamentId)
         {
+            EnsureConnection();
+
             var cmd = new MySqlCommand(
                 @"SELECT 
                       (SELECT COUNT(*) FROM matches WHERE tournamentId=@id) +

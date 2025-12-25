@@ -9,9 +9,23 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 var builder = WebApplication.CreateBuilder(args);
 
 // =====================================================
-// FORCE HTTP (OBAVEZNO ZA NGROK)
+// CONFIGURATION
 // =====================================================
-builder.WebHost.UseUrls("http://localhost:5063");
+
+// koristi appsettings.json (+ appsettings.Development.json ako postoji)
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddEnvironmentVariables();
+
+// =====================================================
+// FORCE HTTP (NGROK / LOCAL)
+// =====================================================
+if (builder.Environment.IsDevelopment())
+{
+    builder.WebHost.UseUrls("http://localhost:5063");
+}
 
 // =====================================================
 // RAZOR PAGES
@@ -19,24 +33,28 @@ builder.WebHost.UseUrls("http://localhost:5063");
 builder.Services.AddRazorPages();
 
 // =====================================================
-// AUTHENTICATION
+// AUTHENTICATION (COOKIE)
 // =====================================================
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.LoginPath = "/Login";
+        options.AccessDeniedPath = "/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromHours(12);
     });
 
 // =====================================================
-// DATABASE CONNECTION
+// DATABASE CONNECTION (CLEAN WAY)
 // =====================================================
-builder.Services.AddSingleton<IConnection, MySQLConnection>(sp =>
+builder.Services.AddScoped<IConnection>(sp =>
 {
-    var conn = new MySQLConnection(
-        builder.Configuration.GetConnectionString("DefaultConnection")
-    );
-    conn.Open();
-    return conn;
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    var connStr = configuration.GetConnectionString("DefaultConnection");
+
+    if (string.IsNullOrWhiteSpace(connStr))
+        throw new Exception("Connection string 'DefaultConnection' is missing.");
+
+    return new MySQLConnection(connStr);
 });
 
 // =====================================================
@@ -57,11 +75,11 @@ builder.Services.AddScoped<ITeamMatchRepo, TeamMatchRepo>();
 builder.Services.AddScoped<UserManager>();
 builder.Services.AddScoped<PostManager>();
 builder.Services.AddScoped<CommentManager>();
+builder.Services.AddScoped<TournamentManager>();
 builder.Services.AddScoped<MatchManager>();
 builder.Services.AddScoped<PlayerManager>();
 builder.Services.AddScoped<TeamManager>();
 builder.Services.AddScoped<TeamMatchManager>();
-builder.Services.AddScoped<TournamentManager>();
 
 // =====================================================
 // SERVICES
@@ -79,8 +97,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// ? NE HTTPS REDIRECTION (RUŠI NGROK)
- //app.UseHttpsRedirection();
+// NGROK ? bez HTTPS redirecta
+// app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseRouting();

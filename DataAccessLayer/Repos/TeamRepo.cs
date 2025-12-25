@@ -19,7 +19,7 @@ namespace DataLayer.Repos
 
         private void EnsureOpen()
         {
-            if (conn.GetInnerConn().State != System.Data.ConnectionState.Open)
+            if (conn.GetInnerConn().State != ConnectionState.Open)
                 conn.Open();
         }
 
@@ -127,6 +127,7 @@ namespace DataLayer.Repos
             EnsureOpen();
 
             var list = new List<Team>();
+
             var cmd = new MySqlCommand(
                 @"SELECT 
                       t.id, 
@@ -163,13 +164,10 @@ namespace DataLayer.Repos
             EnsureOpen();
 
             var list = new List<User>();
+
             var cmd = new MySqlCommand(
                 @"SELECT 
-                      u.id, 
-                      u.first_name,
-                      u.last_name,
-                      u.username,
-                      u.steam_id
+                      u.id, u.first_name, u.last_name, u.username, u.steam_id
                   FROM team_player tp
                   JOIN user u ON tp.user_id = u.id
                   WHERE tp.team_id=@id AND tp.status='Approved'",
@@ -210,8 +208,7 @@ namespace DataLayer.Repos
                 throw new Exception("Captain must have a SteamID.");
 
             var cmd = new MySqlCommand(
-                @"INSERT INTO team (name, captain_id) 
-                  VALUES (@n, @c)",
+                @"INSERT INTO team (name, captain_id) VALUES (@n, @c)",
                 conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@n", name);
@@ -255,7 +252,6 @@ namespace DataLayer.Repos
 
             cmd.Parameters.AddWithValue("@t", teamId);
             cmd.Parameters.AddWithValue("@u", userId);
-
             cmd.ExecuteNonQuery();
         }
 
@@ -278,9 +274,7 @@ namespace DataLayer.Repos
             var list = new List<TeamJoinRequest>();
 
             var cmd = new MySqlCommand(
-                @"SELECT 
-                      r.id, r.team_id, r.user_id, r.requested_at,
-                      u.username
+                @"SELECT r.id, r.team_id, r.user_id, r.requested_at, u.username
                   FROM team_join_request r
                   JOIN user u ON r.user_id=u.id
                   WHERE r.team_id=@id",
@@ -346,7 +340,7 @@ namespace DataLayer.Repos
         }
 
         // ============================================================
-        // ADMIN — free users
+        // ADMIN
         // ============================================================
 
         public List<User> GetUsersWithoutTeam()
@@ -354,6 +348,7 @@ namespace DataLayer.Repos
             EnsureOpen();
 
             var list = new List<User>();
+
             var cmd = new MySqlCommand(
                 @"SELECT u.id, u.first_name, u.last_name, u.username, u.steam_id
                   FROM user u
@@ -378,10 +373,6 @@ namespace DataLayer.Repos
             return list;
         }
 
-        // ============================================================
-        // ADMIN — Add user to team without approval
-        // ============================================================
-
         public void AddUserToTeam_AdminOverride(int teamId, int userId)
         {
             EnsureOpen();
@@ -393,7 +384,6 @@ namespace DataLayer.Repos
 
             cmd.Parameters.AddWithValue("@t", teamId);
             cmd.Parameters.AddWithValue("@u", userId);
-
             cmd.ExecuteNonQuery();
         }
 
@@ -406,6 +396,7 @@ namespace DataLayer.Repos
             EnsureOpen();
 
             var list = new List<User>();
+
             var cmd = new MySqlCommand(
                 @"SELECT u.id, u.first_name, u.last_name, u.username, u.steam_id
                   FROM team_player tp
@@ -431,18 +422,17 @@ namespace DataLayer.Repos
 
             return list;
         }
+
         public void RemovePlayer(int teamId, int userId)
         {
             EnsureOpen();
 
             var cmd = new MySqlCommand(
-                @"DELETE FROM team_player 
-          WHERE team_id=@t AND user_id=@u",
+                @"DELETE FROM team_player WHERE team_id=@t AND user_id=@u",
                 conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@t", teamId);
             cmd.Parameters.AddWithValue("@u", userId);
-
             cmd.ExecuteNonQuery();
         }
 
@@ -451,17 +441,13 @@ namespace DataLayer.Repos
             EnsureOpen();
 
             var cmd = new MySqlCommand(
-                @"UPDATE team_player 
-          SET status=@s 
-          WHERE team_id=@t AND user_id=@u",
+                @"UPDATE team_player SET status=@s WHERE team_id=@t AND user_id=@u",
                 conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@s", newStatus);
             cmd.Parameters.AddWithValue("@t", teamId);
             cmd.Parameters.AddWithValue("@u", userId);
-
             cmd.ExecuteNonQuery();
         }
-
     }
 }

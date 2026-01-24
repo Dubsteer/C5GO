@@ -31,17 +31,22 @@ namespace DataLayer.Repos
             EnsureOpen();
 
             var cmd = new MySqlCommand(
-                @"INSERT INTO post (authorid, title, content, posted_on)
-                  VALUES (@AUTHORID, @TITLE, @CONTENT, @POSTED_ON)",
+                @"INSERT INTO post (authorid, title, content, posted_on, image_path)
+          VALUES (@AUTHORID, @TITLE, @CONTENT, @POSTED_ON, @IMAGE_PATH)",
                 conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@AUTHORID", post.User.Id);
             cmd.Parameters.AddWithValue("@TITLE", post.Title);
             cmd.Parameters.AddWithValue("@CONTENT", post.Content);
             cmd.Parameters.AddWithValue("@POSTED_ON", post.Posted_on);
+            cmd.Parameters.AddWithValue("@IMAGE_PATH",
+                string.IsNullOrWhiteSpace(post.ImagePath)
+                    ? (object)DBNull.Value
+                    : post.ImagePath);
 
             cmd.ExecuteNonQuery();
         }
+
 
         // =========================
         // READ ALL
@@ -57,18 +62,26 @@ namespace DataLayer.Repos
             {
                 while (reader.Read())
                 {
-                    posts.Add(new Post(
+                    var post = new Post(
                         reader.GetInt32("id"),
                         new User(reader.GetInt32("authorid")),
                         reader.GetString("title"),
                         reader.GetString("content"),
                         reader.GetDateTime("posted_on")
-                    ));
+                    );
+
+                    // ✅ IMAGE PATH
+                    post.ImagePath = reader.IsDBNull("image_path")
+                        ? null
+                        : reader.GetString("image_path");
+
+                    posts.Add(post);
                 }
             }
 
             return posts;
         }
+
 
         // =========================
         // READ BY ID
@@ -78,24 +91,33 @@ namespace DataLayer.Repos
             EnsureOpen();
 
             var cmd = new MySqlCommand(
-                "SELECT * FROM post WHERE id=@id",
+                "SELECT * FROM post WHERE id = @id",
                 conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@id", id);
 
             using (var reader = cmd.ExecuteReader())
             {
-                if (!reader.Read()) return null;
+                if (!reader.Read())
+                    return null;
 
-                return new Post(
+                var post = new Post(
                     reader.GetInt32("id"),
                     new User(reader.GetInt32("authorid")),
                     reader.GetString("title"),
                     reader.GetString("content"),
                     reader.GetDateTime("posted_on")
                 );
+
+                // ✅ IMAGE PATH
+                post.ImagePath = reader.IsDBNull("image_path")
+                    ? null
+                    : reader.GetString("image_path");
+
+                return post;
             }
         }
+
 
         // =========================
         // UPDATE
@@ -106,21 +128,23 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 @"UPDATE post SET
-                    authorid=@AUTHORID,
-                    title=@TITLE,
-                    content=@CONTENT,
-                    posted_on=@POSTED_ON
-                  WHERE id=@ID",
+            title = @TITLE,
+            content = @CONTENT,
+            image_path = @IMAGE_PATH
+          WHERE id = @ID",
                 conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@ID", post.Id);
-            cmd.Parameters.AddWithValue("@AUTHORID", post.User.Id);
             cmd.Parameters.AddWithValue("@TITLE", post.Title);
             cmd.Parameters.AddWithValue("@CONTENT", post.Content);
-            cmd.Parameters.AddWithValue("@POSTED_ON", post.Posted_on);
+            cmd.Parameters.AddWithValue(
+                "@IMAGE_PATH",
+                post.ImagePath ?? (object)DBNull.Value
+            );
 
             cmd.ExecuteNonQuery();
         }
+
 
         // =========================
         // DELETE

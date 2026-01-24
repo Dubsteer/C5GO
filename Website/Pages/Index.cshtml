@@ -3,6 +3,11 @@
 @model IndexModel
 @{
     ViewData["Title"] = "Posts";
+
+    // ✅ SORTIRANJE PO VREMENU (NAJNOVIJI PRVI)
+    var orderedPosts = Model.Posts
+        .OrderByDescending(p => p.Id)
+        .ToList();
 }
 
 <style>
@@ -20,7 +25,14 @@
         margin-bottom: 35px;
     }
 
-    /* FULL CARD LINK */
+    h2.section-title {
+        font-size: 22px;
+        font-weight: 700;
+        margin: 35px 0 20px;
+        color: #e5e7eb;
+    }
+
+    /* LINK */
     .post-link {
         text-decoration: none !important;
         color: inherit !important;
@@ -28,13 +40,15 @@
         height: 100%;
     }
 
+    /* BASE CARD */
     .post-card {
         background: #161b22;
-        border-radius: 12px;
-        padding: 20px;
+        border-radius: 14px;
+        padding: 22px;
         border: 1px solid #2d333b;
         height: 100%;
-        transition: border-color .2s ease, box-shadow .2s ease;
+        transition: 0.25s;
+        position: relative;
     }
 
         .post-card:hover {
@@ -42,17 +56,48 @@
             box-shadow: 0 0 10px rgba(99,102,241,0.35);
         }
 
+    /* FEATURED (SUBTLE) */
+    .featured {
+        background: linear-gradient(135deg, #1f2937, #111827);
+        border: 1px solid #3b82f6;
+        box-shadow: 0 0 12px rgba(59,130,246,0.25);
+    }
+
+    .featured-badge {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        background: #3b82f6;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 999px;
+        letter-spacing: 0.5px;
+    }
+
+    /* TEXT */
     .post-title {
         color: #ffffff;
         font-size: 20px;
-        font-weight: 700;
+        font-weight: 800;
         margin-bottom: 10px;
     }
 
     .post-snippet {
         color: #d1d5db;
         font-size: 14px;
-        line-height: 1.5;
+        line-height: 1.55;
+    }
+
+    .read-more {
+        margin-top: 14px;
+        font-size: 13px;
+        color: #9ca3af;
+    }
+
+    .post-card:hover .read-more {
+        color: #ffffff;
     }
 </style>
 
@@ -60,23 +105,39 @@
 
     <h1>Announcements</h1>
 
+    <h2 class="section-title">Latest posts</h2>
+
     <div class="row g-4">
 
-        @foreach (Post post in Model.Posts)
+        @for (int i = 0; i < orderedPosts.Count; i++)
         {
-            <div class="col-12 col-md-6 col-lg-4">
+            var post = orderedPosts[i];
+            bool isFeatured = i == 0;
+
+            <div class="col-12 col-md-6 col-lg-4 @(isFeatured ? "col-lg-8" : "")">
                 <a asp-page="/Posts/Post"
                    asp-route-id="@post.Id"
                    class="post-link">
 
-                    <div class="post-card">
+                    <div class="post-card @(isFeatured ? "featured" : "")">
+
+                        @if (isFeatured)
+                        {
+                            <div class="featured-badge">
+                                📢 FEATURED
+                            </div>
+                        }
 
                         <div class="post-title">
-                            @Model.TruncateString(post.Title ?? post.Content, 45)
+                            @Model.TruncateString(post.Title ?? post.Content, isFeatured ? 80 : 45)
                         </div>
 
                         <div class="post-snippet">
-                            @Model.TruncateString(post.Content, 110)
+                            @Model.TruncateString(post.Content, isFeatured ? 220 : 120)
+                        </div>
+
+                        <div class="read-more">
+                            Read →
                         </div>
 
                     </div>

@@ -81,6 +81,13 @@ namespace Website.Pages.Teams
         {
             LoadUser();
 
+            // ? HARD BLOCK — NULL ILI "0"
+            if (string.IsNullOrWhiteSpace(CurrentUser.SteamId) || CurrentUser.SteamId == "0")
+            {
+                TempData["Error"] = "You must add your SteamID before requesting to join a team.";
+                return RedirectToPage("/Teams/Teams");
+            }
+
             try
             {
                 teamManager.RequestJoinTeam(teamId, CurrentUser.Id.Value);
@@ -93,6 +100,8 @@ namespace Website.Pages.Teams
 
             return RedirectToPage("/Teams/Teams");
         }
+
+
 
         public IActionResult OnPostApprove(int requestId)
         {

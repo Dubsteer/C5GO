@@ -52,7 +52,7 @@ namespace DesktopApp
             playerManager = new PlayerManager(playerRepo);
             matchManager = new MatchManager(matchRepo);
             teamMatchManager = new TeamMatchManager(teamMatchRepo);
-            teamManager = new TeamManager(teamRepo);
+            //teamManager = new TeamManager(teamRepo);
 
             tournamentManager = new TournamentManager(
                 tournamentRepo,

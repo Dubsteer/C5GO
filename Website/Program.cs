@@ -11,8 +11,6 @@ var builder = WebApplication.CreateBuilder(args);
 // =====================================================
 // CONFIGURATION
 // =====================================================
-
-// koristi appsettings.json (+ appsettings.Development.json ako postoji)
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -20,17 +18,12 @@ builder.Configuration
     .AddEnvironmentVariables();
 
 // =====================================================
-// FORCE HTTP (NGROK / LOCAL)
+// FORCE HTTP (LOCAL / NGROK)
 // =====================================================
 if (builder.Environment.IsDevelopment())
 {
     builder.WebHost.UseUrls("http://localhost:5063");
 }
-
-// =====================================================
-// RAZOR PAGES
-// =====================================================
-builder.Services.AddRazorPages();
 
 // =====================================================
 // AUTHENTICATION (COOKIE)
@@ -44,7 +37,28 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 // =====================================================
-// DATABASE CONNECTION (CLEAN WAY)
+// AUTHORIZATION (ADMIN POLICY)
+// =====================================================
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireAuthenticatedUser()
+              .RequireAssertion(context =>
+                  context.User.Identity!.Name == "admin"
+              ));
+});
+
+// =====================================================
+// RAZOR PAGES + ADMIN FOLDER LOCK
+// =====================================================
+builder.Services.AddRazorPages(options =>
+{
+    // ?? CIJELI /Admin folder je zaklju?an za ADMIN-a
+    options.Conventions.AuthorizeFolder("/Admin", "AdminOnly");
+});
+
+// =====================================================
+// DATABASE CONNECTION
 // =====================================================
 builder.Services.AddScoped<IConnection>(sp =>
 {
@@ -68,6 +82,7 @@ builder.Services.AddScoped<IMatchRepo, MatchRepo>();
 builder.Services.AddScoped<IPlayerRepo, PlayerRepo>();
 builder.Services.AddScoped<ITeamRepo, TeamRepo>();
 builder.Services.AddScoped<ITeamMatchRepo, TeamMatchRepo>();
+builder.Services.AddScoped<INotificationRepo, NotificationRepo>();
 
 // =====================================================
 // MANAGERS
@@ -80,6 +95,7 @@ builder.Services.AddScoped<MatchManager>();
 builder.Services.AddScoped<PlayerManager>();
 builder.Services.AddScoped<TeamManager>();
 builder.Services.AddScoped<TeamMatchManager>();
+builder.Services.AddScoped<NotificationManager>();
 
 // =====================================================
 // SERVICES
@@ -89,7 +105,7 @@ builder.Services.AddScoped<EmailService>();
 var app = builder.Build();
 
 // =====================================================
-// MIDDLEWARE
+// MIDDLEWARE PIPELINE
 // =====================================================
 if (!app.Environment.IsDevelopment())
 {
@@ -97,8 +113,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// NGROK ? bez HTTPS redirecta
-// app.UseHttpsRedirection();
+// app.UseHttpsRedirection(); // ? isklju?eno zbog local/ngrok
 
 app.UseStaticFiles();
 app.UseRouting();

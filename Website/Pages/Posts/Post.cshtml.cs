@@ -3,6 +3,7 @@ using LogicLayer.Managers;
 using LogicLayer.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Net;
 
 namespace Website.Pages.Posts
 {
@@ -22,8 +23,6 @@ namespace Website.Pages.Posts
         [BindProperty] public CommentModel NewComment { get; set; }
         [BindProperty] public ReplyModel NewReply { get; set; }
 
-        public HashSet<int> ExpandedReplies { get; set; } = new();
-
         public PostModel(
             PostManager postManager,
             UserManager userManager,
@@ -36,9 +35,15 @@ namespace Website.Pages.Posts
 
         private bool LoadData()
         {
+            if (Id <= 0)
+                return false;
+
             Post = postManager.GetPostById(Id);
             if (Post == null)
                 return false;
+
+            // samo decode – NIŠTA VIŠE
+            Post.Content = WebUtility.HtmlDecode(Post.Content);
 
             Comments = commentManager.GetAllCommentsWithReplies(Id);
 
@@ -59,26 +64,10 @@ namespace Website.Pages.Posts
             return Page();
         }
 
-        // TOGGLE REPLIES
-        public IActionResult OnPostToggleReplies(int commentId)
-        {
-            LoadData();
-
-            if (ExpandedReplies.Contains(commentId))
-                ExpandedReplies.Remove(commentId);
-            else
-                ExpandedReplies.Add(commentId);
-
-            return Page();
-        }
-
-        // ADD COMMENT
         public IActionResult OnPostSubmitComment()
         {
-            LoadData();
-
-            if (CurrentUser == null)
-                return Unauthorized();
+            if (!LoadData())
+                return RedirectToPage("/Error");
 
             var comment = new Comment(
                 0,
@@ -92,13 +81,10 @@ namespace Website.Pages.Posts
             return RedirectToPage("Post", new { Id });
         }
 
-        // ADD REPLY
         public IActionResult OnPostSubmitReply()
         {
-            LoadData();
-
-            if (CurrentUser == null)
-                return Unauthorized();
+            if (!LoadData())
+                return RedirectToPage("/Error");
 
             var reply = new CommentReply(
                 0,
@@ -109,40 +95,31 @@ namespace Website.Pages.Posts
             );
 
             commentManager.AddReply(reply);
-
-            ExpandedReplies.Add(NewReply.replyCommentId);
-            return Page();
+            return RedirectToPage("Post", new { Id });
         }
 
-        // DELETE COMMENT
         public IActionResult OnPostDeleteComment(int cid)
         {
-            LoadData();
-
             var comment = commentManager.GetCommentById(cid);
-            if (comment == null)
-                return RedirectToPage("Post", new { Id });
-
-            if (CurrentUser.IsAdmin || CurrentUser.Id == comment.User.Id)
+            if (comment != null &&
+                (CurrentUser.IsAdmin || CurrentUser.Id == comment.User.Id))
+            {
                 commentManager.DeleteComment(comment);
+            }
 
             return RedirectToPage("Post", new { Id });
         }
 
-        // DELETE REPLY
         public IActionResult OnPostDeleteReply(int rid)
         {
-            LoadData();
-
             var reply = commentManager.GetReplyById(rid);
-            if (reply == null)
-                return RedirectToPage("Post", new { Id });
-
-            if (CurrentUser.IsAdmin || CurrentUser.Id == reply.User.Id)
+            if (reply != null &&
+                (CurrentUser.IsAdmin || CurrentUser.Id == reply.User.Id))
+            {
                 commentManager.DeleteReply(reply);
+            }
 
-            ExpandedReplies.Add(reply.CommentId);
-            return Page();
+            return RedirectToPage("Post", new { Id });
         }
     }
 }

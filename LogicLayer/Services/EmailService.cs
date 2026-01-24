@@ -19,20 +19,24 @@ namespace LogicLayer.Services
         public EmailService(IConfiguration configuration)
         {
             smtpServer = configuration["SMTP_HOST"];
-            smtpPort = int.Parse(configuration["SMTP_PORT"]);
             smtpUser = configuration["SMTP_USER"];
             smtpPassword = configuration["SMTP_PASS"];
             fromEmail = configuration["SMTP_FROM"];
-            baseUrl = configuration["APP_BASE_URL"];
+            baseUrl = configuration["APP_BASE_URL"]?.TrimEnd('/');
+
+            if (!int.TryParse(configuration["SMTP_PORT"], out smtpPort))
+            {
+                throw new Exception("SMTP_PORT is not configured correctly.");
+            }
 
             // FAIL FAST – profesionalni standard
-            if (string.IsNullOrEmpty(smtpServer) ||
-                string.IsNullOrEmpty(smtpUser) ||
-                string.IsNullOrEmpty(smtpPassword) ||
-                string.IsNullOrEmpty(fromEmail) ||
-                string.IsNullOrEmpty(baseUrl))
+            if (string.IsNullOrWhiteSpace(smtpServer) ||
+                string.IsNullOrWhiteSpace(smtpUser) ||
+                string.IsNullOrWhiteSpace(smtpPassword) ||
+                string.IsNullOrWhiteSpace(fromEmail) ||
+                string.IsNullOrWhiteSpace(baseUrl))
             {
-                throw new Exception("Email ENV variables are not configured properly.");
+                throw new Exception("Email environment variables are not configured properly.");
             }
         }
 
@@ -48,10 +52,10 @@ namespace LogicLayer.Services
             email.Body = new TextPart("plain")
             {
                 Text =
-                    "Welcome to C5GO!\n\n" +
-                    "Please verify your email by clicking the link below:\n\n" +
+                    "Dobro dosao nefilu u C5G0!\n\n" +
+                    "Molim te verifikuj svoj email tako sto ces da kliknes na link ispod:\n\n" +
                     verifyLink + "\n\n" +
-                    "If you did not create this account, you can ignore this email."
+                    "Ako nisi kreirao ovaj nalog, mozes da ignorises ovaj email."
             };
 
             using var smtp = new SmtpClient();

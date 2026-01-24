@@ -1,16 +1,11 @@
 ﻿@page
-@model Website.Pages.Errors._404Model
 @{
+    ViewData["Title"] = "Not Found";
 }
 
-<h1>
-    404 Not Found
-</h1>
+<div class="text-center mt-5">
+    <h1 class="display-4">404</h1>
+    <p>Page not found.</p>
 
-<br />
-
-<p>
-    No such page exists at this location.
-</p>
-
-<img src="https://http.cat/404" style="display: block; margin-left: auto; margin-right: auto;">
+    <a href="/" class="btn btn-secondary mt-3">Back to home</a>
+</div>

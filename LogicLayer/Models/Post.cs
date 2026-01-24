@@ -11,6 +11,8 @@ namespace LogicLayer.Models
 
         public string Content { get; set; }
         public DateTime Posted_on { get; set; }
+        public string? ImagePath { get; set; }
+
 
         public User User { get; set; }
 

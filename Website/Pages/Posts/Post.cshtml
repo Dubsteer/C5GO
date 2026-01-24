@@ -1,8 +1,5 @@
 ﻿@page "{id:int}"
 @model Website.Pages.Posts.PostModel
-@{
-    ViewData["Title"] = "Post";
-}
 
 <style>
     body {
@@ -14,137 +11,83 @@
     .post-wrapper {
         background: #161b22;
         border-radius: 12px;
-        padding: 30px;
+        padding: 36px;
         max-width: 900px;
         margin: 40px auto;
         border: 1px solid #2d333b;
     }
 
-    .comment-box {
-        background: #1c2128;
-        padding: 15px;
+    .post-image {
+        width: 100%;
+        max-height: 420px;
+        object-fit: cover;
         border-radius: 10px;
-        border: 1px solid #2d333b;
-        margin-top: 20px;
-    }
-
-    .reply-box {
-        background: #232830;
-        padding: 10px;
-        margin-top: 8px;
-        margin-left: 30px;
-        border-radius: 8px;
+        margin-bottom: 28px;
         border: 1px solid #2d333b;
     }
 
-    .reply-input {
-        margin-left: 30px;
-        margin-top: 10px;
+    .thread-header {
+        padding-bottom: 28px;
+        margin-bottom: 32px;
+        border-bottom: 1px solid #2d333b;
     }
 
-    .toggle-btn,
-    .delete-btn {
-        background: none;
-        border: none;
-        color: #58a6ff;
-        font-size: 13px;
-        cursor: pointer;
-        padding: 0;
-        margin-left: 8px;
+    .thread-title {
+        font-size: 30px;
+        font-weight: 700;
+        margin-bottom: 16px;
     }
 
-    .delete-btn {
-        color: #f87171;
+    .thread-content {
+        font-size: 17px;
+        line-height: 1.75;
     }
 </style>
 
 <div class="post-wrapper">
 
-    <h1>@Model.Post.Title</h1>
-    <p>@Model.Post.Content</p>
-
-    <hr />
-
-    @foreach (var com in Model.Comments)
+    @if (!string.IsNullOrEmpty(Model.Post.ImagePath))
     {
-        <div class="comment-box">
-
-            <strong>@com.User.Username</strong>
-            <span style="opacity:.6; font-size:12px;">
-                @com.Posted_on.ToString("MMM dd, HH:mm")
-            </span>
-
-            @if (Model.CurrentUser != null &&
-                    (Model.CurrentUser.IsAdmin || Model.CurrentUser.Id == com.User.Id))
-            {
-                <form method="post"
-                      asp-page-handler="DeleteComment"
-                      asp-route-cid="@com.Id"
-                      style="display:inline;">
-                    <button class="delete-btn">Delete</button>
-                </form>
-            }
-
-            <div class="mt-2">@com.Content</div>
-
-            @{
-                var replies = com.Replies;
-                var showAll = Model.ExpandedReplies.Contains(com.Id);
-                var visibleReplies = showAll ? replies : replies.Take(2).ToList();
-            }
-
-            @foreach (var r in visibleReplies)
-            {
-                <div class="reply-box">
-                    <strong>@r.Username</strong>
-                    <span style="opacity:.6; font-size:12px;">
-                        @r.PostedOn.ToString("MMM dd, HH:mm")
-                    </span>
-
-                    @if (Model.CurrentUser != null &&
-                                (Model.CurrentUser.IsAdmin || Model.CurrentUser.Id == r.User.Id))
-                    {
-                        <form method="post"
-                              asp-page-handler="DeleteReply"
-                              asp-route-rid="@r.Id"
-                              style="display:inline;">
-                            <button class="delete-btn">Delete</button>
-                        </form>
-                    }
-
-                    <div>@r.Content</div>
-                </div>
-            }
-
-            @if (replies.Count > 2)
-            {
-                <form method="post"
-                      asp-page-handler="ToggleReplies"
-                      asp-route-commentId="@com.Id">
-                    <button class="toggle-btn">
-                        @(showAll
-                                        ? "Hide replies"
-                                        : $"Show all replies ({replies.Count})")
-            </button>
-        </form>
-                }
-
-            @if (User.Identity.IsAuthenticated)
-            {
-                <form method="post"
-                      asp-page-handler="SubmitReply"
-                      class="reply-input">
-                    <input asp-for="NewReply.replyCommentId"
-                           type="hidden"
-                           value="@com.Id" />
-                    <input asp-for="NewReply.ReplyText"
-                           class="form-control"
-                           placeholder="Write a reply..." />
-                    <button class="btn btn-secondary btn-sm mt-2">
-                        Reply
-                    </button>
-                </form>
-            }
-        </div>
+        <img src="@Model.Post.ImagePath"
+             class="post-image"
+             alt="Post image" />
     }
+
+    <div class="thread-header">
+        <div class="thread-title">@Model.Post.Title</div>
+
+        <!-- 🔥 OVO JE KLJUČ -->
+        <div class="thread-content" id="postContent">
+            @Html.Raw(Model.Post.Content)
+        </div>
+    </div>
+
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const container = document.getElementById("postContent");
+            if (!container) return;
+
+            let html = container.innerHTML;
+
+            const ytRegex = /https?:\/\/(www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/g;
+
+            html = html.replace(ytRegex, function (_, __, videoId) {
+                return `
+                    <div style="margin:20px 0; display:flex; justify-content:center;">
+                        <iframe width="560"
+                                height="315"
+                                src="https://www.youtube.com/embed/${videoId}"
+                                frameborder="0"
+                                allowfullscreen>
+                        </iframe>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        });
+    </script>
+}

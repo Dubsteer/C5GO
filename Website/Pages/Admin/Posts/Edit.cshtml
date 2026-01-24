@@ -1,0 +1,89 @@
+﻿@page "{id:int}"
+@model Website.Pages.Admin.Posts.EditModel
+@{
+    ViewData["Title"] = "Edit post";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold">✏️ Edit post</h2>
+
+            <a asp-page="Manage" class="btn btn-outline-secondary btn-sm">
+                ← Back to posts
+            </a>
+        </div>
+
+        <div class="card bg-dark border-secondary">
+            <div class="card-body p-4">
+
+                <form method="post" enctype="multipart/form-data">
+
+                    <input type="hidden" asp-for="Post.Id" />
+
+                    <!-- TITLE -->
+                    <div class="mb-3">
+                        <label class="form-label text-light fw-semibold">
+                            Title
+                        </label>
+                        <input asp-for="Post.Title"
+                               class="form-control bg-dark text-light border-secondary"
+                               required />
+                    </div>
+
+                    <!-- CONTENT -->
+                    <div class="mb-3">
+                        <label class="form-label text-light fw-semibold">
+                            Content
+                        </label>
+                        <textarea asp-for="Post.Content"
+                                  class="form-control bg-dark text-light border-secondary"
+                                  rows="8"
+                                  required></textarea>
+                    </div>
+
+                    <!-- CURRENT IMAGE -->
+                    @if (!string.IsNullOrEmpty(Model.Post.ImagePath))
+                    {
+                        <div class="mb-3">
+                            <label class="form-label text-light fw-semibold">
+                                Current image
+                            </label>
+                            <div class="mt-2">
+                                <img src="@Model.Post.ImagePath"
+                                     class="img-fluid rounded border border-secondary"
+                                     style="max-height:220px;" />
+                            </div>
+                        </div>
+                    }
+
+                    <!-- NEW IMAGE -->
+                    <div class="mb-4">
+                        <label class="form-label text-light fw-semibold">
+                            Replace image (optional)
+                        </label>
+                        <input asp-for="Image"
+                               type="file"
+                               class="form-control bg-dark text-light border-secondary" />
+                    </div>
+
+                    <!-- ACTIONS -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4">
+                            Save changes
+                        </button>
+
+                        <a asp-page="Manage" class="btn btn-secondary px-4">
+                            Cancel
+                        </a>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+

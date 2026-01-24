@@ -36,5 +36,6 @@ namespace LogicLayer.IRepos
         // SEARCH
         // =========================
         List<User> SearchUser(string term);
+        User? GetUserByUsername(string username);
     }
 }

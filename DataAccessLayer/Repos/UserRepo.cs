@@ -310,5 +310,27 @@ namespace DataLayer.Repos
 
             return user;
         }
+
+        public User? GetUserByUsername(string username)
+        {
+            EnsureConnection();
+
+            var cmd = new MySqlCommand(@"
+        SELECT id, first_name, last_name, birthday, age, username, email, password,
+               is_moderator, steam_id, email_confirmed, email_token, token_created_at
+        FROM user
+        WHERE username = @USERNAME
+        LIMIT 1
+    ", conn.GetInnerConn());
+
+            cmd.Parameters.AddWithValue("@USERNAME", username);
+
+            using var reader = cmd.ExecuteReader();
+            if (!reader.Read())
+                return null;
+
+            return MapUser(reader);
+        }
+
     }
 }

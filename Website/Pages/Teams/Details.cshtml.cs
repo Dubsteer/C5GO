@@ -17,6 +17,9 @@ namespace Website.Pages.Teams
         public List<TeamJoinRequest> Pending { get; set; }
         public User CurrentUser { get; set; }
 
+        // ? NOVO
+        public bool IsCaptain { get; set; }
+
         public DetailsModel(TeamManager tm, UserManager um)
         {
             teamManager = tm;
@@ -34,19 +37,18 @@ namespace Website.Pages.Teams
             LoadUser();
 
             Team = teamManager.GetTeam(id);
-
             if (Team == null)
                 return RedirectToPage("/Teams/Teams");
 
             Members = Team.Members;
             Pending = teamManager.GetJoinRequests(id);
 
+            // ? KLJU?NA LINIJA
+            IsCaptain = Team.Captain.Id == CurrentUser.Id;
+
             return Page();
         }
 
-        // =============================================
-        // APPROVE REQUEST
-        // =============================================
         public IActionResult OnPostApprove(int requestId, int teamId)
         {
             LoadUser();
@@ -63,9 +65,6 @@ namespace Website.Pages.Teams
             return RedirectToPage("/Teams/Details", new { id = teamId });
         }
 
-        // =============================================
-        // REJECT REQUEST
-        // =============================================
         public IActionResult OnPostReject(int requestId, int teamId)
         {
             LoadUser();
@@ -82,9 +81,6 @@ namespace Website.Pages.Teams
             return RedirectToPage("/Teams/Details", new { id = teamId });
         }
 
-        // =============================================
-        // LEAVE TEAM
-        // =============================================
         public IActionResult OnPostLeave(int teamId)
         {
             LoadUser();
@@ -102,10 +98,6 @@ namespace Website.Pages.Teams
             return RedirectToPage("/Teams/Teams");
         }
 
-
-        // =============================================
-        // KICK MEMBER
-        // =============================================
         public IActionResult OnPostKick(int userId, int teamId)
         {
             LoadUser();
@@ -122,9 +114,6 @@ namespace Website.Pages.Teams
             return RedirectToPage("/Teams/Details", new { id = teamId });
         }
 
-        // =============================================
-        // NEW: USER SEND JOIN REQUEST
-        // =============================================
         public IActionResult OnPostJoinTeam(int teamId)
         {
             LoadUser();

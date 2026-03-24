@@ -101,6 +101,7 @@ builder.Services.AddScoped<NotificationManager>();
 // SERVICES
 // =====================================================
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<IExternalMatchProvider, MockExternalMatchProvider>();
 
 var app = builder.Build();
 

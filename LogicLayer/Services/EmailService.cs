@@ -18,25 +18,24 @@ namespace LogicLayer.Services
 
         public EmailService(IConfiguration configuration)
         {
-            smtpServer = configuration["SMTP_HOST"];
-            smtpUser = configuration["SMTP_USER"];
-            smtpPassword = configuration["SMTP_PASS"];
-            fromEmail = configuration["SMTP_FROM"];
-            baseUrl = configuration["APP_BASE_URL"]?.TrimEnd('/');
+            smtpServer = configuration["EmailSettings:SmtpServer"];
+            smtpUser = configuration["EmailSettings:Username"];
+            smtpPassword = configuration["EmailSettings:Password"];
+            fromEmail = configuration["EmailSettings:SenderEmail"];
+            baseUrl = configuration["AppSettings:AuthUrl"]?.TrimEnd('/');
 
-            if (!int.TryParse(configuration["SMTP_PORT"], out smtpPort))
+            if (!int.TryParse(configuration["EmailSettings:Port"], out smtpPort))
             {
-                throw new Exception("SMTP_PORT is not configured correctly.");
+                throw new Exception("SMTP Port is not configured correctly.");
             }
 
-            // FAIL FAST – profesionalni standard
             if (string.IsNullOrWhiteSpace(smtpServer) ||
                 string.IsNullOrWhiteSpace(smtpUser) ||
                 string.IsNullOrWhiteSpace(smtpPassword) ||
                 string.IsNullOrWhiteSpace(fromEmail) ||
                 string.IsNullOrWhiteSpace(baseUrl))
             {
-                throw new Exception("Email environment variables are not configured properly.");
+                throw new Exception("Email configuration is missing.");
             }
         }
 
@@ -45,20 +44,21 @@ namespace LogicLayer.Services
             var verifyLink = $"{baseUrl}/VerifyEmail?token={token}";
 
             var email = new MimeMessage();
-            email.From.Add(new MailboxAddress("C5GO", fromEmail));
+            email.From.Add(new MailboxAddress("C5GO Platform", fromEmail));
             email.To.Add(MailboxAddress.Parse(toEmail));
-            email.Subject = "Verify your email";
+            email.Subject = "Verify your email - C5G0";
 
             email.Body = new TextPart("plain")
             {
                 Text =
-                    "Dobro dosao nefilu u C5G0!\n\n" +
-                    "Molim te verifikuj svoj email tako sto ces da kliknes na link ispod:\n\n" +
+                    "Dobro došao na C5G0!\n\n" +
+                    "Molimo te da verifikuješ svoj email klikom na link ispod:\n\n" +
                     verifyLink + "\n\n" +
-                    "Ako nisi kreirao ovaj nalog, mozes da ignorises ovaj email."
+                    "Ako nisi kreirao nalog, slobodno ignoriši ovaj email."
             };
 
             using var smtp = new SmtpClient();
+
             await smtp.ConnectAsync(smtpServer, smtpPort, SecureSocketOptions.StartTls);
             await smtp.AuthenticateAsync(smtpUser, smtpPassword);
             await smtp.SendAsync(email);

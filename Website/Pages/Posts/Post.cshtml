@@ -42,6 +42,36 @@
         font-size: 17px;
         line-height: 1.75;
     }
+
+    textarea {
+        background: #0d1117;
+        color: #f0f0f0;
+        border: 1px solid #2d333b;
+    }
+
+        textarea:focus {
+            background: #0d1117;
+            color: #f0f0f0;
+            border-color: #58a6ff;
+            box-shadow: none;
+        }
+
+    .reply-toggle {
+        margin-top: 10px;
+        font-size: 14px;
+        cursor: pointer;
+        color: #58a6ff;
+        background: none;
+        border: none;
+        padding: 0;
+    }
+
+    .replies {
+        margin-top: 16px;
+        padding-left: 20px;
+        border-left: 2px solid #2d333b;
+        display: none;
+    }
 </style>
 
 <div class="post-wrapper">
@@ -56,11 +86,106 @@
     <div class="thread-header">
         <div class="thread-title">@Model.Post.Title</div>
 
-        <!-- 🔥 OVO JE KLJUČ -->
         <div class="thread-content" id="postContent">
             @Html.Raw(Model.Post.Content)
         </div>
     </div>
+
+    <h4>Comments</h4>
+
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <form method="post" asp-page-handler="SubmitComment">
+            <textarea asp-for="NewComment.CommentText"
+                      class="form-control"
+                      rows="3"
+                      placeholder="Write a comment..."
+                      required></textarea>
+
+            <button type="submit" class="btn btn-primary mt-2">
+                Post comment
+            </button>
+        </form>
+    }
+    else
+    {
+        <div style="opacity:0.6;">Log in to write a comment.</div>
+    }
+
+    <hr style="border-color:#2d333b; margin:30px 0;" />
+
+    @foreach (var comment in Model.Comments)
+    {
+        <div style="margin-bottom:24px; padding:16px; background:#0d1117; border-radius:8px;">
+
+            <strong>@comment.User.Username</strong>
+
+            <p style="margin-top:10px;">@comment.Content</p>
+
+            @if (Model.CurrentUser != null &&
+                    (Model.CurrentUser.IsAdmin || Model.CurrentUser.Id == comment.User.Id))
+            {
+                <form method="post"
+                      asp-page-handler="DeleteComment"
+                      asp-route-cid="@comment.Id"
+                      style="display:inline;">
+                    <button class="btn btn-sm btn-danger">Delete</button>
+                </form>
+            }
+
+            @if (comment.Replies != null && comment.Replies.Any())
+            {
+                <button class="reply-toggle"
+                        onclick="toggleReplies(this)">
+                    Show replies (@comment.Replies.Count)
+                </button>
+
+                <div class="replies">
+                    @foreach (var reply in comment.Replies)
+                    {
+                        <div style="margin-bottom:12px;">
+                            <strong>@reply.User.Username</strong>
+                            <p style="margin:6px 0;">@reply.Content</p>
+
+                            @if (Model.CurrentUser != null &&
+                                            (Model.CurrentUser.IsAdmin || Model.CurrentUser.Id == reply.User.Id))
+                            {
+                                <form method="post"
+                                      asp-page-handler="DeleteReply"
+                                      asp-route-rid="@reply.Id"
+                                      style="display:inline;">
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <form method="post"
+                      asp-page-handler="SubmitReply"
+                      style="margin-top:12px;">
+
+                    <input type="hidden"
+                           asp-for="NewReply.replyCommentId"
+                           value="@comment.Id" />
+
+                    <textarea asp-for="NewReply.ReplyText"
+                              class="form-control"
+                              rows="2"
+                              placeholder="Write a reply..."
+                              required></textarea>
+
+                    <button type="submit"
+                            class="btn btn-sm btn-secondary mt-2">
+                        Reply
+                    </button>
+                </form>
+            }
+        </div>
+    }
 
 </div>
 
@@ -72,15 +197,16 @@
 
             let html = container.innerHTML;
 
-            const ytRegex = /https?:\/\/(www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/g;
+            const ytRegex = /(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:[^\s<]*)?)/g;
 
-            html = html.replace(ytRegex, function (_, __, videoId) {
+            html = html.replace(ytRegex, function (fullMatch, url, videoId) {
                 return `
-                    <div style="margin:20px 0; display:flex; justify-content:center;">
-                        <iframe width="560"
-                                height="315"
+                    <div style="margin:24px 0; display:flex; justify-content:center;">
+                        <iframe width="720"
+                                height="405"
                                 src="https://www.youtube.com/embed/${videoId}"
                                 frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowfullscreen>
                         </iframe>
                     </div>
@@ -91,3 +217,4 @@
         });
     </script>
 }
+

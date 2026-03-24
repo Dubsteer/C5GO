@@ -20,6 +20,7 @@ namespace Website.Pages.Posts
         public List<Comment> Comments { get; set; }
         public User CurrentUser { get; set; }
 
+
         [BindProperty] public CommentModel NewComment { get; set; }
         [BindProperty] public ReplyModel NewReply { get; set; }
 
@@ -100,7 +101,11 @@ namespace Website.Pages.Posts
 
         public IActionResult OnPostDeleteComment(int cid)
         {
+            if (!LoadData())
+                return RedirectToPage("/Error");
+
             var comment = commentManager.GetCommentById(cid);
+
             if (comment != null &&
                 (CurrentUser.IsAdmin || CurrentUser.Id == comment.User.Id))
             {
@@ -110,9 +115,14 @@ namespace Website.Pages.Posts
             return RedirectToPage("Post", new { Id });
         }
 
+
         public IActionResult OnPostDeleteReply(int rid)
         {
+            if (!LoadData())
+                return RedirectToPage("/Error");
+
             var reply = commentManager.GetReplyById(rid);
+
             if (reply != null &&
                 (CurrentUser.IsAdmin || CurrentUser.Id == reply.User.Id))
             {
@@ -121,5 +131,6 @@ namespace Website.Pages.Posts
 
             return RedirectToPage("Post", new { Id });
         }
+
     }
 }

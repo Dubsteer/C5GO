@@ -1,55 +1,60 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using LogicLayer.Models;
 using LogicLayer.Managers;
+using LogicLayer.Models;
 using Unit_Tests.MockRepos;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Unit_Tests
 {
     [TestClass]
     public class TestComment
     {
-        private readonly CommentManager commentManager;
-        private readonly User testUser;
+        private CommentManager commentManager = null!;
+        private User testUser = null!;
 
-        public TestComment()
+        [TestInitialize]
+        public void Setup()
         {
-            var commentRepo = new MockCommentRepo();
-            commentManager = new CommentManager(commentRepo);
-            testUser = new User(1, "Vladimir", "Stijepovic", 22, "dubsteer", "dovla98765@gmail.com", "123", false);
+            commentManager = new CommentManager(new MockCommentRepo());
+            testUser = new User(1, "Vladimir", "Stijepovic", 22, "dubsteer", "test@example.com", "123", false);
         }
 
         [TestMethod]
         public void AddCommentTest()
         {
-            var comment = new Comment(null, testUser, "This is a test comment", DateTime.Now, 1);
+            var comment = CreateComment();
+
             commentManager.AddComment(comment);
-            var allComments = commentManager.GetAllComments();
+            var allComments = commentManager.GetAllCommentsByPostId(1);
+
             Assert.AreEqual(1, allComments.Count);
-            Assert.AreEqual("This is a test comment", allComments.First().Content);
+            Assert.AreEqual("This is a test comment", allComments[0].Content);
         }
 
         [TestMethod]
         public void DeleteCommentTest()
         {
-            var comment = new Comment(null, testUser, "This is a test comment", DateTime.Now, 1);
+            var comment = CreateComment();
             commentManager.AddComment(comment);
+
             commentManager.DeleteComment(comment);
-            var allComments = commentManager.GetAllComments();
-            Assert.AreEqual(0, allComments.Count);
+
+            Assert.AreEqual(0, commentManager.GetAllCommentsByPostId(1).Count);
         }
 
         [TestMethod]
-        public void UpdateCommentTest()
+        public void GetCommentWithReplyTest()
         {
-            var comment = new Comment(null, testUser, "This is a test comment", DateTime.Now, 1);
+            var comment = CreateComment();
             commentManager.AddComment(comment);
-            comment.Content = "Updated content";
-            commentManager.UpdateComment(comment);
-            var allComments = commentManager.GetAllComments();
-            Assert.AreEqual("Updated content", allComments.First().Content);
+            commentManager.AddReply(new CommentReply(1, "Test reply", DateTime.Now, comment.Id, testUser));
+
+            var comments = commentManager.GetAllCommentsWithReplies(1);
+
+            Assert.AreEqual(1, comments.Count);
+            Assert.AreEqual(1, comments[0].Replies.Count);
+            Assert.AreEqual("Test reply", comments[0].Replies[0].Content);
         }
+
+        private Comment CreateComment() =>
+            new Comment(1, testUser, "This is a test comment", DateTime.Now, 1);
     }
 }

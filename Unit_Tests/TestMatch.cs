@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using LogicLayer.Enums;
-using LogicLayer.Exceptions;
 using LogicLayer.Managers;
 using LogicLayer.Models;
 using Unit_Tests.MockRepos;
@@ -14,51 +8,39 @@ namespace Unit_Tests
     [TestClass]
     public class TestMatch
     {
-        private static List<Match> matches;
-        private static MockMatchRepo mockMatchRepo;
-        private static MatchManager MatchManager;
+        private static List<Match> matches = null!;
+        private static MatchManager matchManager = null!;
 
         [ClassInitialize]
-        public static void TestClassSetuo(TestContext context)
+        public static void TestClassSetup(TestContext _)
         {
             matches = new List<Match>();
-            mockMatchRepo = new MockMatchRepo(matches);
-            MatchManager = new MatchManager(mockMatchRepo);
+            matchManager = new MatchManager(new MockMatchRepo(matches));
         }
 
         [TestInitialize]
-        public void Setup()
-        {
-            matches.Clear();
-        }
+        public void Setup() => matches.Clear();
 
         [TestMethod]
         public void TestAddMatch()
         {
-            // Arrange
-            var match = new Match(1, 1, 0, 0, DateTime.Now, Status.Open);
+            var match = CreateMatch(1);
 
-            // Act
-            MatchManager.AddMatch(match);
+            matchManager.AddMatch(match);
 
-            // Assert
             Assert.AreEqual(1, matches.Count);
-            Assert.AreEqual(match, matches[0]);
+            Assert.AreSame(match, matches[0]);
         }
 
         [TestMethod]
-        public void GetAllMatches()
+        public void TestGetAllMatches()
         {
-            // Arrange
-            var match1 = new Match(1, 1, 0, 0, DateTime.Now, Status.Open);
-            var match2 = new Match(2, 1, 0, 0, DateTime.Now, Status.Open);
-            matches.Add(match1);
-            matches.Add(match2);
+            var match1 = CreateMatch(1);
+            var match2 = CreateMatch(2);
+            matches.AddRange(new[] { match1, match2 });
 
-            // Act
-            var result = MatchManager.GetAllMatches();
+            var result = matchManager.GetAllMatches();
 
-            // Assert
             Assert.AreEqual(2, result.Count);
             CollectionAssert.Contains(result, match1);
             CollectionAssert.Contains(result, match2);
@@ -67,30 +49,32 @@ namespace Unit_Tests
         [TestMethod]
         public void TestRemoveMatch()
         {
-            // Arrange
-            var match = new Match(1, 1, 0, 0, DateTime.Now, Status.Open);
+            var match = CreateMatch(1);
             matches.Add(match);
 
-            // Act
-            MatchManager.RemoveMatch(match);
+            matchManager.RemoveMatch(match);
 
-            // Assert
             Assert.AreEqual(0, matches.Count);
         }
 
         [TestMethod]
         public void TestUpdateMatch()
         {
-            // Arrange
-            var match = new Match(1, 1, 0, 0, DateTime.Now, Status.Open);
+            var match = CreateMatch(1);
             matches.Add(match);
+            match.Player1Score = 2;
 
-            // Act
-            MatchManager.UpdateMatch(match);
+            matchManager.UpdateMatch(match);
 
-            // Assert
             Assert.AreEqual(1, matches.Count);
-            Assert.AreEqual(match, matches[0]);
+            Assert.AreEqual(2, matches[0].Player1Score);
+        }
+
+        private static Match CreateMatch(int id)
+        {
+            var player1 = new Player(1, "Player", "One", 20, "player1", "p1@test.local", "password", "steam1", false);
+            var player2 = new Player(2, "Player", "Two", 21, "player2", "p2@test.local", "password", "steam2", false);
+            return new Match(id, 1, player1, player2, 0, 0, DateTime.Now, Status.Open);
         }
     }
 }

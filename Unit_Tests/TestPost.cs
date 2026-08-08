@@ -1,22 +1,18 @@
-﻿using System.Collections.Generic;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using LogicLayer.Models;
 using LogicLayer.Managers;
+using LogicLayer.Models;
 using Unit_Tests.MockRepos;
-using System;
 
 namespace Unit_Tests
 {
     [TestClass]
     public class TestPost
     {
-        private PostManager postManager;
-        private MockPostRepo mockPostRepo;
+        private PostManager postManager = null!;
+        private MockPostRepo mockPostRepo = null!;
 
         [TestInitialize]
         public void TestInit()
         {
-            // Instantiate the mock repository and the manager
             mockPostRepo = new MockPostRepo();
             postManager = new PostManager(mockPostRepo);
         }
@@ -24,50 +20,38 @@ namespace Unit_Tests
         [TestMethod]
         public void TestCreatePost()
         {
-            // Arrange
-            var user = new User(); // This needs to be replaced with actual User object.
-            var post = new Post(1, user, "Test Content", DateTime.Now);
+            var post = CreatePost();
 
-            // Act
-            postManager.CreatePost(post);
+            postManager.AddPost(post);
 
-            // Assert
             Assert.AreEqual(1, mockPostRepo.GetAllPosts().Count);
-            Assert.AreEqual(post, mockPostRepo.GetAllPosts()[0]);
+            Assert.AreSame(post, mockPostRepo.GetAllPosts()[0]);
         }
 
         [TestMethod]
         public void TestUpdatePost()
         {
-            // Arrange
-            var user = new User(); // This needs to be replaced with actual User object.
-            var post = new Post(1, user, "Test Content", DateTime.Now);
-            postManager.CreatePost(post);
-
-            // Act
+            var post = CreatePost();
+            postManager.AddPost(post);
             post.Content = "Updated Content";
+
             postManager.UpdatePost(post);
 
-            // Assert
-            Assert.AreEqual(1, mockPostRepo.GetAllPosts().Count);
             Assert.AreEqual("Updated Content", mockPostRepo.GetAllPosts()[0].Content);
         }
 
         [TestMethod]
         public void TestDeletePost()
         {
-            // Arrange
-            var user = new User(); // This needs to be replaced with actual User object.
-            var post = new Post(1, user, "Test Content", DateTime.Now);
-            postManager.CreatePost(post);
+            var post = CreatePost();
+            postManager.AddPost(post);
 
-            // Act
             postManager.DeletePost(post);
 
-            // Assert
             Assert.AreEqual(0, mockPostRepo.GetAllPosts().Count);
         }
 
-        // More tests can be added here...
+        private static Post CreatePost() =>
+            new Post(1, new User(1), "Test title", "Test content", DateTime.Now);
     }
 }

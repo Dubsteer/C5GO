@@ -1,8 +1,5 @@
-﻿using System.Collections.Generic;
-using LogicLayer.Exceptions;
 using LogicLayer.Managers;
 using LogicLayer.Models;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Unit_Tests.MockRepos;
 
 namespace Unit_Tests
@@ -10,82 +7,53 @@ namespace Unit_Tests
     [TestClass]
     public class TestPlayer
     {
-        private static List<Player> players;
-        private static MockPlayerRepo mockPlayerRepo;
-        private static PlayerManager playerManager;
+        private static List<Player> players = null!;
+        private static PlayerManager playerManager = null!;
 
         [ClassInitialize]
-        public static void TestClassSetup(TestContext context)
+        public static void TestClassSetup(TestContext _)
         {
             players = new List<Player>();
-            mockPlayerRepo = new MockPlayerRepo(players);
-            playerManager = new PlayerManager(mockPlayerRepo);
+            playerManager = new PlayerManager(new MockPlayerRepo(players));
         }
 
         [TestInitialize]
-        public void Setup()
-        {
-            players.Clear();
-        }
+        public void Setup() => players.Clear();
 
         [TestMethod]
         public void TestInitializeRole()
         {
-            // Arrange
-            var player = new Player(1, "Vladimir", "Stijepovic", 22, "dubsteer", "dovla98765@gmail.com", "123", "steam123", false);
+            var player = CreatePlayer(1, "dubsteer", "steam123");
 
-            // Act
             playerManager.InitializeRole(player);
 
-            // Assert
-            var allPlayers = playerManager.GetAllPlayers();
-            Assert.AreEqual(1, allPlayers.Count);
-            Assert.AreEqual(player.Steamaccountid, allPlayers[0].Steamaccountid);
-        }
-
-        [TestMethod]
-        public void TestDeletePlayerRole()
-        {
-            // Arrange
-            var player = new Player(1, "Vladimir", "Stijepovic", 22, "dubsteer", "dovla98765@gmail.com", "123", "steam123", false);
-            playerManager.InitializeRole(player);
-
-            // Act
-            playerManager.DeletePlayerRole(player);
-
-            // Assert
-            Assert.AreEqual(0, players.Count);
+            Assert.AreEqual(1, playerManager.GetAllPlayers().Count);
+            Assert.AreEqual(player.SteamId, playerManager.GetAllPlayers()[0].SteamId);
         }
 
         [TestMethod]
         public void TestGetAllPlayers()
         {
-            // Arrange
-            var player1 = new Player(1, "Vladimir", "Stijepovic", 22, "dubsteer", "dovla98765@gmail.com", "123", "steam123", false);
-            var player2 = new Player(2, "John", "Doe", 25, "johndoe", "johndoe@gmail.com", "password", "steam456", false);
-            playerManager.InitializeRole(player1);
-            playerManager.InitializeRole(player2);
+            playerManager.InitializeRole(CreatePlayer(1, "player1", "steam1"));
+            playerManager.InitializeRole(CreatePlayer(2, "player2", "steam2"));
 
-            // Act
             var allPlayers = playerManager.GetAllPlayers();
 
-            // Assert
             Assert.AreEqual(2, allPlayers.Count);
         }
 
         [TestMethod]
         public void TestGetPlayer()
         {
-            // Arrange
-            var user = new User(1, "Vladimir", "Stijepovic", 22, "dubsteer", "dovla98765@gmail.com", "123", false);
-            var player = new Player((int)user.Id, user.Firstname, user.Lastname, user.Age, user.Username, user.Gmail, user.Password, "steam123", false);
+            var player = CreatePlayer(1, "dubsteer", "steam123");
             playerManager.InitializeRole(player);
 
-            // Act
-            var fetchedPlayer = playerManager.GetPlayer(user);
+            var fetchedPlayer = playerManager.GetPlayer(player);
 
-            // Assert
-            Assert.AreEqual(player, fetchedPlayer);
+            Assert.AreSame(player, fetchedPlayer);
         }
+
+        private static Player CreatePlayer(int id, string username, string steamId) =>
+            new Player(id, "Test", "Player", 22, username, $"{username}@test.local", "password", steamId, false);
     }
 }

@@ -21,7 +21,7 @@ namespace DesktopApp
             // === DATABASE CONNECTION ===
             services.AddSingleton<IConnection>(sp =>
             {
-                var conn = new MySQLConnection("server=127.0.0.1;port=3306;user id=root;password=1234;database=local_dtb;SslMode=none;");
+                var conn = new MySQLConnection("server=127.0.0.1;port=3306;user id=root;password=1234;database=local_dtb;SslMode=Disabled;");
                 conn.Open();
                 return conn;
             });

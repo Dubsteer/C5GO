@@ -30,6 +30,9 @@ namespace LogicLayer.Dtos
     {
         public long Id { get; set; }
         public string? Name { get; set; }
+
+        [JsonPropertyName("image_url")]
+        public string? ImageUrl { get; set; }
     }
 
     public class PandaLeague

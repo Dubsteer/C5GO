@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>C5GO-Website-Diplomski</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

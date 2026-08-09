@@ -1,0 +1,175 @@
+﻿@page
+@model Website.Pages.Matches.DetailsModel
+
+@{
+    ViewData["Title"] = "Match Details";
+}
+
+<style>
+    .details-container {
+        max-width: 900px;
+        margin: auto;
+    }
+
+    .match-header {
+        background: #161b22;
+        border: 1px solid #2d333b;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .teams {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .score {
+        font-size: 22px;
+        font-weight: bold;
+    }
+
+    .event {
+        margin-top: 10px;
+        color: #8b949e;
+    }
+
+    .section {
+        background: #161b22;
+        border: 1px solid #2d333b;
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .map-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 6px;
+    }
+
+    .stream {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #2d333b;
+    }
+
+        .stream:last-child {
+            border-bottom: none;
+        }
+
+    .watch-btn {
+        background: #238636;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 6px;
+        color: white;
+        font-size: 12px;
+        text-decoration: none;
+    }
+
+        .watch-btn:hover {
+            background: #2ea043;
+        }
+
+    .live-badge {
+        color: #ff4d4d;
+        font-weight: bold;
+    }
+</style>
+
+<div class="details-container">
+
+    @if (Model.Match == null)
+    {
+        <p>Match not found.</p>
+    }
+    else
+    {
+        <div class="match-header">
+
+            <div class="teams">
+                <div>@Model.Match.Team1Name</div>
+
+                <div class="score">@Model.Match.Score</div>
+
+                <div>@Model.Match.Team2Name</div>
+            </div>
+
+            <div class="event">
+                @Model.Match.EventName
+            </div>
+
+            <div style="margin-top:10px;">
+                @if (Model.Match.Status == "Live")
+                {
+                    <span class="live-badge">● LIVE</span>
+                }
+                else
+                {
+                    <span>
+                        @Model.Match.StartTimeUtc?.ToLocalTime().ToString("dd.MM HH:mm")
+                    </span>
+                }
+            </div>
+
+        </div>
+
+        <!-- MAPS -->
+        <div class="section">
+            <h5>Maps</h5>
+
+            @if (Model.Match.Maps.Any())
+            {
+                foreach (var map in Model.Match.Maps)
+                {
+                    <div class="map-row">
+                        <div>@map.MapName</div>
+                        <div>@map.Score</div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div>No map data</div>
+            }
+        </div>
+
+        <!-- STREAMS -->
+        <div class="section">
+            <h5>Watch</h5>
+
+            @if (Model.Match.Streams.Any())
+            {
+                foreach (var stream in Model.Match.Streams)
+                {
+                    <div class="stream">
+                        <div>
+                            <strong>@stream.StreamerName</strong>
+                            <span style="color:#8b949e;">
+                                (@stream.Platform)
+                            </span>
+                        </div>
+
+                        <div>
+                            👁 @stream.Viewers
+                            <a href="@stream.Url" target="_blank" class="watch-btn">
+                                Watch
+                            </a>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div>No streams available</div>
+            }
+        </div>
+    }
+</div>

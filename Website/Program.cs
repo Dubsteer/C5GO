@@ -101,7 +101,7 @@ builder.Services.AddScoped<NotificationManager>();
 // SERVICES
 // =====================================================
 builder.Services.AddScoped<EmailService>();
-builder.Services.AddScoped<IExternalMatchProvider, MockExternalMatchProvider>();
+builder.Services.AddHttpClient<IExternalMatchProvider, PandaScoreMatchProvider>();
 
 var app = builder.Build();
 

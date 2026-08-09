@@ -1,4 +1,4 @@
-﻿namespace LogicLayer.Dtos
+namespace LogicLayer.Dtos
 {
     public class ExternalMatchDto
     {
@@ -12,6 +12,7 @@
 
         public string EventName { get; set; } = "";
 
+        // može biti null ako API ne pošalje vrijeme
         public DateTime? StartTimeUtc { get; set; }
 
         // Live / Upcoming / Finished

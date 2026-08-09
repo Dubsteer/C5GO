@@ -1,0 +1,144 @@
+@page
+@model Website.Pages.Matches.IndexModel
+
+@{
+    ViewData["Title"] = "Matches";
+}
+
+<style>
+    .matches-container {
+        max-width: 900px;
+        margin: auto;
+    }
+
+    .match-card {
+        background: #161b22;
+        border: 1px solid #2d333b;
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin-bottom: 12px;
+        transition: 0.2s;
+        cursor: pointer;
+    }
+
+        .match-card:hover {
+            transform: scale(1.01);
+            box-shadow: 0 0 10px rgba(0,255,150,0.15);
+        }
+
+    .teams {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .team-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 35%;
+    }
+
+        .team-box.right {
+            justify-content: flex-end;
+        }
+
+    .team {
+        font-weight: 600;
+        font-size: 15px;
+    }
+
+    .team-logo {
+        width: 28px;
+        height: 28px;
+        object-fit: contain;
+    }
+
+    .score {
+        font-weight: bold;
+        font-size: 18px;
+        width: 30%;
+        text-align: center;
+    }
+
+    .match-meta {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 6px;
+        font-size: 13px;
+        color: #8b949e;
+    }
+
+    .badge-live {
+        color: #ff4d4d;
+        font-weight: bold;
+    }
+
+    .badge-upcoming {
+        color: #58a6ff;
+        font-weight: bold;
+    }
+
+    .badge-finished {
+        color: #8b949e;
+        font-weight: bold;
+    }
+</style>
+
+<div class="matches-container">
+    <h2 style="margin-bottom:20px;">🔥 Today's Matches</h2>
+
+    @foreach (var match in Model.Matches)
+    {
+        <div class="match-card"
+             onclick="window.location='/Matches/Details?id=@match.Id'">
+
+            <div class="teams">
+
+                <!-- TEAM 1 -->
+                <div class="team-box">
+                    <img class="team-logo"
+                         src="@(string.IsNullOrEmpty(match.Team1LogoUrl) ? "/images/default-team.png" : match.Team1LogoUrl)" />
+                    <span class="team">@match.Team1Name</span>
+                </div>
+
+                <!-- SCORE -->
+                <div class="score">
+                    @(string.IsNullOrEmpty(match.Score) ? "-" : match.Score)
+                </div>
+
+                <!-- TEAM 2 -->
+                <div class="team-box right">
+                    <span class="team">@match.Team2Name</span>
+                    <img class="team-logo"
+                         src="@(string.IsNullOrEmpty(match.Team2LogoUrl) ? "/images/default-team.png" : match.Team2LogoUrl)" />
+                </div>
+
+            </div>
+
+            <div class="match-meta">
+                <div>@match.EventName</div>
+
+                <div>
+                    @if (match.Status == "Live")
+                    {
+                        <span class="badge-live">● LIVE</span>
+                    }
+                    else if (match.Status == "Upcoming")
+                    {
+                        <span class="badge-upcoming">
+                            @(match.StartTimeUtc.HasValue
+                                                ? match.StartTimeUtc.Value.ToLocalTime().ToString("HH:mm")
+                                                : "TBD")
+                </span>
+                                }
+                    else
+                    {
+                        <span class="badge-finished">Finished</span>
+                    }
+                </div>
+            </div>
+
+        </div>
+    }
+</div>

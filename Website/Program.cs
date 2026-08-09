@@ -101,7 +101,22 @@ builder.Services.AddScoped<NotificationManager>();
 // SERVICES
 // =====================================================
 builder.Services.AddScoped<EmailService>();
-builder.Services.AddScoped<IExternalMatchProvider, MockExternalMatchProvider>();
+
+var pandaScoreApiKey = builder.Configuration["PandaScore:ApiKey"];
+
+if (string.IsNullOrWhiteSpace(pandaScoreApiKey))
+{
+    builder.Services.AddScoped<IExternalMatchProvider, MockExternalMatchProvider>();
+}
+else
+{
+    builder.Services.AddHttpClient<IExternalMatchProvider, PandaScoreMatchProvider>(client =>
+    {
+        client.BaseAddress = new Uri("https://api.pandascore.co");
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", pandaScoreApiKey);
+    });
+}
 
 var app = builder.Build();
 

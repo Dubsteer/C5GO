@@ -11,19 +11,78 @@
         margin: auto;
     }
 
+    .matches-title {
+        margin-bottom: 20px;
+        color: #f2f5f8;
+        font-weight: 600;
+    }
+
     .match-card {
         background: #161b22;
         border: 1px solid #2d333b;
         border-radius: 12px;
         padding: 15px 20px;
         margin-bottom: 12px;
-        transition: 0.2s;
+        color: #d8dee7;
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         cursor: pointer;
     }
 
         .match-card:hover {
             transform: scale(1.01);
-            box-shadow: 0 0 10px rgba(0,255,150,0.15);
+        }
+
+    .match-card-live {
+        background: linear-gradient(100deg, rgba(255, 59, 72, 0.13), #191d24 38%);
+        border-color: rgba(255, 77, 87, 0.65);
+        box-shadow: 0 0 16px rgba(255, 59, 72, 0.09);
+    }
+
+        .match-card-live:hover {
+            border-color: #ff4d57;
+            box-shadow: 0 0 20px rgba(255, 59, 72, 0.22);
+        }
+
+        .match-card-live .team,
+        .match-card-live .score {
+            color: #ffffff;
+        }
+
+        .match-card-live .match-meta {
+            color: #c9d0d9;
+        }
+
+    .match-card-upcoming {
+        background: #15191f;
+        border-color: #343a43;
+    }
+
+        .match-card-upcoming:hover {
+            border-color: #59616c;
+            box-shadow: 0 0 14px rgba(145, 157, 171, 0.13);
+        }
+
+        .match-card-upcoming .team {
+            color: #c2c8d0;
+        }
+
+        .match-card-upcoming .score {
+            color: #9ba3ad;
+        }
+
+        .match-card-upcoming .team-logo {
+            filter: grayscale(35%);
+            opacity: 0.82;
+        }
+
+    .match-card-finished {
+        background: #14181d;
+        border-color: #30363d;
+    }
+
+        .match-card-finished .team,
+        .match-card-finished .score {
+            color: #9ca4ae;
         }
 
     .teams {
@@ -46,6 +105,7 @@
     .team {
         font-weight: 600;
         font-size: 15px;
+        color: #e6ebf1;
     }
 
     .team-logo {
@@ -59,6 +119,7 @@
         font-size: 18px;
         width: 30%;
         text-align: center;
+        color: #f0f3f6;
     }
 
     .match-meta {
@@ -66,16 +127,38 @@
         justify-content: space-between;
         margin-top: 6px;
         font-size: 13px;
-        color: #8b949e;
+        color: #aeb6c1;
     }
 
     .badge-live {
-        color: #ff4d4d;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 8px;
+        color: #ff6570;
+        background: rgba(255, 59, 72, 0.12);
+        border: 1px solid rgba(255, 77, 87, 0.38);
+        border-radius: 999px;
         font-weight: bold;
+        letter-spacing: 0.04em;
+    }
+
+        .badge-live::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            background: #ff3b48;
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(255, 59, 72, 0.9);
     }
 
     .badge-upcoming {
-        color: #58a6ff;
+        display: inline-block;
+        padding: 3px 8px;
+        color: #a9b4c0;
+        background: rgba(139, 148, 158, 0.1);
+        border: 1px solid rgba(139, 148, 158, 0.25);
+        border-radius: 999px;
         font-weight: bold;
     }
 
@@ -86,11 +169,17 @@
 </style>
 
 <div class="matches-container">
-    <h2 style="margin-bottom:20px;">Live &amp; Upcoming Matches</h2>
+    <h2 class="matches-title">Live &amp; Upcoming Matches</h2>
 
     @foreach (var match in Model.Matches)
     {
-        <div class="match-card"
+        var matchCardClass = match.Status == "Live"
+            ? "match-card-live"
+            : match.Status == "Upcoming"
+                ? "match-card-upcoming"
+                : "match-card-finished";
+
+        <div class="match-card @matchCardClass"
              onclick="window.location='/Matches/Details?id=@match.Id'">
 
             <div class="teams">
@@ -126,7 +215,7 @@
                 <div>
                     @if (match.Status == "Live")
                     {
-                        <span class="badge-live">● LIVE</span>
+                        <span class="badge-live">LIVE</span>
                     }
                     else if (match.Status == "Upcoming")
                     {

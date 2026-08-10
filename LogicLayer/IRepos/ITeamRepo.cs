@@ -24,9 +24,5 @@ namespace LogicLayer.IRepos
         User? GetUserById(int userId);
         void DeleteTeam(int id);
 
-        List<User> GetUsersWithoutTeam();
-        void AddUserToTeam_AdminOverride(int teamId, int userId);
-
-        List<User> GetUsersInTeam(int teamId);
     }
 }

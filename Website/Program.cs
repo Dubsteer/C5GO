@@ -9,15 +9,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 var builder = WebApplication.CreateBuilder(args);
 
 // =====================================================
-// CONFIGURATION
-// =====================================================
-builder.Configuration
-    .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
-    .AddEnvironmentVariables();
-
-// =====================================================
 // FORCE HTTP (LOCAL / NGROK)
 // =====================================================
 if (builder.Environment.IsDevelopment())

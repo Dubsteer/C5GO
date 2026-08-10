@@ -65,6 +65,7 @@ namespace Unit_Tests
             Assert.IsNotNull(match);
             Assert.AreEqual("G2", match.Team1Name);
             Assert.AreEqual("Upcoming", match.Status);
+            Assert.AreEqual("Best of 3", match.Format);
             Assert.AreEqual(2, requestedUris.Count);
             Assert.IsFalse(requestedUris.Any(uri => uri.StartsWith("/csgo/matches/42")));
         }
@@ -121,6 +122,8 @@ namespace Unit_Tests
                 "id": 42,
                 "status": "not_started",
                 "begin_at": "2026-08-09T14:00:00Z",
+                "match_type": "best_of",
+                "number_of_games": 3,
                 "opponents": [
                   { "opponent": { "id": 30, "name": "G2" } },
                   { "opponent": { "id": 40, "name": "MOUZ" } }

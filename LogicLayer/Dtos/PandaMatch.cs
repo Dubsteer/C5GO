@@ -11,6 +11,12 @@ namespace LogicLayer.Dtos
         [JsonPropertyName("begin_at")]
         public DateTime? BeginAt { get; set; }
 
+        [JsonPropertyName("match_type")]
+        public string? MatchType { get; set; }
+
+        [JsonPropertyName("number_of_games")]
+        public int? NumberOfGames { get; set; }
+
         public List<PandaOpponentWrapper> Opponents { get; set; } = new();
 
         public PandaLeague? League { get; set; }

@@ -59,7 +59,10 @@ namespace LogicLayer.Services
                 Id = match.Id.ToString(),
                 Team1Name = match.Opponents.ElementAtOrDefault(0)?.Opponent?.Name ?? "TBD",
                 Team2Name = match.Opponents.ElementAtOrDefault(1)?.Opponent?.Name ?? "TBD",
+                Team1LogoUrl = match.Opponents.ElementAtOrDefault(0)?.Opponent?.ImageUrl ?? "",
+                Team2LogoUrl = match.Opponents.ElementAtOrDefault(1)?.Opponent?.ImageUrl ?? "",
                 EventName = match.League?.Name ?? "Unknown",
+                Format = BuildFormat(match),
                 Status = NormalizeStatus(match.Status),
                 StartTimeUtc = match.BeginAt,
                 Score = BuildScore(match),
@@ -109,6 +112,19 @@ namespace LogicLayer.Services
                 "not_started" => "Upcoming",
                 "finished" => "Finished",
                 _ => "Upcoming"
+            };
+        }
+
+        private static string BuildFormat(PandaMatch match)
+        {
+            if (match.NumberOfGames is > 0)
+                return $"Best of {match.NumberOfGames}";
+
+            return match.MatchType switch
+            {
+                "best_of" => "Best of series",
+                "first_to" => "First to series",
+                _ => "Format unavailable"
             };
         }
 

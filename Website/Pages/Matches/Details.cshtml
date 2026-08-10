@@ -9,11 +9,13 @@
     .details-container {
         max-width: 900px;
         margin: auto;
+        color: #d8dee7;
     }
 
     .match-header {
-        background: #161b22;
-        border: 1px solid #2d333b;
+        color: #eef2f6;
+        background: #171b21;
+        border: 1px solid #343b45;
         border-radius: 12px;
         padding: 20px;
         margin-bottom: 20px;
@@ -31,16 +33,20 @@
     .score {
         font-size: 22px;
         font-weight: bold;
+        color: #ffffff;
+        width: 28%;
     }
 
     .event {
         margin-top: 10px;
-        color: #8b949e;
+        color: #c7ced7;
+        font-size: 16px;
     }
 
     .section {
+        color: #d8dee7;
         background: #161b22;
-        border: 1px solid #2d333b;
+        border: 1px solid #343b45;
         border-radius: 12px;
         padding: 15px;
         margin-bottom: 15px;
@@ -50,6 +56,9 @@
         display: flex;
         justify-content: space-between;
         margin-bottom: 6px;
+        padding: 8px 0;
+        color: #d8dee7;
+        border-bottom: 1px solid #2d333b;
     }
 
     .stream {
@@ -57,6 +66,7 @@
         justify-content: space-between;
         align-items: center;
         padding: 8px 0;
+        color: #d8dee7;
         border-bottom: 1px solid #2d333b;
     }
 
@@ -67,10 +77,11 @@
     .watch-btn {
         background: #238636;
         border: none;
-        padding: 5px 10px;
+        padding: 7px 12px;
         border-radius: 6px;
         color: white;
         font-size: 12px;
+        font-weight: 600;
         text-decoration: none;
     }
 
@@ -78,44 +89,213 @@
             background: #2ea043;
         }
 
-    .live-badge {
-        color: #ff4d4d;
-        font-weight: bold;
+    .details-heading-row {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 18px;
     }
+
+        .details-heading-row h2 {
+            margin: 0;
+            color: #f2f5f8;
+            font-weight: 600;
+        }
+
+    .back-link {
+        color: #aeb6c1;
+        text-decoration: none;
+    }
+
+        .back-link:hover {
+            color: #ffffff;
+        }
+
+    .match-header-live {
+        background: linear-gradient(105deg, rgba(255, 59, 72, 0.14), #191d24 42%);
+        border-color: rgba(255, 77, 87, 0.65);
+        box-shadow: 0 0 18px rgba(255, 59, 72, 0.1);
+    }
+
+    .match-header-upcoming {
+        background: #15191f;
+        border-color: #3a414b;
+    }
+
+    .team-side {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 36%;
+    }
+
+        .team-side.right {
+            justify-content: flex-end;
+            text-align: right;
+        }
+
+    .team-logo {
+        width: 46px;
+        height: 46px;
+        object-fit: contain;
+    }
+
+    .team-name {
+        color: #ffffff;
+    }
+
+    .match-info {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .info-pill,
+    .upcoming-badge,
+    .finished-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        color: #b8c0ca;
+        background: rgba(139, 148, 158, 0.11);
+        border: 1px solid rgba(139, 148, 158, 0.28);
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        color: #ff6570;
+        background: rgba(255, 59, 72, 0.12);
+        border: 1px solid rgba(255, 77, 87, 0.38);
+        border-radius: 999px;
+        font-weight: bold;
+        letter-spacing: 0.04em;
+    }
+
+        .live-badge::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            background: #ff3b48;
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(255, 59, 72, 0.9);
+        }
+
+        .section h5 {
+            margin-bottom: 14px;
+            color: #f0f3f6;
+            font-weight: 600;
+        }
+
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        padding: 12px;
+        color: #aab3be;
+        background: rgba(139, 148, 158, 0.07);
+        border: 1px dashed #3b434e;
+        border-radius: 8px;
+    }
+
+        .empty-state strong {
+            color: #d4dae2;
+        }
+
+        .empty-state span {
+            font-size: 13px;
+        }
+
+    .stream-platform,
+    .viewer-count {
+        color: #9fa9b5;
+        font-size: 13px;
+    }
+
+    .stream-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
 </style>
 
 <div class="details-container">
 
     @if (Model.Match == null)
     {
-        <p>Match not found.</p>
+        <div class="empty-state">
+            <strong>Match not found</strong>
+            <span>The match may no longer be available.</span>
+        </div>
     }
     else
     {
-        <div class="match-header">
+        var matchHeaderClass = Model.Match.Status == "Live"
+            ? "match-header-live"
+            : "match-header-upcoming";
+
+        <div class="details-heading-row">
+            <a asp-page="/Matches/Index" class="back-link">← Back to matches</a>
+            <h2>Match Details</h2>
+        </div>
+
+        <div class="match-header @matchHeaderClass">
 
             <div class="teams">
-                <div>@Model.Match.Team1Name</div>
+                <div class="team-side">
+                    <img class="team-logo"
+                         src="@(string.IsNullOrEmpty(Model.Match.Team1LogoUrl) ? "/Images/default-team.svg" : Model.Match.Team1LogoUrl)"
+                         onerror="this.onerror=null;this.src='/Images/default-team.svg';"
+                         alt="@Model.Match.Team1Name logo" />
+                    <div class="team-name">@Model.Match.Team1Name</div>
+                </div>
 
-                <div class="score">@Model.Match.Score</div>
+                <div class="score">
+                    @(string.IsNullOrEmpty(Model.Match.Score) ? "-" : Model.Match.Score)
+                </div>
 
-                <div>@Model.Match.Team2Name</div>
+                <div class="team-side right">
+                    <div class="team-name">@Model.Match.Team2Name</div>
+                    <img class="team-logo"
+                         src="@(string.IsNullOrEmpty(Model.Match.Team2LogoUrl) ? "/Images/default-team.svg" : Model.Match.Team2LogoUrl)"
+                         onerror="this.onerror=null;this.src='/Images/default-team.svg';"
+                         alt="@Model.Match.Team2Name logo" />
+                </div>
             </div>
 
             <div class="event">
                 @Model.Match.EventName
             </div>
 
-            <div style="margin-top:10px;">
+            <div class="match-info">
+                @if (!string.IsNullOrWhiteSpace(Model.Match.Format))
+                {
+                    <span class="info-pill">@Model.Match.Format</span>
+                }
+
                 @if (Model.Match.Status == "Live")
                 {
-                    <span class="live-badge">● LIVE</span>
+                    <span class="live-badge">LIVE</span>
+                }
+                else if (Model.Match.Status == "Upcoming")
+                {
+                    <span class="upcoming-badge">
+                        @(Model.Match.StartTimeUtc.HasValue
+                            ? Model.Match.StartTimeUtc.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                            : "Time TBD")
+                    </span>
                 }
                 else
                 {
-                    <span>
-                        @Model.Match.StartTimeUtc?.ToLocalTime().ToString("dd.MM HH:mm")
-                    </span>
+                    <span class="finished-badge">Finished</span>
                 }
             </div>
 
@@ -137,7 +317,10 @@
             }
             else
             {
-                <div>No map data</div>
+                <div class="empty-state">
+                    <strong>Map details unavailable</strong>
+                    <span>The current PandaScore plan does not provide individual map data.</span>
+                </div>
             }
         </div>
 
@@ -152,14 +335,17 @@
                     <div class="stream">
                         <div>
                             <strong>@stream.StreamerName</strong>
-                            <span style="color:#8b949e;">
+                            <span class="stream-platform">
                                 (@stream.Platform)
                             </span>
                         </div>
 
-                        <div>
-                            👁 @stream.Viewers
-                            <a href="@stream.Url" target="_blank" class="watch-btn">
+                        <div class="stream-actions">
+                            @if (stream.Viewers > 0)
+                            {
+                                <span class="viewer-count">@stream.Viewers viewers</span>
+                            }
+                            <a href="@stream.Url" target="_blank" rel="noopener noreferrer" class="watch-btn">
                                 Watch
                             </a>
                         </div>
@@ -168,7 +354,10 @@
             }
             else
             {
-                <div>No streams available</div>
+                <div class="empty-state">
+                    <strong>No stream available</strong>
+                    <span>An official stream link may appear closer to the start of the match.</span>
+                </div>
             }
         </div>
     }

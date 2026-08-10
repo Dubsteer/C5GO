@@ -1,8 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using LogicLayer.Exceptions;
 using LogicLayer.Managers;
 using LogicLayer.Models;
@@ -13,145 +8,109 @@ namespace Unit_Tests
     [TestClass]
     public class TestUser
     {
-        private static List<User> users;
-        private static MockUserRepo mockUserRepo;
-        private static UserManager UserManager;
+        private static List<User> users = null!;
+        private static UserManager userManager = null!;
 
         [ClassInitialize]
-        public static void TestClassSetuo(TestContext context)
+        public static void TestClassSetup(TestContext _)
         {
             users = new List<User>();
-            mockUserRepo = new MockUserRepo(users);
-            UserManager = new UserManager(mockUserRepo);
+            userManager = new UserManager(new MockUserRepo(users));
         }
 
         [TestInitialize]
-        public void Setup()
-        {
-            users.Clear();
-        }
+        public void Setup() => users.Clear();
 
         [TestMethod]
         public void TestCreateUser()
         {
-            //arrange
-            var user = new User(1, "Vladimir", "Stijepovic", 22, "dubsteer", "dovla98765@gmail.com", "123", false);
+            userManager.CreateUser(CreateUser(1, "dubsteer", "dubsteer@test.local"));
 
-            //act
-            UserManager.CreateUser(user);
-            //assert
-            Assert.AreEqual(users.Count, 1);
-
+            Assert.AreEqual(1, users.Count);
+            Assert.IsTrue(users[0].Password.StartsWith("$2"));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(UsernameAlreadyInUseException))]
         public void TestCreateUserWithUsernameAlreadyInUse()
         {
+            userManager.CreateUser(CreateUser(1, "dubsteer", "first@test.local"));
 
-            //arrange
-            var user = new User(1, "Vladimir", "Stijepovic", 22, "dubsteer", "dovla98765@gmail.com", "123", false);
-            UserManager.CreateUser(user);
-
-            //act
-            UserManager.CreateUser(user);
-
-            //assert
-
+            Assert.ThrowsExactly<UsernameAlreadyInUseException>(() =>
+                userManager.CreateUser(CreateUser(2, "dubsteer", "second@test.local")));
         }
 
         [TestMethod]
         public void TestUpdateUser()
         {
-            //arrange
-            var user = new User(1, "Vladimir", "Stijepovic", 22, "dubsteer", "dovla98765@gmail.com", "123", false);
-            UserManager.CreateUser(user);
+            var user = CreateUser(1, "dubsteer", "dubsteer@test.local");
+            userManager.CreateUser(user);
+            user.Firstname = "Updated";
 
-            //act
-            UserManager.UpdateUser(user);
+            userManager.UpdateUser(user);
 
-            //assert
-            Assert.AreEqual(users.Count, 1);
+            Assert.AreEqual("Updated", users[0].Firstname);
         }
 
         [TestMethod]
         public void TestDeleteUser()
         {
-            //arrange
-            var user = new User(1, "Vladimir", "Stijepovic", 22, "dubsteer", "dovla98765@gmail.com", "123", false);
-            UserManager.CreateUser(user);
+            var user = CreateUser(1, "dubsteer", "dubsteer@test.local");
+            userManager.CreateUser(user);
 
-            //act
-            UserManager.DeleteUser(user);
+            userManager.DeleteUser(user);
 
-            //assert
-            Assert.AreEqual(users.Count, 0);
+            Assert.AreEqual(0, users.Count);
         }
 
         [TestMethod]
-        public void TestAllUsers()
+        public void TestGetAllUsers()
         {
-            //arrange
-            var user = new User(1, "Vladimir", "Stijepovic", 22, "dubsteer", "dovla98765@gmail.com", "123", false);
-            UserManager.CreateUser(user);
+            userManager.CreateUser(CreateUser(1, "dubsteer", "dubsteer@test.local"));
 
-            //act
-            UserManager.GetAllUsers();
-
-            //assert
-            Assert.AreEqual(users.Count, 1);
+            Assert.AreEqual(1, userManager.GetAllUsers().Count);
         }
 
         [TestMethod]
         public void TestGetLoginUser()
         {
-            var user = new User(1, "Vladimir", "Stijepovic", 22, "dubsteer", "dovla98765@gmail.com", "123", false);
-            UserManager.CreateUser(user);
+            const string password = "password123";
+            var user = CreateUser(1, "dubsteer", "dubsteer@test.local", password);
+            userManager.CreateUser(user);
+            user.EmailConfirmed = true;
 
-            //act
-            UserManager.GetLoginUser(user.Username, user.Password);
+            var result = userManager.GetLoginUser(user.Username, password);
 
-            //assert
-            Assert.AreEqual(users.Count, 1);
+            Assert.AreSame(user, result);
         }
 
         [TestMethod]
         public void TestGetLoginUserWithWrongCredentials()
         {
-            var user = new User(1, "Vladimir", "Stijepovic", 22, "dubsteer", "dovla98765@gmail.com", "123", false);
-            UserManager.CreateUser(user);
+            var user = CreateUser(1, "dubsteer", "dubsteer@test.local");
+            userManager.CreateUser(user);
+            user.EmailConfirmed = true;
 
-            //act
-            UserManager.GetLoginUser("dsadas", "sdasd");
+            var result = userManager.GetLoginUser(user.Username, "wrong-password");
 
-            //assert
-            Assert.IsNotNull(users);
-
-
+            Assert.IsNull(result);
         }
 
         [TestMethod]
         public void TestSearchUser()
         {
-            // Arrange
-            var user1 = new User(1, "Vladimir", "Stijepovic", 22, "dubsteer", "dovla98765@gmail.com", "123", false);
-            var user2 = new User(2, "Vladimir", "Stijepovic", 22, "dubsteer2", "dovla98765@gmail.com", "123", false);
-            var user3 = new User(3, "Vladimir", "Stijepovic", 22, "dubsteer1", "dovla98765@gmail.com", "123", false);
-            UserManager.CreateUser(user1);
-            UserManager.CreateUser(user2);
-            UserManager.CreateUser(user3);
+            userManager.CreateUser(CreateUser(1, "dubsteer", "one@test.local"));
+            userManager.CreateUser(CreateUser(2, "dubsteer1", "two@test.local"));
+            userManager.CreateUser(CreateUser(3, "dubsteer2", "three@test.local"));
 
-            // Act
-            var searchResults1 = UserManager.SearchUser("dubsteer");   // Search for users with "dubsteer" in username or email
-            var searchResults2 = UserManager.SearchUser("dubsteer2");  // Search for users with "dubsteer2" in username or email
+            var broadResults = userManager.SearchUser("dubsteer");
+            var exactResults = userManager.SearchUser("dubsteer2");
 
-            // Assert
-            Assert.AreEqual(3, searchResults1.Count);
-            Assert.IsTrue(searchResults1.Any(u => u.Username == "dubsteer" || u.Gmail == "dubsteer"));
-            Assert.IsTrue(searchResults1.Any(u => u.Username == "dubsteer1" || u.Gmail == "dubsteer1"));
-            Assert.IsTrue(searchResults1.Any(u => u.Username == "dubsteer2" || u.Gmail == "dubsteer2"));
-            Assert.AreEqual(1, searchResults2.Count);
-            Assert.IsTrue(searchResults2.Any(u => u.Username == "dubsteer2" || u.Gmail == "dubsteer2"));
+            Assert.AreEqual(3, broadResults.Count);
+            Assert.AreEqual(1, exactResults.Count);
+            Assert.AreEqual("dubsteer2", exactResults[0].Username);
         }
+
+        private static User CreateUser(int id, string username, string email, string password = "password") =>
+            new User(id, "Test", "User", 22, username, email, password, false);
     }
 }

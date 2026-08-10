@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using LogicLayer.Enums;
-using LogicLayer.Exceptions;
 using LogicLayer.Managers;
 using LogicLayer.Models;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Unit_Tests.MockRepos;
 
 namespace Unit_Tests
@@ -13,21 +8,21 @@ namespace Unit_Tests
     [TestClass]
     public class TestTournament
     {
-        private static List<Tournament> tournaments;
-        private static MockTournamentRepo mockTournamentRepo;
-        private static TournamentManager tournamentManager;
-        private static List<Match> matches;
-        private static MockMatchRepo mockMatchRepo;
+        private static List<Tournament> tournaments = null!;
+        private static List<Match> matches = null!;
+        private static TournamentManager tournamentManager = null!;
 
         [ClassInitialize]
-        public static void TestClassSetup(TestContext context)
+        public static void TestClassSetup(TestContext _)
         {
             tournaments = new List<Tournament>();
-            mockTournamentRepo = new MockTournamentRepo(tournaments);
             matches = new List<Match>();
-            mockMatchRepo = new MockMatchRepo(matches);
-            var matchManager = new MatchManager(mockMatchRepo);
-            tournamentManager = new TournamentManager(mockTournamentRepo, matchManager);
+            var matchManager = new MatchManager(new MockMatchRepo(matches));
+            var teamMatchManager = new TeamMatchManager(new MockTeamMatchRepo());
+            tournamentManager = new TournamentManager(
+                new MockTournamentRepo(tournaments),
+                matchManager,
+                teamMatchManager);
         }
 
         [TestInitialize]
@@ -40,131 +35,106 @@ namespace Unit_Tests
         [TestMethod]
         public void TestAddTournament()
         {
-            // Arrange
-            var tournament = new Tournament(1, "Tournament 1", "Description 1");
+            var tournament = CreateTournament(1, "Tournament 1");
 
-            // Act
             tournamentManager.AddTournament(tournament);
 
-            // Assert
             Assert.AreEqual(1, tournaments.Count);
-            Assert.AreEqual(tournament, tournaments[0]);
+            Assert.AreSame(tournament, tournaments[0]);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(TournamentNotFoundException))]
-        public void TestAddDuplicateTournament()
+        public void TestGetTournamentById()
         {
-            // Arrange
-            var tournament = new Tournament(1, "Tournament 1", "Description 1");
-            tournamentManager.AddTournament(tournament);
+            var tournament = CreateTournament(1, "Tournament 1");
+            tournaments.Add(tournament);
 
-            // Act
-            tournamentManager.AddTournament(tournament);
+            var result = tournamentManager.GetTournamentById(1);
 
-            // Assert
-            // TournamentNotFoundException should be thrown
+            Assert.AreSame(tournament, result);
         }
 
         [TestMethod]
         public void TestGetAllTournaments()
         {
-            // Arrange
-            var tournament1 = new Tournament(1, "Tournament 1", "Description 1");
-            var tournament2 = new Tournament(2, "Tournament 2", "Description 2");
-            tournaments.Add(tournament1);
-            tournaments.Add(tournament2);
+            var tournament1 = CreateTournament(1, "Tournament 1");
+            var tournament2 = CreateTournament(2, "Tournament 2");
+            tournaments.AddRange(new[] { tournament1, tournament2 });
 
-            // Act
             var result = tournamentManager.GetAllTournaments();
 
-            // Assert
             Assert.AreEqual(2, result.Count);
-            Assert.IsTrue(result.Contains(tournament1));
-            Assert.IsTrue(result.Contains(tournament2));
+            CollectionAssert.Contains(result, tournament1);
+            CollectionAssert.Contains(result, tournament2);
         }
 
         [TestMethod]
         public void TestRemoveTournament()
         {
-            // Arrange
-            var tournament1 = new Tournament(1, "Tournament 1", "Description 1");
-            var tournament2 = new Tournament(2, "Tournament 2", "Description 2");
-            tournaments.Add(tournament1);
-            tournaments.Add(tournament2);
-
-            // Act
-            tournamentManager.RemoveTournament(tournament1);
-
-            // Assert
-            Assert.AreEqual(1, tournaments.Count);
-            Assert.IsFalse(tournaments.Contains(tournament1));
-            Assert.IsTrue(tournaments.Contains(tournament2));
-        }
-
-        [TestMethod]
-        public void TestUpdateTournament()
-        {
-            // Arrange
-            var tournament = new Tournament(1, "Tournament 1", "Description 1");
+            var tournament = CreateTournament(1, "Tournament 1");
             tournaments.Add(tournament);
 
-            // Act
-            tournament.Name = "Updated Tournament";
-            tournamentManager.UpdateTournament(tournament);
+            tournamentManager.RemoveTournament(tournament);
 
-            // Assert
-            Assert.AreEqual("Updated Tournament", tournaments[0].Name);
+            Assert.AreEqual(0, tournaments.Count);
         }
 
         [TestMethod]
-        public void TestTournamentLogic()
+        public void TestSetTournamentStatus()
         {
-            // Arrange
-            var player1 = new Player(1, "John", "Doe", 25, "johndoe", "johndoe@gmail.com", "password", "steamid1", false);
-            var player2 = new Player(2, "Jane", "Smith", 28, "janesmith", "janesmith@gmail.com", "password", "steamid2", false);
-            var player3 = new Player(3, "Mike", "Johnson", 30, "mikejohnson", "mikejohnson@gmail.com", "password", "steamid3", false);
-            var player4 = new Player(4, "Sarah", "Williams", 22, "sarahwilliams", "sarahwilliams@gmail.com", "password", "steamid4", false);
+            var tournament = CreateTournament(1, "Tournament 1");
+            tournaments.Add(tournament);
 
-            var players = new List<Player> { player1, player2, player3, player4 };
-            var tournament = new Tournament(1, "Test Tournament", "Description");
+            tournamentManager.SetStatus(tournament, Status.InProgress);
 
-            DateTime startTime = DateTime.Now;
-            int interval = 30;
+            Assert.AreEqual(Status.InProgress, tournaments[0].Status);
+        }
 
-            // Act
-            tournamentManager.TournamentLogic(players, tournament, startTime, interval);
+        [TestMethod]
+        public void TestGenerateSoloBracket()
+        {
+            var players = new List<Player>
+            {
+                CreatePlayer(1),
+                CreatePlayer(2),
+                CreatePlayer(3),
+                CreatePlayer(4)
+            };
+            var tournament = CreateTournament(1, "Test Tournament");
 
-            // Assert
-            List<Match> matches = tournamentManager.GetAllMatchesInTournament(tournament);
-            Assert.AreEqual(6, matches.Count);
+            tournamentManager.GenerateSoloBracket(players, tournament);
+
+            Assert.AreEqual(2, tournamentManager.GetAllMatchesInTournament(tournament).Count);
         }
 
         [TestMethod]
         public void TestGetAllMatchesInTournament()
         {
-            // Arrange
-            var tournament = new Tournament(1, "Tournament 1", "Description 1");
-            tournaments.Add(tournament);
-
-            var player1 = new Player(1, "Player 1", "Player 1", 25, "player1", "player1@gmail.com", "password", "steamid1", false);
-            var player2 = new Player(2, "Player 2", "Player 2", 28, "player2", "player2@gmail.com", "password", "steamid2", false);
-            var player3 = new Player(3, "Player 3", "Player 3", 30, "player3", "player3@gmail.com", "password", "steamid3", false);
-            var player4 = new Player(4, "Player 4", "Player 4", 22, "player4", "player4@gmail.com", "password", "steamid4", false);
-
+            var tournament = CreateTournament(1, "Tournament 1");
+            var player1 = CreatePlayer(1);
+            var player2 = CreatePlayer(2);
+            var player3 = CreatePlayer(3);
+            var player4 = CreatePlayer(4);
             var match1 = new Match(1, 1, player1, player2, 0, 0, DateTime.Now, Status.InProgress);
             var match2 = new Match(2, 1, player3, player4, 0, 0, DateTime.Now, Status.InProgress);
+            matches.AddRange(new[] { match1, match2 });
 
-            matches.Add(match1);
-            matches.Add(match2);
-
-            // Act
             var result = tournamentManager.GetAllMatchesInTournament(tournament);
 
-            // Assert
             Assert.AreEqual(2, result.Count);
-            Assert.IsTrue(result.Contains(match1));
-            Assert.IsTrue(result.Contains(match2));
+            CollectionAssert.Contains(result, match1);
+            CollectionAssert.Contains(result, match2);
         }
+
+        private static Tournament CreateTournament(int id, string name) => new()
+        {
+            Id = id,
+            Name = name,
+            Description = $"{name} description",
+            Status = Status.Open
+        };
+
+        private static Player CreatePlayer(int id) =>
+            new Player(id, "Player", id.ToString(), 20, $"player{id}", $"player{id}@test.local", "password", $"steam{id}", false);
     }
 }

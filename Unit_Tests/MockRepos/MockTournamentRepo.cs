@@ -1,75 +1,62 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using LogicLayer.IRepos;
 using LogicLayer.Models;
-
 
 namespace Unit_Tests.MockRepos
 {
     public class MockTournamentRepo : ITournamentRepo
     {
-        public List<Tournament> Tournaments = new();
+        public List<Tournament> Tournaments { get; }
 
         public MockTournamentRepo(List<Tournament> tournaments)
         {
             Tournaments = tournaments;
         }
 
-        public void AddTournament(Tournament tournament)
-        {
-            Tournaments.Add(tournament);
-        }
+        public List<Tournament> GetAllTournaments() => Tournaments;
 
-        public void AddTournamentApp(Player player, Tournament tournament)
-        {
-            // Find the tournament and add the player
-            var tourney = Tournaments.FirstOrDefault(t => t.Id == tournament.Id);
-            if (tourney != null)
-            {
-                if (tourney.Players == null)
-                {
-                    tourney.Players = new List<Player>();
-                }
-                tourney.Players.Add(player);
-            }
-        }
+        public Tournament GetTournamentById(int id) =>
+            Tournaments.FirstOrDefault(t => t.Id == id)!;
 
-        public List<Player> GetAllPlayersInTournament(int tournamentId)
-        {
-            // Find the tournament and return its players
-            var tournament = Tournaments.FirstOrDefault(t => t.Id == tournamentId);
-            return tournament?.Players;
-        }
-
-        public List<Tournament> GetAllTournaments()
-        {
-            return Tournaments;
-        }
-
-        public void RemoveTournament(Tournament tournament)
-        {
-            var tourney = Tournaments.FirstOrDefault(t => t.Id == tournament.Id);
-            if (tourney != null)
-            {
-                Tournaments.Remove(tourney);
-            }
-        }
+        public void AddTournament(Tournament tournament) => Tournaments.Add(tournament);
 
         public void UpdateTournament(Tournament tournament)
         {
-            for (int i = 0; i < Tournaments.Count; i++)
-            {
-                if (Tournaments[i].Id == tournament.Id)
-                {
-                    Tournaments[i] = tournament;
-                    return;
-                }
-            }
-            // If no matching tournament is found, you might want to throw an exception.
-            throw new Exception("Tournament not found");
+            var index = Tournaments.FindIndex(t => t.Id == tournament.Id);
+            if (index < 0)
+                throw new InvalidOperationException("Tournament not found");
+
+            Tournaments[index] = tournament;
         }
+
+        public void RemoveTournament(Tournament tournament) =>
+            Tournaments.RemoveAll(t => t.Id == tournament.Id);
+
+        public void AddTournamentApp(Player player, Tournament tournament)
+        {
+            var stored = GetTournamentById(tournament.Id);
+            stored?.Players.Add(player);
+        }
+
+        public void RemovePlayerFromTournament(Player player, Tournament tournament)
+        {
+            var stored = GetTournamentById(tournament.Id);
+            stored?.Players.RemoveAll(p => p.Id == player.Id);
+        }
+
+        public List<Player> GetAllPlayersInTournament(int tournamentId) =>
+            GetTournamentById(tournamentId)?.Players ?? new List<Player>();
+
+        public void AddTeamTournamentApp(int teamId, int tournamentId)
+        {
+            var tournament = GetTournamentById(tournamentId);
+            if (tournament != null && !tournament.TeamIds.Contains(teamId))
+                tournament.TeamIds.Add(teamId);
+        }
+
+        public List<int> GetTeamApplications(int tournamentId) =>
+            GetTournamentById(tournamentId)?.TeamIds ?? new List<int>();
+
+        public void RemoveTeamTournamentApp(int teamId, int tournamentId) =>
+            GetTournamentById(tournamentId)?.TeamIds.Remove(teamId);
     }
 }

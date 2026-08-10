@@ -17,7 +17,7 @@ namespace DesktopApp
         {
             InitializeComponent();
 
-            connection = new MySQLConnection("server=127.0.0.1;port=3306;user id=root;password=1234;database=local_dtb;SslMode=none;");
+            connection = new MySQLConnection("server=127.0.0.1;port=3306;user id=root;password=1234;database=local_dtb;SslMode=Disabled;");
             connection.Open();
 
             var userRepo = new UserRepo(connection);

@@ -1,4 +1,4 @@
-﻿@using LogicLayer.Models
+@using LogicLayer.Models
 @inject LogicLayer.Managers.NotificationManager NotificationManager
 
 @{
@@ -12,53 +12,40 @@
 }
 
 <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle position-relative"
-       href="#"
-       id="notifDropdown"
-       role="button"
-       data-bs-toggle="dropdown"
-       aria-expanded="false">
-
-        🔔
+    <button class="nav-link dropdown-toggle position-relative notification-trigger"
+            id="notifDropdown"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            aria-label="Notifications@(unread > 0 ? $", {unread} unread" : string.Empty)">
+        <span aria-hidden="true">&#128276;</span>
         @if (unread > 0)
         {
             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                 @unread
+                <span class="visually-hidden">unread notifications</span>
             </span>
         }
-    </a>
+    </button>
 
-    <ul class="dropdown-menu dropdown-menu-end"
-        style="
-            width: 320px;
-            max-height: 400px;
-            overflow-y: auto;
-            overflow-x: hidden;
-            white-space: normal;
-        ">
-
+    <ul class="dropdown-menu dropdown-menu-end notification-menu" aria-labelledby="notifDropdown">
         @if (!notifications.Any())
         {
-            <li class="dropdown-item text-muted">
-                No notifications
-            </li>
+            <li><span class="dropdown-item-text text-secondary">No notifications</span></li>
         }
         else
         {
-            foreach (var n in notifications)
+            foreach (var notification in notifications)
             {
                 <li>
-                    <a class="dropdown-item @(n.IsRead ? "" : "fw-bold")"
+                    <a class="dropdown-item @(notification.IsRead ? string.Empty : "fw-bold")"
                        asp-page="/Notifications/Read"
-                       asp-route-id="@n.Id"
-                       asp-route-link="@n.Link"
-                       style="white-space: normal; word-break: break-word;">
-
-                        @n.Message
-                        <br />
-                        <small class="text-muted">
-                            @n.CreatedAt.ToString("dd.MM.yyyy HH:mm")
-                        </small>
+                       asp-route-id="@notification.Id"
+                       asp-route-link="@notification.Link">
+                        @notification.Message
+                        <span class="d-block text-secondary small">
+                            @notification.CreatedAt.ToString("dd.MM.yyyy HH:mm")
+                        </span>
                     </a>
                 </li>
             }

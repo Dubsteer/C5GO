@@ -1,135 +1,61 @@
-﻿@page
+@page
 @model Website.Pages.RegisterModel
 @{
     ViewData["Title"] = "Register";
 }
 
-<style>
-    body {
-        background-color: #0d1117;
-        font-family: "Segoe UI", Roboto, sans-serif;
-        color: #fff;
-    }
-
-    .auth-container {
-        display: flex;
-        justify-content: center;
-        padding: 40px 10px;
-    }
-
-    .auth-card {
-        background: #161b22;
-        padding: 30px;
-        width: 100%;
-        max-width: 450px;
-        border-radius: 12px;
-        border: 1px solid #2d333b;
-        box-shadow: 0 0 10px rgba(99,102,241,0.25);
-    }
-
-        .auth-card h2 {
-            text-align: center;
-            margin-bottom: 25px;
-            font-weight: 700;
-        }
-
-    .auth-input {
-        width: 100%;
-        padding: 10px;
-        margin-top: 6px;
-        margin-bottom: 5px;
-        background: #0d1117;
-        border: 1px solid #2d333b;
-        color: #fff;
-        border-radius: 8px;
-    }
-
-        .auth-input:focus {
-            outline: none;
-            border-color: #6366f1;
-        }
-
-    .field-error {
-        color: #f87171;
-        font-size: 13px;
-        margin-bottom: 10px;
-        display: block;
-    }
-
-    .auth-btn {
-        width: 100%;
-        padding: 12px;
-        background-color: #4f46e5;
-        border: none;
-        border-radius: 8px;
-        color: white;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        margin-top: 10px;
-    }
-
-        .auth-btn:hover {
-            background-color: #6366f1;
-        }
-
-    .small-text {
-        text-align: center;
-        color: #9ca3af;
-        margin-top: 15px;
-    }
-
-    a {
-        color: #58a6ff;
-        text-decoration: none;
-    }
-</style>
-
-<div class="auth-container">
+<section class="auth-container" aria-labelledby="registerTitle">
     <div class="auth-card">
-
-        <h2>Create Account</h2>
+        <h1 id="registerTitle">Create account</h1>
 
         <form method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors" role="alert"></div>
 
-            <label>First name</label>
-            <input asp-for="FullUserFormModel.Firstname" class="auth-input" />
-            <span asp-validation-for="FullUserFormModel.Firstname" class="field-error"></span>
+            <div class="auth-field">
+                <label asp-for="FullUserFormModel.Firstname">First name</label>
+                <input asp-for="FullUserFormModel.Firstname" class="auth-input" autocomplete="given-name" />
+                <span asp-validation-for="FullUserFormModel.Firstname" class="field-error"></span>
+            </div>
 
-            <label>Last name</label>
-            <input asp-for="FullUserFormModel.Lastname" class="auth-input" />
-            <span asp-validation-for="FullUserFormModel.Lastname" class="field-error"></span>
+            <div class="auth-field">
+                <label asp-for="FullUserFormModel.Lastname">Last name</label>
+                <input asp-for="FullUserFormModel.Lastname" class="auth-input" autocomplete="family-name" />
+                <span asp-validation-for="FullUserFormModel.Lastname" class="field-error"></span>
+            </div>
 
-            <label>Age</label>
-            <input asp-for="FullUserFormModel.Age" type="number" class="auth-input" />
-            <span asp-validation-for="FullUserFormModel.Age" class="field-error"></span>
+            <div class="auth-field">
+                <label asp-for="FullUserFormModel.Age">Age</label>
+                <input asp-for="FullUserFormModel.Age" class="auth-input" type="number" inputmode="numeric" />
+                <span asp-validation-for="FullUserFormModel.Age" class="field-error"></span>
+            </div>
 
-            <label>Username</label>
-            <input asp-for="FullUserFormModel.Username" class="auth-input" />
-            <span asp-validation-for="FullUserFormModel.Username" class="field-error"></span>
+            <div class="auth-field">
+                <label asp-for="FullUserFormModel.Username">Username</label>
+                <input asp-for="FullUserFormModel.Username" class="auth-input" autocomplete="username" />
+                <span asp-validation-for="FullUserFormModel.Username" class="field-error"></span>
+            </div>
 
-            <label>Email</label>
-            <input asp-for="FullUserFormModel.Gmail" class="auth-input" />
-            <span asp-validation-for="FullUserFormModel.Gmail" class="field-error"></span>
+            <div class="auth-field">
+                <label asp-for="FullUserFormModel.Gmail">Email</label>
+                <input asp-for="FullUserFormModel.Gmail" class="auth-input" type="email" autocomplete="email" />
+                <span asp-validation-for="FullUserFormModel.Gmail" class="field-error"></span>
+            </div>
 
-            <label>Password</label>
-            <input asp-for="FullUserFormModel.Password"
-                   type="password"
-                   class="auth-input" />
-            <span asp-validation-for="FullUserFormModel.Password" class="field-error"></span>
+            <div class="auth-field">
+                <label asp-for="FullUserFormModel.Password">Password</label>
+                <input asp-for="FullUserFormModel.Password" class="auth-input" type="password" autocomplete="new-password" />
+                <span asp-validation-for="FullUserFormModel.Password" class="field-error"></span>
+            </div>
 
-            <input type="submit"
-                   class="auth-btn"
-                   value="Create your account" />
+            <button type="submit" class="auth-btn">Create account</button>
         </form>
 
-        <div class="small-text">
-            Already have an account?
-            <a href="/Login">Log In</a>
-        </div>
-
-        @section Scripts {
-            <partial name="_ValidationScriptsPartial" />
-        }
+        <p class="small-text">
+            Already have an account? <a asp-page="/Login">Log in</a>
+        </p>
     </div>
-</div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,239 +1,106 @@
-﻿@page "{id:int}"
+@page "{id:int}"
 @model Website.Pages.Tournaments.DetailsModel
+@{
+    ViewData["Title"] = "Tournament details";
+}
 
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
-
-<style>
-    body {
-        background-color: #0d1117;
-        color: white;
-        font-family: "Segoe UI", Roboto, sans-serif;
-    }
-
-    .section-title {
-        font-size: 22px;
-        font-weight: 800;
-        color: #58a6ff;
-        margin-bottom: 12px;
-        border-bottom: 1px solid #30363d;
-        padding-bottom: 6px;
-    }
-
-    .match-box {
-        background: #161b22;
-        border: 1px solid #30363d;
-        border-radius: 10px;
-        padding: 14px;
-        margin-bottom: 14px;
-        box-shadow: 0 0 6px rgba(0,0,0,0.25);
-    }
-
-    .team-row {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        padding: 4px 0;
-    }
-
-        .team-row strong {
-            font-weight: 600;
-        }
-
-    .score {
-        font-weight: bold;
-        color: #a5b4fc;
-        font-size: 16px;
-    }
-
-    .loser {
-        opacity: 0.45;
-    }
-
-    .team-name {
-        font-weight: 500;
-    }
-
-    .team-list-box {
-        background: #151b24;
-        border: 1px solid #30363d;
-        padding: 10px 12px;
-        border-radius: 8px;
-        margin-bottom: 8px;
-    }
-
-    .back-btn {
-        background: #4da3ff;
-        color: white;
-        padding: 10px 22px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: bold;
-        display: inline-block;
-    }
-</style>
-
-<div class="container mt-4">
-
-    <!-- TITLE -->
-    <h1 class="text-center mb-2" style="font-weight:900;">
-        🏆 @Model.Tournament.Name
-    </h1>
-
-    <p class="text-center opacity-75">
-        @Model.Tournament.Description
-    </p>
-
-    <div class="text-center mb-4">
-        <span class="badge bg-info fs-6">
-            @(Model.Tournament.IsTeamTournament ? "TEAM Tournament" : "SOLO Tournament")
+<article class="tournament-details">
+    <header class="tournament-details-header">
+        <a asp-page="/Tournaments" class="back-link">&larr; Back to tournaments</a>
+        <h1 class="tournament-details-title">@Model.Tournament.Name</h1>
+        <p class="tournament-details-description">@Model.Tournament.Description</p>
+        <span class="tag @(Model.Tournament.IsTeamTournament ? "tag-team" : "tag-solo")">
+            @(Model.Tournament.IsTeamTournament ? "Team tournament" : "Solo tournament")
         </span>
-    </div>
+    </header>
 
-    <hr style="border-color:#2d333b" />
-
-    <!-- TEAM TOURNAMENT – TEAMS -->
     @if (Model.Tournament.IsTeamTournament)
     {
-        <h3 class="section-title">
-            Registered Teams (@Model.TeamsById.Count)
-        </h3>
-
-        @if (!Model.TeamsById.Any())
-        {
-            <p>No teams have registered yet.</p>
-        }
-        else
-        {
-            foreach (var t in Model.TeamsById.Values)
+        <section class="tournament-section" aria-labelledby="registeredTeamsTitle">
+            <h2 id="registeredTeamsTitle" class="tournament-section-title">Registered teams (@Model.TeamsById.Count)</h2>
+            @if (!Model.TeamsById.Any())
             {
-                <div class="team-list-box">
-                    <strong>@t.Name</strong>
-                    <div class="opacity-75">
-                        Captain: @t.Captain.Username
-                    </div>
-                    <div class="opacity-75 small">
-                        Members: @string.Join(", ", t.Members.Select(m => m.Username))
-                    </div>
-                </div>
+                <div class="empty-state"><strong>No teams registered</strong><span>Registered teams will appear here.</span></div>
             }
-        }
-
-        <hr style="border-color:#2d333b; margin:22px 0;" />
-    }
-
-    <!-- SOLO MATCHES -->
-    @if (!Model.Tournament.IsTeamTournament)
-    {
-        <h3 class="section-title">Matches</h3>
-
-        @if (!Model.SoloMatches.Any())
-        {
-            <p>No matches have been generated yet.</p>
-        }
-        else
-        {
-            foreach (var m in Model.SoloMatches)
+            else
             {
-                <div class="match-box">
-
-                    <div class="team-row @(m.Player1Score < m.Player2Score ? "loser" : "")">
-                        <div class="d-flex justify-content-between">
-                            <span class="team-name">@m.User1.Username</span>
-                            <span class="score">@m.Player1Score</span>
-                        </div>
-                    </div>
-
-                    <div class="team-row @(m.Player2Score < m.Player1Score ? "loser" : "")">
-                        <div class="d-flex justify-content-between">
-                            <span class="team-name">@m.User2.Username</span>
-                            <span class="score">@m.Player2Score</span>
-                        </div>
-                    </div>
-
-                    <div class="opacity-50 small mt-1">
-                        @m.MatchDate.ToString("dd.MM.yyyy HH:mm")
-                    </div>
-                </div>
-            }
-        }
-    }
-
-    <!-- SOLO PLAYERS -->
-    @if (!Model.Tournament.IsTeamTournament)
-    {
-        <h3 class="section-title mt-4">
-            Players (@Model.SoloPlayers.Count)
-        </h3>
-
-        @if (!Model.SoloPlayers.Any())
-        {
-            <p>No players joined yet.</p>
-        }
-        else
-        {
-            <ul class="list-group">
-                @foreach (var p in Model.SoloPlayers)
+                foreach (var team in Model.TeamsById.Values)
                 {
-                    <li class="list-group-item bg-dark text-white">
-                        @p.Username
-                    </li>
+                    <div class="team-list-box">
+                        <strong>@team.Name</strong>
+                        <div class="text-secondary">Captain: @team.Captain.Username</div>
+                        <div class="text-secondary small">Members: @string.Join(", ", team.Members.Select(member => member.Username))</div>
+                    </div>
                 }
-            </ul>
-        }
+            }
+        </section>
 
-        <hr style="border-color:#2d333b; margin:22px 0;" />
-    }
-
-    <!-- TEAM MATCHES -->
-    @if (Model.Tournament.IsTeamTournament)
-    {
-        <h3 class="section-title">Team Matches</h3>
-
-        @if (!Model.TeamMatches.Any())
-        {
-            <p>No matches scheduled yet.</p>
-        }
-        else
-        {
-            foreach (var m in Model.TeamMatches)
+        <section class="tournament-section" aria-labelledby="teamMatchesTitle">
+            <h2 id="teamMatchesTitle" class="tournament-section-title">Team matches</h2>
+            @if (!Model.TeamMatches.Any())
             {
-                var t1 = Model.TeamsById.ContainsKey(m.Team1Id)
-                ? Model.TeamsById[m.Team1Id].Name
-                : $"Team {m.Team1Id}";
+                <div class="empty-state"><strong>No matches scheduled</strong><span>Matches will appear after the bracket is generated.</span></div>
+            }
+            else
+            {
+                foreach (var match in Model.TeamMatches)
+                {
+                    var teamOne = Model.TeamsById.TryGetValue(match.Team1Id, out var firstTeam) ? firstTeam.Name : $"Team {match.Team1Id}";
+                    var teamTwo = Model.TeamsById.TryGetValue(match.Team2Id, out var secondTeam) ? secondTeam.Name : $"Team {match.Team2Id}";
 
-                var t2 = Model.TeamsById.ContainsKey(m.Team2Id)
-                ? Model.TeamsById[m.Team2Id].Name
-                : $"Team {m.Team2Id}";
-
-                <div class="match-box">
-
-                    <div class="team-row @(m.Team1Score < m.Team2Score ? "loser" : "")">
-                        <div class="d-flex justify-content-between">
-                            <span class="team-name">@t1</span>
-                            <span class="score">@m.Team1Score</span>
+                    <div class="match-box">
+                        <div class="team-row @(match.Team1Score < match.Team2Score ? "loser" : string.Empty)">
+                            <div class="d-flex justify-content-between gap-3"><span>@teamOne</span><span class="score">@match.Team1Score</span></div>
                         </div>
-                    </div>
-
-                    <div class="team-row @(m.Team2Score < m.Team1Score ? "loser" : "")">
-                        <div class="d-flex justify-content-between">
-                            <span class="team-name">@t2</span>
-                            <span class="score">@m.Team2Score</span>
+                        <div class="team-row @(match.Team2Score < match.Team1Score ? "loser" : string.Empty)">
+                            <div class="d-flex justify-content-between gap-3"><span>@teamTwo</span><span class="score">@match.Team2Score</span></div>
                         </div>
+                        <time class="text-secondary small" datetime="@match.MatchDate.ToString("O")">@match.MatchDate.ToString("dd.MM.yyyy HH:mm")</time>
                     </div>
+                }
+            }
+        </section>
+    }
+    else
+    {
+        <section class="tournament-section" aria-labelledby="soloMatchesTitle">
+            <h2 id="soloMatchesTitle" class="tournament-section-title">Matches</h2>
+            @if (!Model.SoloMatches.Any())
+            {
+                <div class="empty-state"><strong>No matches generated</strong><span>Matches will appear after the bracket is generated.</span></div>
+            }
+            else
+            {
+                foreach (var match in Model.SoloMatches)
+                {
+                    <div class="match-box">
+                        <div class="team-row @(match.Player1Score < match.Player2Score ? "loser" : string.Empty)">
+                            <div class="d-flex justify-content-between gap-3"><span>@match.User1.Username</span><span class="score">@match.Player1Score</span></div>
+                        </div>
+                        <div class="team-row @(match.Player2Score < match.Player1Score ? "loser" : string.Empty)">
+                            <div class="d-flex justify-content-between gap-3"><span>@match.User2.Username</span><span class="score">@match.Player2Score</span></div>
+                        </div>
+                        <time class="text-secondary small" datetime="@match.MatchDate.ToString("O")">@match.MatchDate.ToString("dd.MM.yyyy HH:mm")</time>
+                    </div>
+                }
+            }
+        </section>
 
-                    <div class="opacity-50 small mt-1">
-                        @m.MatchDate.ToString("dd.MM.yyyy HH:mm")
-                    </div>
+        <section class="tournament-section" aria-labelledby="playersTitle">
+            <h2 id="playersTitle" class="tournament-section-title">Players (@Model.SoloPlayers.Count)</h2>
+            @if (!Model.SoloPlayers.Any())
+            {
+                <div class="empty-state"><strong>No players joined</strong><span>Registered players will appear here.</span></div>
+            }
+            else
+            {
+                <div class="participant-list">
+                    @foreach (var player in Model.SoloPlayers)
+                    {
+                        <div class="participant-item">@player.Username</div>
+                    }
                 </div>
             }
-        }
+        </section>
     }
-
-    <!-- BACK -->
-    <div class="text-center mt-4">
-        <a href="/Tournaments" class="back-btn">
-            ⬅ Back to Tournaments
-        </a>
-    </div>
-
-</div>
+</article>

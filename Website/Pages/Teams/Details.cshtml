@@ -1,177 +1,114 @@
-﻿@page
+@page
 @model Website.Pages.Teams.DetailsModel
 @{
-    ViewData["Title"] = "Team Details";
+    ViewData["Title"] = "Team details";
 }
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
-
-<style>
-    body {
-        background-color: #0d1117;
-        color: #e2e2e2;
-        font-family: 'Segoe UI', Roboto, sans-serif;
-    }
-
-    .team-card {
-        background: #161b22;
-        border: 1px solid #2d333b;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 30px;
-    }
-
-    h2, h3 {
-        color: #ffffff;
-        font-weight: 700;
-    }
-
-    .member-pill,
-    .pending-pill {
-        border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 10px;
-        border: 1px solid;
-    }
-
-    .member-pill {
-        background: #1f2937;
-        border-color: #374151;
-    }
-
-    .pending-pill {
-        background: #312e81;
-        color: #c7d2fe;
-        border-color: #4338ca;
-    }
-
-    .captain-tag {
-        padding: 4px 8px;
-        font-size: 12px;
-        background-color: #2563eb;
-        margin-left: 8px;
-        border-radius: 6px;
-    }
-</style>
-
-<div class="container mt-4">
-
-    <!-- ALERTS -->
-    @if (TempData["Error"] != null)
+<section class="team-details-card" aria-labelledby="teamTitle">
+    @if (TempData["Error"] is string errorMessage)
     {
-        <div class="alert alert-danger text-center">@TempData["Error"]</div>
+        <div class="alert alert-danger" role="alert">@errorMessage</div>
     }
-    @if (TempData["Success"] != null)
+    @if (TempData["Success"] is string successMessage)
     {
-        <div class="alert alert-success text-center">@TempData["Success"]</div>
+        <div class="alert alert-success" role="status">@successMessage</div>
     }
 
-    <div class="row justify-content-center">
-        <div class="col-lg-8 col-md-10 col-12">
+    <header class="d-flex justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <a asp-page="/Teams/Teams" class="back-link">&larr; Back to teams</a>
+            <h1 id="teamTitle" class="mt-2 mb-0">@Model.Team.Name</h1>
+        </div>
+        <span class="tag tag-team">@Model.Members.Count / 5 members</span>
+    </header>
 
-            <div class="team-card">
-                <h2>@Model.Team.Name</h2>
+    <section aria-labelledby="membersTitle">
+        <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+            <h2 id="membersTitle" class="section-heading mb-0">Members</h2>
+            @if (Model.IsCaptain)
+            {
+                <form method="post" asp-page-handler="Leave" onsubmit="return confirm('Delete this team?');">
+                    <input type="hidden" name="teamId" value="@Model.Team.Id" />
+                    <button type="submit" class="btn btn-outline-danger btn-sm">Delete team</button>
+                </form>
+            }
+        </div>
 
-                <hr />
+        <div class="member-list">
+            @foreach (var member in Model.Members)
+            {
+                <div class="member-pill">
+                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+                        <div>
+                            <a asp-page="/UserProfile" asp-route-id="@member.Id" class="user-link">@member.Username</a>
+                            @if (member.Id == Model.Team.Captain.Id)
+                            {
+                                <span class="captain-tag">Captain</span>
+                            }
+                        </div>
 
-                <!-- MEMBERS -->
-                <h3>Members</h3>
+                        <div class="d-flex gap-2">
+                            @if (Model.IsCaptain && member.Id != Model.Team.Captain.Id)
+                            {
+                                <form method="post" asp-page-handler="Kick" onsubmit="return confirm('Remove this member from the team?');">
+                                    <input type="hidden" name="userId" value="@member.Id" />
+                                    <input type="hidden" name="teamId" value="@Model.Team.Id" />
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+                                </form>
+                            }
 
-                @if (Model.IsCaptain)
-                {
-                    <form method="post" asp-page-handler="Leave" class="mb-3">
-                        <input type="hidden" name="teamId" value="@Model.Team.Id" />
-                        <button class="btn btn-danger w-100">
-                            Delete Team
-                        </button>
-                    </form>
-                }
-
-                @foreach (var m in Model.Members)
-                {
-                    <div class="member-pill">
-                        <div class="d-flex flex-column flex-sm-row justify-content-between gap-2">
-
-                            <div>
-                                <strong>@m.Username</strong>
-
-                                @if (m.Id == Model.Team.Captain.Id)
-                                {
-                                    <span class="captain-tag">CAPTAIN</span>
-                                }
-                            </div>
-
-                            <div class="d-flex gap-2">
-                                @if (Model.IsCaptain && m.Id != Model.Team.Captain.Id)
-                                {
-                                    <form method="post" asp-page-handler="Kick">
-                                        <input type="hidden" name="userId" value="@m.Id" />
-                                        <input type="hidden" name="teamId" value="@Model.Team.Id" />
-                                        <button class="btn btn-danger btn-sm w-100">
-                                            Kick
-                                        </button>
-                                    </form>
-                                }
-
-                                @if (m.Id == Model.CurrentUser.Id && !Model.IsCaptain)
-                                {
-                                    <form method="post" asp-page-handler="Leave">
-                                        <input type="hidden" name="teamId" value="@Model.Team.Id" />
-                                        <button class="btn btn-warning btn-sm w-100">
-                                            Leave
-                                        </button>
-                                    </form>
-                                }
-                            </div>
+                            @if (member.Id == Model.CurrentUser.Id && !Model.IsCaptain)
+                            {
+                                <form method="post" asp-page-handler="Leave" onsubmit="return confirm('Leave this team?');">
+                                    <input type="hidden" name="teamId" value="@Model.Team.Id" />
+                                    <button type="submit" class="btn btn-outline-warning btn-sm">Leave team</button>
+                                </form>
+                            }
                         </div>
                     </div>
-                }
+                </div>
+            }
+        </div>
+    </section>
 
-                <!-- ✅ JOIN REQUESTS — SAMO KAPETAN -->
-                @if (Model.IsCaptain)
-                {
-                    <hr />
-                    <h3>Join Requests</h3>
+    @if (Model.IsCaptain)
+    {
+        <hr class="section-divider" />
+        <section aria-labelledby="requestsTitle">
+            <h2 id="requestsTitle" class="section-heading">Join requests</h2>
 
-                    @if (!Model.Pending.Any())
+            @if (!Model.Pending.Any())
+            {
+                <div class="empty-state">
+                    <strong>No pending requests</strong>
+                    <span>New requests will appear here.</span>
+                </div>
+            }
+            else
+            {
+                <div class="request-list">
+                    @foreach (var request in Model.Pending)
                     {
-                        <p class="text-muted">No pending requests.</p>
-                    }
-                    else
-                    {
-                        @foreach (var r in Model.Pending)
-                        {
-                            <div class="pending-pill">
-                                <div class="d-flex flex-column flex-sm-row justify-content-between gap-2">
-
-                                    <div>
-                                        <strong>@r.User.Username</strong>
-                                    </div>
-
-                                    <div class="d-flex gap-2">
-                                        <form method="post" asp-page-handler="Approve">
-                                            <input type="hidden" name="requestId" value="@r.Id" />
-                                            <input type="hidden" name="teamId" value="@Model.Team.Id" />
-                                            <button class="btn btn-success btn-sm w-100">
-                                                Approve
-                                            </button>
-                                        </form>
-
-                                        <form method="post" asp-page-handler="Reject">
-                                            <input type="hidden" name="requestId" value="@r.Id" />
-                                            <input type="hidden" name="teamId" value="@Model.Team.Id" />
-                                            <button class="btn btn-danger btn-sm w-100">
-                                                Reject
-                                            </button>
-                                        </form>
-                                    </div>
+                        <div class="pending-pill">
+                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+                                <a asp-page="/UserProfile" asp-route-id="@request.User.Id" class="user-link">@request.User.Username</a>
+                                <div class="d-flex gap-2">
+                                    <form method="post" asp-page-handler="Approve">
+                                        <input type="hidden" name="requestId" value="@request.Id" />
+                                        <input type="hidden" name="teamId" value="@Model.Team.Id" />
+                                        <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                    </form>
+                                    <form method="post" asp-page-handler="Reject">
+                                        <input type="hidden" name="requestId" value="@request.Id" />
+                                        <input type="hidden" name="teamId" value="@Model.Team.Id" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">Reject</button>
+                                    </form>
                                 </div>
                             </div>
-                        }
+                        </div>
                     }
-                }
-
-            </div>
-        </div>
-    </div>
-</div>
+                </div>
+            }
+        </section>
+    }
+</section>

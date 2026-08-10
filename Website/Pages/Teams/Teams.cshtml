@@ -1,348 +1,153 @@
-﻿@page "/Teams/Teams"
+@page "/Teams/Teams"
 @model Website.Pages.Teams.TeamsModel
 @{
     ViewData["Title"] = "Teams";
 }
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+<section aria-labelledby="teamsTitle">
+    <header class="page-header page-header-centered">
+        <h1 id="teamsTitle" class="page-title">Teams</h1>
+        <p class="page-subtitle">Find a team, review its roster or create your own.</p>
+    </header>
 
-<style>
-    body {
-        background-color: #0d1117;
-        color: #f0f0f0;
-        font-family: "Segoe UI", Roboto, sans-serif;
-    }
-
-    h1 {
-        color: #ffffff;
-        font-weight: 700;
-        margin-bottom: 25px;
-    }
-
-    /* ========================= */
-    /* FILTER BAR  // FILTER ADDED */
-    /* ========================= */
-    .filter-bar {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin-bottom: 30px;
-    }
-
-    .filter-btn {
-        padding: 8px 20px;
-        border-radius: 10px;
-        font-weight: 600;
-        font-size: 14px;
-        border: none;
-        background: #374151;
-        color: #e5e7eb;
-        transition: 0.2s;
-        cursor: pointer;
-    }
-
-        .filter-btn:hover {
-            background: #4b5563;
-        }
-
-        .filter-btn.active {
-            background: #22c55e;
-            color: #0d1117;
-        }
-
-    /* ========================= */
-    /* TEAM CARDS */
-    /* ========================= */
-    .team-card {
-        background: #161b22;
-        border-radius: 12px;
-        padding: 22px;
-        border: 1px solid #2d333b;
-        transition: 0.25s;
-        min-height: 220px;
-        position: relative;
-    }
-
-        .team-card:hover {
-            border-color: #6366f1;
-            box-shadow: 0 0 10px rgba(99,102,241,0.35);
-        }
-
-    .my-team {
-        border: 2px solid #22c55e !important;
-        box-shadow: 0 0 18px rgba(34,197,94,0.4);
-    }
-
-        .my-team:hover {
-            box-shadow: 0 0 25px rgba(34,197,94,0.6);
-        }
-
-    .my-team-badge {
-        position: absolute;
-        top: 14px;
-        right: 14px;
-        background: #22c55e;
-        color: #0d1117;
-        font-size: 12px;
-        font-weight: 700;
-        padding: 4px 10px;
-        border-radius: 999px;
-        letter-spacing: 0.5px;
-    }
-
-    .other-team {
-        opacity: 0.75;
-    }
-
-    .full-link {
-        position: absolute;
-        inset: 0;
-        z-index: 1;
-    }
-
-    .user-link {
-        color: #58a6ff !important;
-        font-weight: 600;
-        text-decoration: none;
-        position: relative;
-        z-index: 2;
-    }
-
-    .team-actions {
-        position: relative;
-        z-index: 2;
-        margin-top: 12px;
-    }
-
-    .btn-disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-    }
-
-    .create-team-box {
-        background: #161b22;
-        border: 1px dashed #3b82f6;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 30px;
-        text-align: center;
-    }
-
-    /* ========================= */
-    /* TOAST */
-    /* ========================= */
-    .toast-container {
-        position: fixed;
-        bottom: 30px;
-        right: 30px;
-        z-index: 9999;
-    }
-
-    .toast {
-        background: #161b22;
-        color: #f0f0f0;
-        border: 1px solid #2d333b;
-        border-radius: 10px;
-    }
-
-    .toast-success {
-        border-left: 5px solid #22c55e;
-    }
-
-    .toast-warning {
-        border-left: 5px solid #f59e0b;
-    }
-</style>
-
-<div class="container mt-5">
-
-    <h1 class="text-center">Teams</h1>
-
-    <!-- FILTER BAR  // FILTER ADDED -->
-    <div class="filter-bar">
-        <button class="filter-btn active" onclick="filterTeams('all', this)">
-            All Teams
-        </button>
-        <button class="filter-btn" onclick="filterTeams('open', this)">
-            Open Teams
-        </button>
-        <button class="filter-btn" onclick="filterTeams('full', this)">
-            Full Teams
-        </button>
+    <div class="filter-bar" role="group" aria-label="Filter teams">
+        <button type="button" class="filter-btn active" data-team-filter="all" aria-pressed="true">All teams</button>
+        <button type="button" class="filter-btn" data-team-filter="open" aria-pressed="false">Open teams</button>
+        <button type="button" class="filter-btn" data-team-filter="full" aria-pressed="false">Full teams</button>
     </div>
 
-    @if (User.Identity?.IsAuthenticated == true && Model.MyTeam == null)
+    @if (Model.MyTeam == null)
     {
         <div class="create-team-box">
-            <h4>You don’t have a team yet</h4>
-            <p >Create your own team and invite players.</p>
-
-            <a asp-page="/Teams/Create" class="btn btn-success">
-                Create Team
-            </a>
+            <h2 class="section-heading">You don't have a team yet</h2>
+            <p>Create a team and invite players, or request to join an open team.</p>
+            <a asp-page="/Teams/Create" class="btn btn-success">Create team</a>
         </div>
     }
 
-    <div class="row g-4" id="teamsContainer">
-        @foreach (var t in Model.AllTeams)
-        {
-            bool isMyTeam = Model.MyTeam?.Id == t.Id;
-            bool isFull = t.Members.Count >= 5;
+    @if (Model.AllTeams.Count == 0)
+    {
+        <div class="page-empty-state">
+            <strong>No teams yet</strong>
+            <span>Create the first team in the community.</span>
+        </div>
+    }
+    else
+    {
+        <div class="team-grid" id="teamsContainer">
+            @foreach (var team in Model.AllTeams)
+            {
+                var isMyTeam = Model.MyTeam?.Id == team.Id;
+                var isFull = team.Members.Count >= 5;
 
-            <!-- data-status // FILTER ADDED -->
-            <div class="col-lg-4 col-md-6 team-item"
-                 data-status="@(isFull ? "full" : "open")">
-
-                <div class="team-card @(isMyTeam ? "my-team" : "other-team")">
-
-                    <a class="full-link"
-                       asp-page="/Teams/Details"
-                       asp-route-id="@t.Id"></a>
-
-                    @if (isMyTeam)
-                    {
-                        <div class="my-team-badge">
-                            MY TEAM
-                        </div>
-                    }
-
-                    <h3>@t.Name</h3>
-
-                    <p>
-                        <strong>Captain:</strong>
-                        <a asp-page="/UserProfile"
-                           asp-route-id="@t.Captain.Id"
-                           class="user-link">
-                            @t.Captain.Username
+                <article class="team-item" data-status="@(isFull ? "full" : "open")">
+                    <div class="team-card @(isMyTeam ? "my-team" : string.Empty)">
+                        <a class="full-link" asp-page="/Teams/Details" asp-route-id="@team.Id">
+                            <span class="visually-hidden">View @team.Name</span>
                         </a>
-                    </p>
-
-                    <p><strong>Members:</strong> @t.Members.Count / 5</p>
-
-                    <div class="team-actions">
 
                         @if (isMyTeam)
                         {
-                            <a asp-page="/Teams/Details"
-                               asp-route-id="@t.Id"
-                               class="btn btn-success btn-sm">
-                                View Team
-                            </a>
+                            <span class="my-team-badge">My team</span>
                         }
-                        else if (User.Identity?.IsAuthenticated == true)
-                        {
-                            if (isFull)
+
+                        <h2>@team.Name</h2>
+                        <p>
+                            <strong>Captain:</strong>
+                            <a asp-page="/UserProfile" asp-route-id="@team.Captain.Id" class="user-link">@team.Captain.Username</a>
+                        </p>
+                        <p><strong>Members:</strong> @team.Members.Count / 5</p>
+
+                        <div class="team-actions">
+                            @if (isMyTeam)
                             {
-                                <span style="color:#ff8f8f; font-weight:600;">
-                                    Team is full (5/5)
-                                </span>
+                                <a asp-page="/Teams/Details" asp-route-id="@team.Id" class="btn btn-success btn-sm">View team</a>
                             }
-                            else if (Model.MyTeam == null && !Model.PendingRequests.Contains(t.Id))
+                            else if (isFull)
+                            {
+                                <span class="team-status-text team-status-full">Team is full</span>
+                            }
+                            else if (Model.MyTeam == null && !Model.PendingRequests.Contains(team.Id))
                             {
                                 if (string.IsNullOrWhiteSpace(Model.CurrentUser.SteamId) || Model.CurrentUser.SteamId == "0")
                                 {
-                                    <button type="button"
-                                            class="btn btn-secondary btn-sm btn-disabled"
-                                            onclick="requireSteamId()">
-                                        Request Join
-                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-sm btn-disabled" onclick="requireSteamId()">Request to join</button>
                                 }
                                 else
                                 {
                                     <form method="post" asp-page-handler="Join">
-                                        <input type="hidden" name="teamId" value="@t.Id" />
-                                        <button class="btn btn-primary btn-sm"
-                                                type="submit"
-                                                onclick="requestSent()">
-                                            Request Join
-                                        </button>
+                                        <input type="hidden" name="teamId" value="@team.Id" />
+                                        <button class="btn btn-primary btn-sm" type="submit">Request to join</button>
                                     </form>
                                 }
                             }
-                            else if (Model.PendingRequests.Contains(t.Id))
+                            else if (Model.PendingRequests.Contains(team.Id))
                             {
-                                <span style="color:#aaa;">Request sent…</span>
+                                <span class="team-status-text">Request pending</span>
                             }
-                        }
-                        else
-                        {
-                            <button class="btn btn-primary btn-sm"
-                                    type="button"
-                                    onclick="requireLogin()">
-                                Request Join
-                            </button>
-                        }
-
+                        </div>
                     </div>
+                </article>
+            }
+        </div>
+    }
+</section>
 
-                </div>
-            </div>
-        }
-    </div>
-</div>
-
-<!-- TOAST (NE DIRAMO) -->
 <div class="toast-container">
-    <div id="appToast" class="toast align-items-center" role="alert">
+    <div id="appToast" class="toast align-items-center" role="status" aria-live="polite">
         <div class="d-flex">
             <div class="toast-body" id="toastMessage"></div>
-            <button type="button"
-                    class="btn-close btn-close-white me-2 m-auto"
-                    data-bs-dismiss="toast"></button>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close notification"></button>
         </div>
     </div>
 </div>
 
-<script>
-    function filterTeams(type, btn) {
-        document.querySelectorAll(".filter-btn")
-            .forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-
-        document.querySelectorAll(".team-item").forEach(card => {
-            if (type === "all") {
-                card.style.display = "block";
-            } else {
-                card.style.display =
-                    card.dataset.status === type ? "block" : "none";
-            }
-        });
-    }
-
-    function showToast(message, type) {
-        const toastEl = document.getElementById("appToast");
-        const toastBody = document.getElementById("toastMessage");
-
-        toastEl.classList.remove("toast-success", "toast-warning");
-        toastEl.classList.add(type === "success" ? "toast-success" : "toast-warning");
-
-        toastBody.innerText = message;
-        new bootstrap.Toast(toastEl, { delay: 3000 }).show();
-    }
-
-    function requireSteamId() {
-        showToast("You must add your SteamID in your profile before requesting to join a team.", "warning");
-    }
-
-    function requestSent() {
-        showToast("Join request sent. Waiting for captain approval.", "success");
-    }
-</script>
-
-@if (TempData["Error"] != null)
-{
+@section Scripts {
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            showToast("@TempData["Error"]", "warning");
+        function showToast(message, type) {
+            const toastElement = document.getElementById("appToast");
+            const toastBody = document.getElementById("toastMessage");
+            toastElement.classList.remove("toast-success", "toast-warning");
+            toastElement.classList.add(type === "success" ? "toast-success" : "toast-warning");
+            toastBody.textContent = message;
+            new bootstrap.Toast(toastElement, { delay: 3000 }).show();
+        }
+
+        function requireSteamId() {
+            showToast("Add your Steam ID in your profile before requesting to join a team.", "warning");
+        }
+
+        document.querySelectorAll("[data-team-filter]").forEach((button) => {
+            button.addEventListener("click", () => {
+                const filter = button.dataset.teamFilter;
+                document.querySelectorAll("[data-team-filter]").forEach((item) => {
+                    const isActive = item === button;
+                    item.classList.toggle("active", isActive);
+                    item.setAttribute("aria-pressed", String(isActive));
+                });
+
+                document.querySelectorAll(".team-item").forEach((card) => {
+                    card.hidden = filter !== "all" && card.dataset.status !== filter;
+                });
+            });
         });
     </script>
-}
 
-@if (TempData["Message"] != null)
-{
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            showToast("@TempData["Message"]", "success");
-        });
-    </script>
+    @if (TempData["Error"] is string errorMessage)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                showToast(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(errorMessage)), "warning");
+            });
+        </script>
+    }
+
+    @if (TempData["Message"] is string successMessage)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                showToast(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(successMessage)), "success");
+            });
+        </script>
+    }
 }

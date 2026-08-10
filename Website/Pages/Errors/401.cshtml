@@ -1,16 +1,12 @@
-﻿@page
+@page
 @model Website.Pages.Errors._401Model
 @{
+    ViewData["Title"] = "Authentication required";
 }
 
-<h1>
-    401 Unauthorized
-</h1>
-
-<br />
-
-<p>
-    It seems to appear you do not have the access to view this page.
-</p>
-
-<img src="https://http.cat/401" style="display: block; margin-left: auto; margin-right: auto;">
+<section class="error-page">
+    <p class="error-code">401</p>
+    <h1>Authentication required</h1>
+    <p>Log in to access this page.</p>
+    <a asp-page="/Login" class="btn btn-primary">Go to login</a>
+</section>

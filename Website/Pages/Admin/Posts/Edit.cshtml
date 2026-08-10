@@ -1,89 +1,49 @@
-﻿@page "{id:int}"
+@page "{id:int}"
 @model Website.Pages.Admin.Posts.EditModel
 @{
     ViewData["Title"] = "Edit post";
 }
 
-<div class="row justify-content-center">
-    <div class="col-lg-8">
+<section class="admin-shell admin-form-shell">
+    <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+        <a asp-page="/Admin/Index">Administration</a><span>/</span><a asp-page="/Admin/Posts/Manage">Posts</a><span>/</span><span>Edit</span>
+    </nav>
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold">✏️ Edit post</h2>
+    <header class="admin-page-header">
+        <p class="admin-eyebrow">Update content</p>
+        <h1>Edit post</h1>
+        <p>Update the announcement text or replace its cover image.</p>
+    </header>
 
-            <a asp-page="Manage" class="btn btn-outline-secondary btn-sm">
-                ← Back to posts
-            </a>
+    <form method="post" enctype="multipart/form-data" class="admin-panel admin-form-card">
+        <input type="hidden" asp-for="Post.Id" />
+        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+        <div class="mb-3">
+            <label asp-for="Post.Title" class="form-label">Title</label>
+            <input asp-for="Post.Title" class="form-control" maxlength="200" required />
+        </div>
+        <div class="mb-3">
+            <label asp-for="Post.Content" class="form-label">Content</label>
+            <textarea asp-for="Post.Content" class="form-control" rows="10" required></textarea>
         </div>
 
-        <div class="card bg-dark border-secondary">
-            <div class="card-body p-4">
-
-                <form method="post" enctype="multipart/form-data">
-
-                    <input type="hidden" asp-for="Post.Id" />
-
-                    <!-- TITLE -->
-                    <div class="mb-3">
-                        <label class="form-label text-light fw-semibold">
-                            Title
-                        </label>
-                        <input asp-for="Post.Title"
-                               class="form-control bg-dark text-light border-secondary"
-                               required />
-                    </div>
-
-                    <!-- CONTENT -->
-                    <div class="mb-3">
-                        <label class="form-label text-light fw-semibold">
-                            Content
-                        </label>
-                        <textarea asp-for="Post.Content"
-                                  class="form-control bg-dark text-light border-secondary"
-                                  rows="8"
-                                  required></textarea>
-                    </div>
-
-                    <!-- CURRENT IMAGE -->
-                    @if (!string.IsNullOrEmpty(Model.Post.ImagePath))
-                    {
-                        <div class="mb-3">
-                            <label class="form-label text-light fw-semibold">
-                                Current image
-                            </label>
-                            <div class="mt-2">
-                                <img src="@Model.Post.ImagePath"
-                                     class="img-fluid rounded border border-secondary"
-                                     style="max-height:220px;" />
-                            </div>
-                        </div>
-                    }
-
-                    <!-- NEW IMAGE -->
-                    <div class="mb-4">
-                        <label class="form-label text-light fw-semibold">
-                            Replace image (optional)
-                        </label>
-                        <input asp-for="Image"
-                               type="file"
-                               class="form-control bg-dark text-light border-secondary" />
-                    </div>
-
-                    <!-- ACTIONS -->
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary px-4">
-                            Save changes
-                        </button>
-
-                        <a asp-page="Manage" class="btn btn-secondary px-4">
-                            Cancel
-                        </a>
-                    </div>
-
-                </form>
-
+        @if (!string.IsNullOrEmpty(Model.Post.ImagePath))
+        {
+            <div class="mb-3">
+                <span class="form-label d-block">Current image</span>
+                <img src="@Model.Post.ImagePath" class="admin-current-image" alt="Current post cover" />
             </div>
+        }
+
+        <div class="mb-3">
+            <label asp-for="Image" class="form-label">Replace image (optional)</label>
+            <input asp-for="Image" class="form-control" type="file" accept="image/*" />
         </div>
 
-    </div>
-</div>
-
+        <div class="admin-form-actions">
+            <button type="submit" class="btn btn-primary">Save changes</button>
+            <a asp-page="/Admin/Posts/Manage" class="btn btn-outline-light">Cancel</a>
+        </div>
+    </form>
+</section>

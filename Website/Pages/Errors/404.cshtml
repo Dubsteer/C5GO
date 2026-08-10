@@ -1,11 +1,11 @@
-﻿@page
+@page
 @{
-    ViewData["Title"] = "Not Found";
+    ViewData["Title"] = "Page not found";
 }
 
-<div class="text-center mt-5">
-    <h1 class="display-4">404</h1>
-    <p>Page not found.</p>
-
-    <a href="/" class="btn btn-secondary mt-3">Back to home</a>
-</div>
+<section class="error-page">
+    <p class="error-code">404</p>
+    <h1>Page not found</h1>
+    <p>The page may have been moved, renamed or removed.</p>
+    <a asp-page="/Index" class="btn btn-primary">Return home</a>
+</section>

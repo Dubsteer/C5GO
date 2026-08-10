@@ -1,4 +1,30 @@
-﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
+function requireLogin() {
+    const overlay = document.getElementById("loginOverlay");
+    if (!overlay) {
+        return;
+    }
 
-// Write your JavaScript code.
+    overlay.classList.remove("hidden");
+    overlay.querySelector("a, button")?.focus();
+}
+
+function closeLoginModal() {
+    document.getElementById("loginOverlay")?.classList.add("hidden");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const overlay = document.getElementById("loginOverlay");
+    document.querySelector("[data-close-login-modal]")?.addEventListener("click", closeLoginModal);
+
+    overlay?.addEventListener("click", (event) => {
+        if (event.target === overlay) {
+            closeLoginModal();
+        }
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+            closeLoginModal();
+        }
+    });
+});

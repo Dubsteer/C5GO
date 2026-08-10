@@ -101,10 +101,74 @@ namespace Unit_Tests
                 CreatePlayer(4)
             };
             var tournament = CreateTournament(1, "Test Tournament");
+            tournaments.Add(tournament);
 
             tournamentManager.GenerateSoloBracket(players, tournament);
 
             Assert.AreEqual(2, tournamentManager.GetAllMatchesInTournament(tournament).Count);
+            Assert.AreEqual(Status.InProgress, tournament.Status);
+        }
+
+        [TestMethod]
+        public void TestCreateTournamentRejectsBlankName()
+        {
+            var tournament = CreateTournament(1, " ");
+
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => tournamentManager.AddTournament(tournament));
+            Assert.AreEqual(0, tournaments.Count);
+        }
+
+        [TestMethod]
+        public void TestSoloBracketRequiresEvenPlayerCount()
+        {
+            var tournament = CreateTournament(1, "Tournament");
+            tournaments.Add(tournament);
+            var players = new List<Player> { CreatePlayer(1), CreatePlayer(2), CreatePlayer(3) };
+
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => tournamentManager.GenerateSoloBracket(players, tournament));
+            Assert.AreEqual(0, matches.Count);
+        }
+
+        [TestMethod]
+        public void TestParticipantCannotBeRemovedAfterBracketGeneration()
+        {
+            var tournament = CreateTournament(1, "Tournament");
+            var player1 = CreatePlayer(1);
+            var player2 = CreatePlayer(2);
+            tournament.Players.AddRange(new[] { player1, player2 });
+            tournaments.Add(tournament);
+            tournamentManager.GenerateSoloBracket(tournament.Players, tournament);
+
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => tournamentManager.RemovePlayerFromTournament(player1, tournament));
+            Assert.AreEqual(2, tournament.Players.Count);
+        }
+
+        [TestMethod]
+        public void TestDuplicateSoloRegistrationIsRejected()
+        {
+            var tournament = CreateTournament(1, "Tournament");
+            var player = CreatePlayer(1);
+            tournament.Players.Add(player);
+            tournaments.Add(tournament);
+
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => tournamentManager.AddTournamentApp(player, tournament));
+            Assert.AreEqual(1, tournament.Players.Count);
+        }
+
+        [TestMethod]
+        public void TestRegistrationIsRejectedWhenTournamentIsClosed()
+        {
+            var tournament = CreateTournament(1, "Tournament");
+            tournament.Status = Status.Closed;
+            tournaments.Add(tournament);
+
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => tournamentManager.AddTournamentApp(CreatePlayer(1), tournament));
+            Assert.AreEqual(0, tournament.Players.Count);
         }
 
         [TestMethod]

@@ -5,20 +5,25 @@ namespace Unit_Tests.MockRepos
 {
     public class MockTeamMatchRepo : ITeamMatchRepo
     {
-        private readonly List<TeamMatch> matches = new();
+        public List<TeamMatch> Matches { get; }
 
-        public List<TeamMatch> GetAllTeamMatches() => matches;
+        public MockTeamMatchRepo(List<TeamMatch>? matches = null)
+        {
+            Matches = matches ?? new List<TeamMatch>();
+        }
 
-        public void AddTeamMatch(TeamMatch match) => matches.Add(match);
+        public List<TeamMatch> GetAllTeamMatches() => Matches;
+
+        public void AddTeamMatch(TeamMatch match) => Matches.Add(match);
 
         public void UpdateTeamMatch(TeamMatch match)
         {
-            var index = matches.FindIndex(m => m.Id == match.Id);
+            var index = Matches.FindIndex(m => m.Id == match.Id);
             if (index >= 0)
-                matches[index] = match;
+                Matches[index] = match;
         }
 
         public void RemoveTeamMatch(TeamMatch match) =>
-            matches.RemoveAll(m => m.Id == match.Id);
+            Matches.RemoveAll(m => m.Id == match.Id);
     }
 }

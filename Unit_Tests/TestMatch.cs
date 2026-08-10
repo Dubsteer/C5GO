@@ -70,6 +70,39 @@ namespace Unit_Tests
             Assert.AreEqual(2, matches[0].Player1Score);
         }
 
+        [TestMethod]
+        public void TestUpdateResult()
+        {
+            var match = CreateMatch(1);
+            matches.Add(match);
+            var matchDate = DateTime.Now.AddDays(1);
+
+            matchManager.UpdateResult(1, 1, 13, 8, Status.Closed, matchDate);
+
+            Assert.AreEqual(13, match.Player1Score);
+            Assert.AreEqual(8, match.Player2Score);
+            Assert.AreEqual(Status.Closed, match.Status);
+            Assert.AreEqual(matchDate, match.MatchDate);
+        }
+
+        [TestMethod]
+        public void TestClosedResultRequiresWinner()
+        {
+            matches.Add(CreateMatch(1));
+
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => matchManager.UpdateResult(1, 1, 13, 13, Status.Closed, DateTime.Now));
+        }
+
+        [TestMethod]
+        public void TestResultCannotBeMovedToAnotherTournament()
+        {
+            matches.Add(CreateMatch(1));
+
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => matchManager.UpdateResult(1, 2, 13, 8, Status.Closed, DateTime.Now));
+        }
+
         private static Match CreateMatch(int id)
         {
             var player1 = new Player(1, "Player", "One", 20, "player1", "p1@test.local", "password", "steam1", false);

@@ -26,6 +26,10 @@
             <span>Posts</span>
             <strong>@Model.PostCount</strong>
         </article>
+        <article class="admin-stat-card">
+            <span>Tournaments</span>
+            <strong>@Model.TournamentCount</strong>
+        </article>
     </div>
 
     <div class="admin-action-grid">
@@ -43,11 +47,11 @@
             <strong>Open posts</strong>
         </a>
 
-        <article class="admin-action-card admin-action-card-muted">
+        <a asp-page="/Admin/Tournaments/Index" class="admin-action-card">
             <span class="admin-action-number">03</span>
             <h2>Tournament management</h2>
-            <p>Web tournament, bracket and result tools are the next project step.</p>
-            <strong>Coming next</strong>
-        </article>
+            <p>Create tournaments, manage participants, generate brackets and enter results.</p>
+            <strong>Open tournaments</strong>
+        </a>
     </div>
 </section>

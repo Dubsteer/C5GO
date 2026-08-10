@@ -31,6 +31,12 @@ namespace LogicLayer.Managers
                        .ToList();
         }
 
+        public TeamMatch GetTeamMatchById(int id)
+        {
+            return GetAllTeamMatches().FirstOrDefault(match => match.Id == id)
+                ?? throw new InvalidOperationException("Team match was not found.");
+        }
+
         // ================================
         // ADD / UPDATE / REMOVE
         // ================================
@@ -44,6 +50,28 @@ namespace LogicLayer.Managers
             repo.UpdateTeamMatch(match);
         }
 
+        public void UpdateResult(
+            int matchId,
+            int tournamentId,
+            int team1Score,
+            int team2Score,
+            Status status,
+            DateTime matchDate)
+        {
+            var match = GetTeamMatchById(matchId);
+
+            if (match.TournamentId != tournamentId)
+                throw new InvalidOperationException("Match does not belong to this tournament.");
+
+            ValidateResult(team1Score, team2Score, status, matchDate);
+
+            match.Team1Score = team1Score;
+            match.Team2Score = team2Score;
+            match.Status = status;
+            match.MatchDate = matchDate;
+            repo.UpdateTeamMatch(match);
+        }
+
         public void RemoveTeamMatch(TeamMatch match)
         {
             repo.RemoveTeamMatch(match);
@@ -52,20 +80,27 @@ namespace LogicLayer.Managers
         // ================================
         // GENERATE TEAM BRACKET
         // ================================
-        public void GenerateTeamBracket(List<int> teamIds, int tournamentId)
+        public void GenerateTeamBracket(List<int> teamIds, int tournamentId, bool replaceExisting = false)
         {
-            // CLEAN OLD MATCHES
+            if (teamIds == null)
+                throw new ArgumentNullException(nameof(teamIds));
+
+            var uniqueTeamIds = teamIds.Distinct().ToList();
+            if (uniqueTeamIds.Count != teamIds.Count)
+                throw new InvalidOperationException("A team can appear only once in a bracket.");
+
+            if (!(uniqueTeamIds.Count == 8 || uniqueTeamIds.Count == 12 || uniqueTeamIds.Count == 16))
+                throw new InvalidOperationException("Team bracket requires 8, 12 or 16 teams.");
+
             var existing = GetTeamMatchesByTournament(tournamentId);
-            foreach (var m in existing)
-                RemoveTeamMatch(m);
+            if (existing.Count > 0 && !replaceExisting)
+                throw new InvalidOperationException("A bracket already exists for this tournament.");
 
-            // SHUFFLE TEAMS
+            foreach (var match in existing)
+                RemoveTeamMatch(match);
+
             var rnd = new Random();
-            var shuffled = teamIds.OrderBy(x => rnd.Next()).ToList();
-
-            // ❗ TURNIR MORA BITI 8, 12 ILI 16 TIMOVA
-            if (!(shuffled.Count == 8 || shuffled.Count == 12 || shuffled.Count == 16))
-                throw new Exception("Team bracket requires 8, 12 or 16 teams.");
+            var shuffled = uniqueTeamIds.OrderBy(_ => rnd.Next()).ToList();
 
             // PAIRING (ROUND 1)
             for (int i = 0; i < shuffled.Count - 1; i += 2)
@@ -73,8 +108,8 @@ namespace LogicLayer.Managers
                 var match = new TeamMatch(
                     0,
                     tournamentId,
-                    new Team(shuffled[i], "", null),
-                    new Team(shuffled[i + 1], "", null),
+                    new Team(shuffled[i], "", null!),
+                    new Team(shuffled[i + 1], "", null!),
                     0,
                     0,
                     DateTime.Now,
@@ -83,6 +118,21 @@ namespace LogicLayer.Managers
 
                 AddTeamMatch(match);
             }
+        }
+
+        private static void ValidateResult(int score1, int score2, Status status, DateTime matchDate)
+        {
+            if (!Enum.IsDefined(status))
+                throw new InvalidOperationException("Select a valid match status.");
+
+            if (matchDate.Year < 2000 || matchDate.Year > 2100)
+                throw new InvalidOperationException("Select a valid match date.");
+
+            if (score1 < 0 || score1 > 99 || score2 < 0 || score2 > 99)
+                throw new InvalidOperationException("Scores must be between 0 and 99.");
+
+            if (status == Status.Closed && score1 == score2)
+                throw new InvalidOperationException("A closed bracket match must have a winner.");
         }
     }
 }

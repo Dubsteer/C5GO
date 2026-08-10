@@ -1,0 +1,284 @@
+@page "{id:int}"
+@using LogicLayer.Enums
+@model Website.Pages.Admin.Tournaments.DetailsModel
+@{
+    ViewData["Title"] = $"Manage {Model.Tournament.Name}";
+}
+
+<section class="admin-shell">
+    <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+        <a asp-page="/Admin/Index">Administration</a>
+        <span>/</span>
+        <a asp-page="/Admin/Tournaments/Index">Tournaments</a>
+        <span>/</span>
+        <span>@Model.Tournament.Name</span>
+    </nav>
+
+    <header class="admin-page-header admin-page-header-row">
+        <div>
+            <p class="admin-eyebrow">Tournament workspace</p>
+            <h1>@Model.Tournament.Name</h1>
+            <p>
+                @(Model.Tournament.IsTeamTournament ? $"Team {Model.Tournament.TeamSizeRequired}v{Model.Tournament.TeamSizeRequired}" : "Solo")
+                · @Model.Tournament.Status
+            </p>
+        </div>
+        <a asp-page="/Tournaments/Details" asp-route-id="@Model.Tournament.Id" class="btn btn-outline-light">Open public page</a>
+    </header>
+
+    @if (TempData["SuccessMessage"] is string successMessage)
+    {
+        <div class="alert alert-success" role="status">@successMessage</div>
+    }
+    @if (TempData["ErrorMessage"] is string errorMessage)
+    {
+        <div class="alert alert-danger" role="alert">@errorMessage</div>
+    }
+
+    <div class="admin-workspace-grid">
+        <article class="admin-panel">
+            <div class="admin-panel-heading">
+                <div>
+                    <span class="admin-section-number">01</span>
+                    <h2>Settings</h2>
+                </div>
+                <span class="admin-badge admin-status-@Model.Tournament.Status.ToString().ToLowerInvariant()">@Model.Tournament.Status</span>
+            </div>
+
+            <form method="post" asp-page-handler="UpdateSettings" asp-route-id="@Model.Tournament.Id">
+                <div class="mb-3">
+                    <label for="tournamentName" class="form-label">Name</label>
+                    <input id="tournamentName" name="name" value="@Model.Tournament.Name" class="form-control" maxlength="50" required />
+                </div>
+                <div class="mb-3">
+                    <label for="tournamentDescription" class="form-label">Description</label>
+                    <textarea id="tournamentDescription" name="description" class="form-control" maxlength="300" rows="4" required>@Model.Tournament.Description</textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="tournamentStatus" class="form-label">Status</label>
+                    <select id="tournamentStatus" name="status" class="form-select">
+                        @foreach (var status in Enum.GetValues<Status>())
+                        {
+                            if (status == Model.Tournament.Status)
+                            {
+                                <option value="@status" selected>@status</option>
+                            }
+                            else
+                            {
+                                <option value="@status">@status</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Save settings</button>
+            </form>
+        </article>
+
+        <article class="admin-panel">
+            <div class="admin-panel-heading">
+                <div>
+                    <span class="admin-section-number">02</span>
+                    <h2>@(Model.Tournament.IsTeamTournament ? "Teams" : "Players")</h2>
+                </div>
+                <span class="admin-count-pill">
+                    @(Model.Tournament.IsTeamTournament ? Model.RegisteredTeams.Count : Model.Players.Count)
+                </span>
+            </div>
+
+            @if (Model.HasBracket)
+            {
+                <p class="admin-inline-notice">The participant list is locked while a bracket exists.</p>
+            }
+
+            @if (Model.Tournament.IsTeamTournament)
+            {
+                @if (!Model.HasBracket && Model.AvailableTeams.Count > 0)
+                {
+                    <form method="post" asp-page-handler="AddTeam" asp-route-id="@Model.Tournament.Id" class="admin-inline-form">
+                        <select name="teamId" class="form-select" aria-label="Team to add" required>
+                            <option value="">Choose a team</option>
+                            @foreach (var team in Model.AvailableTeams)
+                            {
+                                <option value="@team.Id">@team.Name (@team.Members.Count/@Model.Tournament.TeamSizeRequired players)</option>
+                            }
+                        </select>
+                        <button type="submit" class="btn btn-success">Add team</button>
+                    </form>
+                }
+
+                @if (Model.RegisteredTeams.Count == 0)
+                {
+                    <div class="admin-empty-compact">No teams are registered.</div>
+                }
+                else
+                {
+                    <div class="admin-roster-list">
+                        @foreach (var team in Model.RegisteredTeams)
+                        {
+                            <div class="admin-roster-item">
+                                <div>
+                                    <strong>@team.Name</strong>
+                                    <span>@team.Members.Count/@Model.Tournament.TeamSizeRequired players · Captain: @team.Captain.Username</span>
+                                </div>
+                                @if (!Model.HasBracket)
+                                {
+                                    <form method="post" asp-page-handler="RemoveTeam" asp-route-id="@Model.Tournament.Id"
+                                          onsubmit="return confirm('Remove this team from the tournament?');">
+                                        <input type="hidden" name="teamId" value="@team.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                    </form>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                @if (Model.Players.Count == 0)
+                {
+                    <div class="admin-empty-compact">No players are registered.</div>
+                }
+                else
+                {
+                    <div class="admin-roster-list">
+                        @foreach (var player in Model.Players)
+                        {
+                            <div class="admin-roster-item">
+                                <div>
+                                    <strong>@player.Username</strong>
+                                    <span>@player.Firstname @player.Lastname</span>
+                                </div>
+                                @if (!Model.HasBracket)
+                                {
+                                    <form method="post" asp-page-handler="RemovePlayer" asp-route-id="@Model.Tournament.Id"
+                                          onsubmit="return confirm('Remove this player from the tournament?');">
+                                        <input type="hidden" name="playerId" value="@player.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                    </form>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            }
+        </article>
+    </div>
+
+    <article class="admin-panel admin-bracket-panel">
+        <div class="admin-panel-heading admin-panel-heading-responsive">
+            <div>
+                <span class="admin-section-number">03</span>
+                <h2>Opening-round bracket</h2>
+                <p>Generate pairings, schedule matches and publish results.</p>
+            </div>
+            <form method="post" asp-page-handler="GenerateBracket" asp-route-id="@Model.Tournament.Id"
+                  onsubmit="return confirm('@(Model.HasBracket ? "Regenerate the bracket and permanently remove its current results?" : "Generate random opening-round pairings?")');">
+                <input type="hidden" name="replaceExisting" value="@Model.HasBracket.ToString().ToLowerInvariant()" />
+                <button type="submit" class="btn @(Model.HasBracket ? "btn-outline-warning" : "btn-success")">
+                    @(Model.HasBracket ? "Regenerate bracket" : "Generate bracket")
+                </button>
+            </form>
+        </div>
+
+        @if (!Model.HasBracket)
+        {
+            <div class="admin-empty-compact">
+                @if (Model.Tournament.IsTeamTournament)
+                {
+                    <span>A team bracket requires 8, 12 or 16 complete teams.</span>
+                }
+                else
+                {
+                    <span>A solo bracket requires an even number of at least two players.</span>
+                }
+            </div>
+        }
+        else if (Model.Tournament.IsTeamTournament)
+        {
+            <div class="admin-match-grid">
+                @foreach (var match in Model.TeamMatches)
+                {
+                    <form method="post" asp-page-handler="UpdateTeamMatch" asp-route-id="@Model.Tournament.Id" class="admin-match-card">
+                        <input type="hidden" name="matchId" value="@match.Id" />
+                        <div class="admin-match-title">
+                            <strong>@match.Team1.Name</strong>
+                            <span>vs</span>
+                            <strong>@match.Team2.Name</strong>
+                        </div>
+                        <div class="admin-score-row">
+                            <label>
+                                <span>@match.Team1.Name</span>
+                                <input name="score1" type="number" min="0" max="99" value="@match.Team1Score" class="form-control" required />
+                            </label>
+                            <label>
+                                <span>@match.Team2.Name</span>
+                                <input name="score2" type="number" min="0" max="99" value="@match.Team2Score" class="form-control" required />
+                            </label>
+                        </div>
+                        <div class="admin-match-controls">
+                            <input name="matchDate" type="datetime-local" value="@match.MatchDate.ToString("yyyy-MM-ddTHH:mm")" class="form-control" required />
+                            <select name="matchStatus" class="form-select">
+                                @foreach (var status in Enum.GetValues<Status>())
+                                {
+                                    if (status == match.Status)
+                                    {
+                                        <option value="@status" selected>@status</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@status">@status</option>
+                                    }
+                                }
+                            </select>
+                            <button type="submit" class="btn btn-primary">Save result</button>
+                        </div>
+                    </form>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="admin-match-grid">
+                @foreach (var match in Model.SoloMatches)
+                {
+                    <form method="post" asp-page-handler="UpdateSoloMatch" asp-route-id="@Model.Tournament.Id" class="admin-match-card">
+                        <input type="hidden" name="matchId" value="@match.Id" />
+                        <div class="admin-match-title">
+                            <strong>@match.User1.Username</strong>
+                            <span>vs</span>
+                            <strong>@match.User2.Username</strong>
+                        </div>
+                        <div class="admin-score-row">
+                            <label>
+                                <span>@match.User1.Username</span>
+                                <input name="score1" type="number" min="0" max="99" value="@match.Player1Score" class="form-control" required />
+                            </label>
+                            <label>
+                                <span>@match.User2.Username</span>
+                                <input name="score2" type="number" min="0" max="99" value="@match.Player2Score" class="form-control" required />
+                            </label>
+                        </div>
+                        <div class="admin-match-controls">
+                            <input name="matchDate" type="datetime-local" value="@match.MatchDate.ToString("yyyy-MM-ddTHH:mm")" class="form-control" required />
+                            <select name="matchStatus" class="form-select">
+                                @foreach (var status in Enum.GetValues<Status>())
+                                {
+                                    if (status == match.Status)
+                                    {
+                                        <option value="@status" selected>@status</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@status">@status</option>
+                                    }
+                                }
+                            </select>
+                            <button type="submit" class="btn btn-primary">Save result</button>
+                        </div>
+                    </form>
+                }
+            </div>
+        }
+    </article>
+</section>

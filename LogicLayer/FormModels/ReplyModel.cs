@@ -1,5 +1,8 @@
-﻿public class ReplyModel
+namespace LogicLayer.FormModels
 {
-    public string ReplyText { get; set; } = "";
-    public int replyCommentId { get; set; }
+    public sealed class ReplyModel
+    {
+        public string ReplyText { get; set; } = string.Empty;
+        public int CommentId { get; set; }
+    }
 }

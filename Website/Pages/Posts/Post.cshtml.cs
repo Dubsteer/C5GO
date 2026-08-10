@@ -1,9 +1,11 @@
 using LogicLayer.FormModels;
 using LogicLayer.Managers;
 using LogicLayer.Models;
+using LogicLayer.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Net;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Website.Models;
 
 namespace Website.Pages.Posts
 {
@@ -16,13 +18,16 @@ namespace Website.Pages.Posts
         [BindProperty(SupportsGet = true)]
         public int Id { get; set; }
 
+        [BindProperty]
+        public CommentModel NewComment { get; set; } = new();
+
+        [BindProperty]
+        public ReplyModel NewReply { get; set; } = new();
+
         public Post Post { get; set; } = null!;
         public List<Comment> Comments { get; set; } = [];
         public User? CurrentUser { get; set; }
-
-
-        [BindProperty] public CommentModel NewComment { get; set; } = new();
-        [BindProperty] public ReplyModel NewReply { get; set; } = new();
+        public IReadOnlyList<PostContentBlock> ContentBlocks { get; set; } = [];
 
         public PostModel(
             PostManager postManager,
@@ -32,6 +37,118 @@ namespace Website.Pages.Posts
             this.postManager = postManager;
             this.userManager = userManager;
             this.commentManager = commentManager;
+        }
+
+        public IActionResult OnGet()
+        {
+            return LoadData() ? Page() : NotFound();
+        }
+
+        public IActionResult OnPostSubmitComment()
+        {
+            if (!LoadData())
+                return NotFoundResponse("Post was not found.");
+
+            if (CurrentUser == null)
+                return AuthenticationRequired();
+
+            try
+            {
+                commentManager.AddComment(new Comment(
+                    0,
+                    CurrentUser,
+                    NewComment.CommentText,
+                    DateTime.Now,
+                    Id));
+            }
+            catch (ArgumentException exception)
+            {
+                return ValidationError(exception.Message, nameof(NewComment));
+            }
+
+            return MutationSucceeded();
+        }
+
+        public IActionResult OnPostSubmitReply()
+        {
+            if (!LoadData())
+                return NotFoundResponse("Post was not found.");
+
+            if (CurrentUser == null)
+                return AuthenticationRequired();
+
+            var parentComment = commentManager.GetCommentById(NewReply.CommentId);
+            if (parentComment == null || parentComment.PostId != Id)
+                return NotFoundResponse("Comment was not found.");
+
+            try
+            {
+                commentManager.AddReply(new CommentReply(
+                    0,
+                    NewReply.ReplyText,
+                    DateTime.Now,
+                    parentComment.Id,
+                    CurrentUser));
+            }
+            catch (ArgumentException exception)
+            {
+                return ValidationError(exception.Message, nameof(NewReply));
+            }
+
+            return MutationSucceeded();
+        }
+
+        public IActionResult OnPostDeleteComment(int cid)
+        {
+            if (!LoadData())
+                return NotFoundResponse("Post was not found.");
+
+            if (CurrentUser == null)
+                return AuthenticationRequired();
+
+            var comment = commentManager.GetCommentById(cid);
+            if (comment == null || comment.PostId != Id)
+                return NotFoundResponse("Comment was not found.");
+
+            if (!CurrentUser.IsAdmin && CurrentUser.Id != comment.User.Id)
+                return ForbiddenResponse();
+
+            commentManager.DeleteComment(comment);
+            return MutationSucceeded();
+        }
+
+        public IActionResult OnPostDeleteReply(int rid)
+        {
+            if (!LoadData())
+                return NotFoundResponse("Post was not found.");
+
+            if (CurrentUser == null)
+                return AuthenticationRequired();
+
+            var reply = commentManager.GetReplyById(rid);
+            if (reply == null)
+                return NotFoundResponse("Reply was not found.");
+
+            var parentComment = commentManager.GetCommentById(reply.CommentId);
+            if (parentComment == null || parentComment.PostId != Id)
+                return NotFoundResponse("Reply was not found.");
+
+            if (!CurrentUser.IsAdmin && CurrentUser.Id != reply.User.Id)
+                return ForbiddenResponse();
+
+            commentManager.DeleteReply(reply);
+            return MutationSucceeded();
+        }
+
+        public PostCommentsViewModel CreateCommentsViewModel()
+        {
+            return new PostCommentsViewModel
+            {
+                PostId = Id,
+                Comments = Comments,
+                CurrentUser = CurrentUser,
+                IsAuthenticated = User.Identity?.IsAuthenticated == true
+            };
         }
 
         private bool LoadData()
@@ -44,105 +161,69 @@ namespace Website.Pages.Posts
                 return false;
 
             Post = post;
-            Post.Content = WebUtility.HtmlDecode(Post.Content);
-
+            ContentBlocks = PostContentParser.Parse(post.Content);
             Comments = commentManager.GetAllCommentsWithReplies(Id);
 
-            if (User.Identity?.IsAuthenticated == true)
+            if (User.Identity?.IsAuthenticated == true &&
+                int.TryParse(User.FindFirst("id")?.Value, out var userId))
             {
-                if (int.TryParse(User.FindFirst("id")?.Value, out var userId))
-                    CurrentUser = userManager.GetUserById(userId);
+                CurrentUser = userManager.GetUserById(userId);
             }
 
             return true;
         }
 
-        public IActionResult OnGet()
+        private IActionResult MutationSucceeded()
         {
-            if (!LoadData())
-                return RedirectToPage("/Error");
+            if (!IsAjaxRequest())
+                return RedirectToPage("Post", new { Id });
 
-            return Page();
-        }
+            Comments = commentManager.GetAllCommentsWithReplies(Id);
+            var viewData = new ViewDataDictionary<PostCommentsViewModel>(ViewData, CreateCommentsViewModel());
 
-        public IActionResult OnPostSubmitComment()
-        {
-            if (!LoadData())
-                return RedirectToPage("/Error");
-
-            if (CurrentUser == null)
-                return Challenge();
-
-            var comment = new Comment(
-                0,
-                CurrentUser,
-                NewComment.CommentText,
-                DateTime.Now,
-                Id
-            );
-
-            commentManager.AddComment(comment);
-            return RedirectToPage("Post", new { Id });
-        }
-
-        public IActionResult OnPostSubmitReply()
-        {
-            if (!LoadData())
-                return RedirectToPage("/Error");
-
-            if (CurrentUser == null)
-                return Challenge();
-
-            var reply = new CommentReply(
-                0,
-                NewReply.ReplyText,
-                DateTime.Now,
-                NewReply.replyCommentId,
-                CurrentUser
-            );
-
-            commentManager.AddReply(reply);
-            return RedirectToPage("Post", new { Id });
-        }
-
-        public IActionResult OnPostDeleteComment(int cid)
-        {
-            if (!LoadData())
-                return RedirectToPage("/Error");
-
-            if (CurrentUser == null)
-                return Challenge();
-
-            var comment = commentManager.GetCommentById(cid);
-
-            if (comment != null &&
-                (CurrentUser.IsAdmin || CurrentUser.Id == comment.User.Id))
+            return new PartialViewResult
             {
-                commentManager.DeleteComment(comment);
-            }
-
-            return RedirectToPage("Post", new { Id });
+                ViewName = "_CommentList",
+                ViewData = viewData,
+                TempData = TempData
+            };
         }
 
-
-        public IActionResult OnPostDeleteReply(int rid)
+        private IActionResult ValidationError(string message, string modelKey)
         {
-            if (!LoadData())
-                return RedirectToPage("/Error");
-
-            if (CurrentUser == null)
-                return Challenge();
-
-            var reply = commentManager.GetReplyById(rid);
-
-            if (reply != null &&
-                (CurrentUser.IsAdmin || CurrentUser.Id == reply.User.Id))
-            {
-                commentManager.DeleteReply(reply);
-            }
-
-            return RedirectToPage("Post", new { Id });
+            ModelState.AddModelError(modelKey, message);
+            return IsAjaxRequest()
+                ? BadRequest(new { message })
+                : Page();
         }
 
+        private IActionResult AuthenticationRequired()
+        {
+            return IsAjaxRequest()
+                ? StatusCode(StatusCodes.Status401Unauthorized, new { message = "Your session has expired. Log in again." })
+                : Challenge();
+        }
+
+        private IActionResult ForbiddenResponse()
+        {
+            return IsAjaxRequest()
+                ? StatusCode(StatusCodes.Status403Forbidden, new { message = "You cannot delete this comment." })
+                : Forbid();
+        }
+
+        private IActionResult NotFoundResponse(string message)
+        {
+            return IsAjaxRequest()
+                ? NotFound(new { message })
+                : NotFound();
+        }
+
+        private bool IsAjaxRequest()
+        {
+            return string.Equals(
+                Request.Headers["X-Requested-With"],
+                "XMLHttpRequest",
+                StringComparison.OrdinalIgnoreCase);
+        }
     }
 }

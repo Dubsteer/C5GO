@@ -54,6 +54,38 @@ namespace Unit_Tests
             Assert.AreEqual("Test reply", comments[0].Replies[0].Content);
         }
 
+        [TestMethod]
+        public void CommentContentIsTrimmedBeforeSaving()
+        {
+            var comment = new Comment(1, testUser, "  Trimmed comment  ", DateTime.Now, 1);
+
+            commentManager.AddComment(comment);
+
+            Assert.AreEqual("Trimmed comment", commentManager.GetAllCommentsByPostId(1)[0].Content);
+        }
+
+        [TestMethod]
+        public void EmptyCommentIsRejected()
+        {
+            var comment = new Comment(1, testUser, "   ", DateTime.Now, 1);
+
+            Assert.ThrowsExactly<ArgumentException>(() => commentManager.AddComment(comment));
+            Assert.AreEqual(0, commentManager.GetAllCommentsByPostId(1).Count);
+        }
+
+        [TestMethod]
+        public void OversizedReplyIsRejected()
+        {
+            var reply = new CommentReply(
+                1,
+                new string('a', CommentManager.MaxContentLength + 1),
+                DateTime.Now,
+                1,
+                testUser);
+
+            Assert.ThrowsExactly<ArgumentException>(() => commentManager.AddReply(reply));
+        }
+
         private Comment CreateComment() =>
             new Comment(1, testUser, "This is a test comment", DateTime.Now, 1);
     }

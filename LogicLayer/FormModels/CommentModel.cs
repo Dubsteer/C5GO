@@ -1,5 +1,7 @@
-﻿public class CommentModel
+namespace LogicLayer.FormModels
 {
-    public string CommentText { get; set; } = "";
-    public int commentPostId { get; set; }
+    public sealed class CommentModel
+    {
+        public string CommentText { get; set; } = string.Empty;
+    }
 }

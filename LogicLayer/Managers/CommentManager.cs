@@ -6,6 +6,8 @@ namespace LogicLayer.Managers
 {
     public class CommentManager
     {
+        public const int MaxContentLength = 1500;
+
         private readonly ICommentRepo repo;
 
         public CommentManager(ICommentRepo repo)
@@ -13,7 +15,12 @@ namespace LogicLayer.Managers
             this.repo = repo;
         }
 
-        public void AddComment(Comment c) => repo.AddComment(c);
+        public void AddComment(Comment comment)
+        {
+            comment.Content = NormalizeContent(comment.Content);
+            repo.AddComment(comment);
+        }
+
         public void DeleteComment(Comment c) => repo.DeleteComment(c);
         public Comment? GetCommentById(int id) => repo.GetCommentById(id);
         public List<Comment> GetAllCommentsByPostId(int postId) => repo.GetAllCommentsByPostId(postId);
@@ -30,9 +37,26 @@ namespace LogicLayer.Managers
             return list;
         }
 
-        public void AddReply(CommentReply reply) => repo.AddReply(reply);
+        public void AddReply(CommentReply reply)
+        {
+            reply.Content = NormalizeContent(reply.Content);
+            repo.AddReply(reply);
+        }
 
         public CommentReply? GetReplyById(int replyId) => repo.GetReplyById(replyId);
         public void DeleteReply(CommentReply reply) => repo.DeleteReply(reply);
+
+        private static string NormalizeContent(string? content)
+        {
+            var normalized = content?.Trim() ?? string.Empty;
+
+            if (normalized.Length == 0)
+                throw new ArgumentException("Comment cannot be empty.", nameof(content));
+
+            if (normalized.Length > MaxContentLength)
+                throw new ArgumentException($"Comment cannot exceed {MaxContentLength} characters.", nameof(content));
+
+            return normalized;
+        }
     }
 }

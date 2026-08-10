@@ -13,15 +13,12 @@ namespace DesktopApp
         private readonly IConnection connection;
         private readonly UserManager userManager;
 
-        public Login()
+        public Login(IConnection connection, UserManager userManager)
         {
             InitializeComponent();
 
-            connection = new MySQLConnection("server=127.0.0.1;port=3306;user id=root;password=1234;database=local_dtb;SslMode=Disabled;");
-            connection.Open();
-
-            var userRepo = new UserRepo(connection);
-            userManager = new UserManager(userRepo);
+            this.connection = connection;
+            this.userManager = userManager;
 
             tbPassword.PasswordChar = '*';
         }
@@ -33,22 +30,6 @@ namespace DesktopApp
 
             if (!ValidateInput(username, password))
                 return;
-
-            User? currentUser = userManager.GetLoginUser(username, password);
-
-            if (currentUser == null || !currentUser.IsAdmin)
-            {
-                ShowLoginError();
-                return;
-            }
-
-            OpenAdminPanel(currentUser);
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            string username = "admin";
-            string password = "admin";
 
             User? currentUser = userManager.GetLoginUser(username, password);
 

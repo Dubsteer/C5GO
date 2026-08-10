@@ -2,19 +2,21 @@ using LogicLayer.Managers;
 using LogicLayer.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using System;
 using System.IO;
 
 namespace Website.Pages.Admin.Posts
 {
-    public class CreateModel : AdminPageModel
+    public class CreateModel : PageModel
     {
         private readonly PostManager postManager;
+        private readonly UserManager userManager;
 
         public CreateModel(PostManager postManager, UserManager userManager)
-            : base(userManager) // ?? OBAVEZNO
         {
             this.postManager = postManager;
+            this.userManager = userManager;
         }
 
         [BindProperty] public string Title { get; set; } = "";
@@ -23,17 +25,11 @@ namespace Website.Pages.Admin.Posts
 
         public IActionResult OnGet()
         {
-            var guard = RequireAdmin();
-            if (guard != null) return guard;
-
             return Page();
         }
 
         public IActionResult OnPost()
         {
-            var guard = RequireAdmin();
-            if (guard != null) return guard;
-
             var author = userManager.GetByUsername(User.Identity!.Name!);
             if (author == null)
                 return StatusCode(403);

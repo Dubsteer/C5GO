@@ -7,14 +7,6 @@ namespace DataLayer
     {
         public MySqlConnection conn { get; set; }
 
-        private const string defaultConnectionString =
-            "server=127.0.0.1;port=3306;user id=root;password=1234;database=local_dtb;SslMode=Disabled;AllowPublicKeyRetrieval=True;";
-
-        public MySQLConnection()
-        {
-            conn = new MySqlConnection(defaultConnectionString);
-        }
-
         public MySQLConnection(string connectionString)
         {
             conn = new MySqlConnection(connectionString);

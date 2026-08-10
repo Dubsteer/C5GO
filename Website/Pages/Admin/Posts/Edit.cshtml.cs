@@ -2,18 +2,17 @@ using LogicLayer.Managers;
 using LogicLayer.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using System;
 using System.IO;
-using Website.Pages.Admin;
 
 namespace Website.Pages.Admin.Posts
 {
-    public class EditModel : AdminPageModel
+    public class EditModel : PageModel
     {
         private readonly PostManager postManager;
 
-        public EditModel(PostManager postManager, UserManager userManager)
-            : base(userManager)
+        public EditModel(PostManager postManager)
         {
             this.postManager = postManager;
         }
@@ -26,9 +25,6 @@ namespace Website.Pages.Admin.Posts
 
         public IActionResult OnGet(int id)
         {
-            var guard = RequireAdmin();
-            if (guard != null) return guard;
-
             var post = postManager.GetPostById(id);
             if (post == null)
                 return NotFound();
@@ -39,9 +35,6 @@ namespace Website.Pages.Admin.Posts
 
         public IActionResult OnPost()
         {
-            var guard = RequireAdmin();
-            if (guard != null) return guard;
-
             var postFromDb = postManager.GetPostById(Post.Id);
             if (postFromDb == null)
                 return NotFound();

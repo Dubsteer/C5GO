@@ -1,15 +1,15 @@
 using LogicLayer.Managers;
 using LogicLayer.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Website.Pages.Admin.Posts
 {
-    public class DeleteModel : AdminPageModel
+    public class DeleteModel : PageModel
     {
         private readonly PostManager postManager;
 
-        public DeleteModel(PostManager postManager, UserManager userManager)
-            : base(userManager) // ?? OBAVEZNO
+        public DeleteModel(PostManager postManager)
         {
             this.postManager = postManager;
         }
@@ -18,9 +18,6 @@ namespace Website.Pages.Admin.Posts
 
         public IActionResult OnGet(int id)
         {
-            var guard = RequireAdmin();
-            if (guard != null) return guard;
-
             var post = postManager.GetPostById(id);
             if (post == null)
                 return NotFound();
@@ -31,9 +28,6 @@ namespace Website.Pages.Admin.Posts
 
         public IActionResult OnPost(int id)
         {
-            var guard = RequireAdmin();
-            if (guard != null) return guard;
-
             var post = postManager.GetPostById(id);
             if (post == null)
                 return NotFound();

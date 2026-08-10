@@ -176,8 +176,7 @@
                            asp-page="/Index">Posts</a>
                     </li>
 
-                    @* ===== ADMIN LINK (S A M O  A D M I N) ===== *@
-                    @if (User.Identity != null && User.Identity.IsAuthenticated && User.Identity.Name == "admin")
+                    @if (User.IsInRole("Admin"))
                     {
                         <li class="nav-item">
                             <a class="nav-link"

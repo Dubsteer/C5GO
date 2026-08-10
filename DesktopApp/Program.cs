@@ -17,11 +17,15 @@ namespace DesktopApp
         static void Main()
         {
             var services = new ServiceCollection();
+            var connectionString = Environment.GetEnvironmentVariable("C5GO_CONNECTION_STRING");
 
-            // === DATABASE CONNECTION ===
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new InvalidOperationException(
+                    "Environment variable C5GO_CONNECTION_STRING is required.");
+
             services.AddSingleton<IConnection>(sp =>
             {
-                var conn = new MySQLConnection("server=127.0.0.1;port=3306;user id=root;password=1234;database=local_dtb;SslMode=Disabled;");
+                var conn = new MySQLConnection(connectionString);
                 conn.Open();
                 return conn;
             });

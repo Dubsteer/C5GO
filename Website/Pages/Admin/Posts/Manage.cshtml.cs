@@ -6,23 +6,19 @@ using System.Collections.Generic;
 
 namespace Website.Pages.Admin.Posts
 {
-    public class ManageModel : AdminPageModel
+    public class ManageModel : PageModel
     {
         private readonly PostManager postManager;
 
         public List<Post> Posts { get; set; } = new();
 
-        public ManageModel(PostManager postManager, UserManager userManager)
-            : base(userManager) // ?? OVO JE KLJU?NO
+        public ManageModel(PostManager postManager)
         {
             this.postManager = postManager;
         }
 
         public IActionResult OnGet()
         {
-            var guard = RequireAdmin();
-            if (guard != null) return guard;
-
             Posts = postManager.GetAllPosts();
             return Page();
         }

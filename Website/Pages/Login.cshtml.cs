@@ -1,19 +1,16 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Security.Claims;
 using LogicLayer.FormModels;
 using LogicLayer.Managers;
 using LogicLayer.Models;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
-using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Website.Pages
 {
     public class LoginModel : PageModel
     {
-        [BindProperty]
-        public LoginFormModel LoginFormModel { get; set; }
-
         private readonly UserManager userManager;
 
         public LoginModel(UserManager userManager)
@@ -21,30 +18,28 @@ namespace Website.Pages
             this.userManager = userManager;
         }
 
+        [BindProperty]
+        public LoginFormModel LoginFormModel { get; set; } = new();
+
         public IActionResult OnGet()
         {
-            if (User.Identity.IsAuthenticated)
+            if (User.Identity?.IsAuthenticated == true)
                 return RedirectToPage("Index");
 
             return Page();
         }
 
-        public IActionResult OnPost()
+        public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
                 return Page();
 
-            // ? GetLoginUser sada NE baca exception
             User? user = userManager.GetLoginUser(
                 LoginFormModel.Username,
-                LoginFormModel.Password
-            );
+                LoginFormModel.Password);
 
-            if (user == null)
+            if (user?.Id == null)
             {
-                // ? JEDNA poruka za oba slu?aja:
-                // - pogrešni kredencijali
-                // - email nije verifikovan
                 ViewData["Error"] =
                     "Invalid credentials or email not verified. Please check your email.";
 
@@ -53,24 +48,22 @@ namespace Website.Pages
                 return Page();
             }
 
-            // ? LOGIN USPJEŠAN
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim("username", user.Username),
-                new Claim("id", user.Id.Value.ToString()),
-                new Claim("isAdmin", user.IsAdmin.ToString())
+                new(ClaimTypes.Name, user.Username),
+                new("id", user.Id.Value.ToString())
             };
 
-            var claimsIdentity = new ClaimsIdentity(
-                claims,
-                CookieAuthenticationDefaults.AuthenticationScheme
-            );
+            if (user.IsAdmin)
+                claims.Add(new Claim(ClaimTypes.Role, "Admin"));
 
-            HttpContext.SignInAsync(
+            var identity = new ClaimsIdentity(
+                claims,
+                CookieAuthenticationDefaults.AuthenticationScheme);
+
+            await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(claimsIdentity)
-            );
+                new ClaimsPrincipal(identity));
 
             return RedirectToPage("Index");
         }

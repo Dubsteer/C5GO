@@ -34,6 +34,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LoginPath = "/Login";
         options.AccessDeniedPath = "/AccessDenied";
         options.ExpireTimeSpan = TimeSpan.FromHours(12);
+        options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     });
 
 // =====================================================
@@ -43,9 +47,7 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy =>
         policy.RequireAuthenticatedUser()
-              .RequireAssertion(context =>
-                  context.User.Identity!.Name == "admin"
-              ));
+              .RequireRole("Admin"));
 });
 
 // =====================================================
@@ -53,7 +55,6 @@ builder.Services.AddAuthorization(options =>
 // =====================================================
 builder.Services.AddRazorPages(options =>
 {
-    // ?? CIJELI /Admin folder je zaklju?an za ADMIN-a
     options.Conventions.AuthorizeFolder("/Admin", "AdminOnly");
 });
 
@@ -66,7 +67,8 @@ builder.Services.AddScoped<IConnection>(sp =>
     var connStr = configuration.GetConnectionString("DefaultConnection");
 
     if (string.IsNullOrWhiteSpace(connStr))
-        throw new Exception("Connection string 'DefaultConnection' is missing.");
+        throw new InvalidOperationException(
+            "Connection string 'DefaultConnection' is missing. Configure it with User Secrets or an environment variable.");
 
     return new MySQLConnection(connStr);
 });

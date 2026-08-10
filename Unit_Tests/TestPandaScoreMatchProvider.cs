@@ -34,6 +34,7 @@ namespace Unit_Tests
             Assert.AreEqual("Live", matches[0].Status);
             Assert.AreEqual("1 - 0", matches[0].Score);
             Assert.AreEqual("https://images.test/navi.png", matches[0].Team1LogoUrl);
+            Assert.AreEqual("", matches[1].Score);
             CollectionAssert.Contains(requestedPaths, "/csgo/matches/running");
             CollectionAssert.Contains(requestedPaths, "/csgo/matches/upcoming");
         }
@@ -125,7 +126,10 @@ namespace Unit_Tests
                   { "opponent": { "id": 40, "name": "MOUZ" } }
                 ],
                 "league": { "name": "BLAST" },
-                "results": [],
+                "results": [
+                  { "team_id": 30, "score": 0 },
+                  { "team_id": 40, "score": 0 }
+                ],
                 "streams_list": []
               }
             ]

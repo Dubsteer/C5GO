@@ -98,7 +98,9 @@
                 <!-- TEAM 1 -->
                 <div class="team-box">
                     <img class="team-logo"
-                         src="@(string.IsNullOrEmpty(match.Team1LogoUrl) ? "/images/default-team.png" : match.Team1LogoUrl)" />
+                         src="@(string.IsNullOrEmpty(match.Team1LogoUrl) ? "/Images/default-team.svg" : match.Team1LogoUrl)"
+                         onerror="this.onerror=null;this.src='/Images/default-team.svg';"
+                         alt="@match.Team1Name logo" />
                     <span class="team">@match.Team1Name</span>
                 </div>
 
@@ -111,7 +113,9 @@
                 <div class="team-box right">
                     <span class="team">@match.Team2Name</span>
                     <img class="team-logo"
-                         src="@(string.IsNullOrEmpty(match.Team2LogoUrl) ? "/images/default-team.png" : match.Team2LogoUrl)" />
+                         src="@(string.IsNullOrEmpty(match.Team2LogoUrl) ? "/Images/default-team.svg" : match.Team2LogoUrl)"
+                         onerror="this.onerror=null;this.src='/Images/default-team.svg';"
+                         alt="@match.Team2Name logo" />
                 </div>
 
             </div>

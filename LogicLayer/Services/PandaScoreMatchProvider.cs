@@ -114,6 +114,9 @@ namespace LogicLayer.Services
 
         private string BuildScore(PandaMatch m)
         {
+            if (m.Status == "not_started")
+                return "";
+
             if (m.Results == null || m.Results.Count == 0)
                 return "";
 

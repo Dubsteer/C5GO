@@ -139,12 +139,9 @@ namespace DesktopApp.UserControls
 
             var currentUser = (User)dgvUsers.CurrentRow.DataBoundItem;
 
-            var currentPlayer = new Player(currentUser);
-            currentPlayer.SteamId = "0";
-
             try
             {
-                playerRepo.DeletePlayerRole(currentPlayer);
+                playerManager.RemovePlayerRole(currentUser.Id!.Value);
 
                 MessageBox.Show("Player role deleted.",
                     "Delete user role",

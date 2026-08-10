@@ -17,5 +17,11 @@ namespace LogicLayer.Managers
         public Player GetPlayer(User u) => repo.GetPlayer(u);
 
         public List<Player> GetAllPlayers() => repo.GetAllPlayers();
+
+        public void RemovePlayerRole(int userId)
+        {
+            if (!repo.DeletePlayerRole(userId))
+                throw new InvalidOperationException("The selected user does not have a player profile.");
+        }
     }
 }

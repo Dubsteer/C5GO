@@ -61,6 +61,8 @@ namespace Unit_Tests.MockRepos
         public List<User> SearchUser(string term) =>
             Users.Where(user =>
                 user.Username.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                user.Gmail.Contains(term, StringComparison.OrdinalIgnoreCase)).ToList();
+                user.Gmail.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                user.Firstname.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                user.Lastname.Contains(term, StringComparison.OrdinalIgnoreCase)).ToList();
     }
 }

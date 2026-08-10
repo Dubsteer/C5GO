@@ -148,16 +148,16 @@ namespace DataLayer.Repos
         // =========================
         // DELETE ROLE
         // =========================
-        public void DeletePlayerRole(Player player)
+        public bool DeletePlayerRole(int userId)
         {
             EnsureConnection();
 
             var cmd = new MySqlCommand(
-                "UPDATE user SET steam_id = NULL WHERE id=@id",
+                "UPDATE user SET steam_id = NULL WHERE id=@id AND steam_id IS NOT NULL AND steam_id != '0'",
                 conn.GetInnerConn());
 
-            cmd.Parameters.AddWithValue("@id", player.Id);
-            cmd.ExecuteNonQuery();
+            cmd.Parameters.AddWithValue("@id", userId);
+            return cmd.ExecuteNonQuery() > 0;
         }
     }
 }

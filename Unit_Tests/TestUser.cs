@@ -63,6 +63,70 @@ namespace Unit_Tests
         }
 
         [TestMethod]
+        public void TestAdminCanDeleteRegularUser()
+        {
+            var admin = CreateUser(1, "admin", "admin@test.local");
+            admin.IsAdmin = true;
+            userManager.CreateUser(admin);
+            userManager.CreateUser(CreateUser(2, "member", "member@test.local"));
+
+            userManager.DeleteUserAsAdmin(2, 1);
+
+            Assert.IsNull(userManager.GetUserById(2));
+        }
+
+        [TestMethod]
+        public void TestAdminCannotDeleteOwnAccount()
+        {
+            var admin = CreateUser(1, "admin", "admin@test.local");
+            admin.IsAdmin = true;
+            userManager.CreateUser(admin);
+
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                userManager.DeleteUserAsAdmin(1, 1));
+        }
+
+        [TestMethod]
+        public void TestAdminCannotDeleteAnotherAdmin()
+        {
+            var actingAdmin = CreateUser(1, "admin1", "admin1@test.local");
+            actingAdmin.IsAdmin = true;
+            userManager.CreateUser(actingAdmin);
+
+            var admin = CreateUser(2, "admin2", "admin2@test.local");
+            admin.IsAdmin = true;
+            userManager.CreateUser(admin);
+
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                userManager.DeleteUserAsAdmin(2, 1));
+        }
+
+        [TestMethod]
+        public void TestRegularUserCannotDeleteAccountAsAdmin()
+        {
+            userManager.CreateUser(CreateUser(1, "member1", "member1@test.local"));
+            userManager.CreateUser(CreateUser(2, "member2", "member2@test.local"));
+
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                userManager.DeleteUserAsAdmin(2, 1));
+        }
+
+        [TestMethod]
+        public void TestPlayerProfileMustBeRemovedBeforeDeletingAccount()
+        {
+            var admin = CreateUser(1, "admin", "admin@test.local");
+            admin.IsAdmin = true;
+            userManager.CreateUser(admin);
+
+            var player = CreateUser(2, "player", "player@test.local");
+            player.SteamId = "steam123";
+            userManager.CreateUser(player);
+
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                userManager.DeleteUserAsAdmin(2, 1));
+        }
+
+        [TestMethod]
         public void TestGetAllUsers()
         {
             userManager.CreateUser(CreateUser(1, "dubsteer", "dubsteer@test.local"));
@@ -108,6 +172,15 @@ namespace Unit_Tests
             Assert.AreEqual(3, broadResults.Count);
             Assert.AreEqual(1, exactResults.Count);
             Assert.AreEqual("dubsteer2", exactResults[0].Username);
+        }
+
+        [TestMethod]
+        public void TestSearchUserByEmailOrName()
+        {
+            userManager.CreateUser(CreateUser(1, "member", "member@test.local"));
+
+            Assert.AreEqual(1, userManager.SearchUser("member@test.local").Count);
+            Assert.AreEqual(1, userManager.SearchUser("Test").Count);
         }
 
         private static User CreateUser(int id, string username, string email, string password = "password") =>

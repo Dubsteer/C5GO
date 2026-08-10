@@ -131,6 +131,29 @@ namespace LogicLayer.Managers
             userRepo.DeleteUser(user);
         }
 
+        public void DeleteUserAsAdmin(int userId, int actingAdminId)
+        {
+            var actingAdmin = userRepo.GetUserById(actingAdminId)
+                ?? throw new InvalidOperationException("Administrator account was not found.");
+
+            if (!actingAdmin.IsAdmin)
+                throw new InvalidOperationException("Only administrators can delete user accounts.");
+
+            var user = userRepo.GetUserById(userId)
+                ?? throw new InvalidOperationException("User was not found.");
+
+            if (user.Id == actingAdminId)
+                throw new InvalidOperationException("You cannot delete your own account.");
+
+            if (user.IsAdmin)
+                throw new InvalidOperationException("Administrator accounts cannot be deleted here.");
+
+            if (!string.IsNullOrWhiteSpace(user.SteamId) && user.SteamId != "0")
+                throw new InvalidOperationException("Remove the player profile before deleting this account.");
+
+            userRepo.DeleteUser(user);
+        }
+
         // =====================================================
         // HELPERS
         // =====================================================

@@ -53,6 +53,23 @@ namespace Unit_Tests
             Assert.AreSame(player, fetchedPlayer);
         }
 
+        [TestMethod]
+        public void TestRemovePlayerRole()
+        {
+            playerManager.InitializeRole(CreatePlayer(1, "dubsteer", "steam123"));
+
+            playerManager.RemovePlayerRole(1);
+
+            Assert.AreEqual(0, playerManager.GetAllPlayers().Count);
+        }
+
+        [TestMethod]
+        public void TestRemoveMissingPlayerRole()
+        {
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                playerManager.RemovePlayerRole(99));
+        }
+
         private static Player CreatePlayer(int id, string username, string steamId) =>
             new Player(id, "Test", "Player", 22, username, $"{username}@test.local", "password", steamId, false);
     }

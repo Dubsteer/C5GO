@@ -1,0 +1,148 @@
+@page
+@model Website.Pages.Admin.Users.IndexModel
+@{
+    ViewData["Title"] = "User management";
+}
+
+<section class="admin-shell">
+    <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+        <a asp-page="/Admin/Index">Administration</a>
+        <span>/</span>
+        <span>Users</span>
+    </nav>
+
+    <header class="admin-page-header admin-page-header-row">
+        <div>
+            <p class="admin-eyebrow">Accounts and roles</p>
+            <h1>User management</h1>
+            <p>Search registered users and manage access without exposing passwords.</p>
+        </div>
+        <a asp-page="/Admin/Index" class="btn btn-outline-light">Back to dashboard</a>
+    </header>
+
+    @if (TempData["SuccessMessage"] is string successMessage)
+    {
+        <div class="alert alert-success" role="status">@successMessage</div>
+    }
+
+    @if (TempData["ErrorMessage"] is string errorMessage)
+    {
+        <div class="alert alert-danger" role="alert">@errorMessage</div>
+    }
+
+    <form method="get" class="admin-search" role="search">
+        <label asp-for="SearchTerm" class="visually-hidden">Search users</label>
+        <input asp-for="SearchTerm"
+               class="form-control"
+               placeholder="Search by username, name or email"
+               autocomplete="off" />
+        <button type="submit" class="btn btn-primary">Search</button>
+        @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
+        {
+            <a asp-page="/Admin/Users/Index" class="btn btn-outline-light">Clear</a>
+        }
+    </form>
+
+    @if (Model.Users.Count == 0)
+    {
+        <div class="admin-empty-state">
+            <h2>No users found</h2>
+            <p>Try a different username, name or email address.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive admin-table-wrap">
+            <table class="table admin-table align-middle">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Account</th>
+                        <th>Player</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model.Users)
+                    {
+                        var isCurrentAccount = user.Id == Model.CurrentAdminId;
+                        var isPlayer = Model.IsPlayer(user);
+
+                        <tr>
+                            <td>
+                                <strong>@user.Username</strong>
+                                <span class="admin-secondary-text">@user.Firstname @user.Lastname</span>
+                            </td>
+                            <td>
+                                <span>@user.Gmail</span>
+                                @if (user.EmailConfirmed)
+                                {
+                                    <span class="admin-badge admin-badge-success">Verified</span>
+                                }
+                                else
+                                {
+                                    <span class="admin-badge admin-badge-warning">Pending</span>
+                                }
+                            </td>
+                            <td>
+                                @if (user.IsAdmin)
+                                {
+                                    <span class="admin-badge admin-badge-admin">Admin</span>
+                                }
+                                else
+                                {
+                                    <span class="admin-badge">Member</span>
+                                }
+                                @if (isCurrentAccount)
+                                {
+                                    <span class="admin-badge">You</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="admin-badge @(isPlayer ? "admin-badge-success" : "")">
+                                    @(isPlayer ? "Active" : "No profile")
+                                </span>
+                            </td>
+                            <td>
+                                <div class="admin-row-actions">
+                                    @if (isPlayer)
+                                    {
+                                        <form method="post"
+                                              asp-page-handler="RemovePlayer"
+                                              onsubmit="return confirm('Remove this player profile?');">
+                                            <input type="hidden" name="id" value="@user.Id" />
+                                            <input type="hidden" name="SearchTerm" value="@Model.SearchTerm" />
+                                            <button type="submit" class="btn btn-sm btn-outline-warning">
+                                                Remove player
+                                            </button>
+                                        </form>
+                                    }
+
+                                    @if (!user.IsAdmin && !isCurrentAccount && !isPlayer)
+                                    {
+                                        <form method="post"
+                                              asp-page-handler="Delete"
+                                              onsubmit="return confirm('Permanently delete this user account? This cannot be undone.');">
+                                            <input type="hidden" name="id" value="@user.Id" />
+                                            <input type="hidden" name="SearchTerm" value="@Model.SearchTerm" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                Delete account
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="admin-protected-label">
+                                            @(isPlayer && !user.IsAdmin ? "Remove player first" : "Protected")
+                                        </span>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

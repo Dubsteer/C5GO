@@ -272,6 +272,9 @@ namespace DataLayer.Repos
                        is_moderator, steam_id, email_confirmed, email_token, token_created_at
                 FROM user
                 WHERE username LIKE CONCAT('%', @TERM, '%')
+                   OR email LIKE CONCAT('%', @TERM, '%')
+                   OR first_name LIKE CONCAT('%', @TERM, '%')
+                   OR last_name LIKE CONCAT('%', @TERM, '%')
             ", conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@TERM", term);

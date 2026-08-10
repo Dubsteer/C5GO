@@ -43,17 +43,6 @@ namespace LogicLayer.Managers
         }
 
 
-        public List<User> GetUsersWithoutTeam()
-        {
-            return teamRepo.GetUsersWithoutTeam();
-        }
-
-        public List<User> GetUsersInTeam(int teamId)
-        {
-            return teamRepo.GetUsersInTeam(teamId);
-        }
-
-
         public void CreateTeam(string name, int captainId)
         {
             teamRepo.CreateTeam(name, captainId);
@@ -195,12 +184,6 @@ namespace LogicLayer.Managers
                 throw new Exception("Captain cannot kick himself.");
 
             teamRepo.RemovePlayer(team.Id, userId);
-        }
-
-
-        public void AddUserToTeam_AdminOverride(int teamId, int userId)
-        {
-            teamRepo.AddUserToTeam_AdminOverride(teamId, userId);
         }
     }
 }

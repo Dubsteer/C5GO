@@ -39,7 +39,7 @@
                                 @Model.TruncateString(post.Title ?? post.Content, isFeatured ? 80 : 45)
                             </h2>
                             <p class="post-snippet">
-                                @Model.TruncateString(post.Content, isFeatured ? 220 : 120)
+                                @Model.TruncateString(Model.GetPostPreview(post.Content), isFeatured ? 220 : 120)
                             </p>
                             <span class="read-more">Read post <span aria-hidden="true">&rarr;</span></span>
                         </div>

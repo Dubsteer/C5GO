@@ -1,5 +1,8 @@
 @page "{id:int}"
 @model Website.Pages.Posts.PostModel
+@{
+    ViewData["Title"] = Model.Post.Title;
+}
 
 <article class="post-wrapper">
     @if (!string.IsNullOrEmpty(Model.Post.ImagePath))
@@ -9,18 +12,57 @@
 
     <header class="thread-header">
         <h1 class="thread-title">@Model.Post.Title</h1>
-        <div class="thread-content" id="postContent">@Html.Raw(Model.Post.Content)</div>
+        <div class="thread-content" id="postContent">
+            @foreach (var block in Model.ContentBlocks)
+            {
+                if (block.IsVideo)
+                {
+                    <div class="video-embed">
+                        <iframe src="https://www.youtube-nocookie.com/embed/@block.VideoId"
+                                title="Video included in @Model.Post.Title"
+                                loading="lazy"
+                                referrerpolicy="strict-origin-when-cross-origin"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowfullscreen></iframe>
+                    </div>
+                }
+                else if (!string.IsNullOrWhiteSpace(block.Text))
+                {
+                    <div class="post-content-text">@block.Text</div>
+                }
+            }
+        </div>
     </header>
 
-    <section aria-labelledby="commentsTitle">
-        <h2 id="commentsTitle" class="section-heading">Comments</h2>
+    <section aria-labelledby="commentsTitle" data-comment-section>
+        <div class="comment-section-header">
+            <h2 id="commentsTitle" class="section-heading">Comments</h2>
+            <span class="comment-count">@Model.Comments.Count</span>
+        </div>
+
+        <div class="comment-status" data-comment-status role="status" aria-live="polite" hidden></div>
+        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
 
         @if (User.Identity?.IsAuthenticated == true)
         {
-            <form method="post" asp-page-handler="SubmitComment">
+            <form method="post"
+                  asp-page-handler="SubmitComment"
+                  class="comment-compose"
+                  data-async-comment-form
+                  data-focus-after="comment-input"
+                  data-success-message="Comment posted.">
                 <label asp-for="NewComment.CommentText" class="visually-hidden">Write a comment</label>
-                <textarea asp-for="NewComment.CommentText" class="form-control" rows="3" placeholder="Write a comment..." required></textarea>
-                <button type="submit" class="btn btn-primary mt-2">Post comment</button>
+                <textarea asp-for="NewComment.CommentText"
+                          class="form-control"
+                          rows="3"
+                          maxlength="@LogicLayer.Managers.CommentManager.MaxContentLength"
+                          placeholder="Write a comment..."
+                          data-comment-focus="comment-input"
+                          required></textarea>
+                <div class="comment-compose-footer">
+                    <span>Maximum @LogicLayer.Managers.CommentManager.MaxContentLength characters</span>
+                    <button type="submit" class="btn btn-primary">Post comment</button>
+                </div>
             </form>
         }
         else
@@ -30,107 +72,10 @@
 
         <hr class="thread-divider" />
 
-        @if (!Model.Comments.Any())
-        {
-            <div class="empty-state">
-                <strong>No comments yet</strong>
-                <span>Start the conversation.</span>
-            </div>
-        }
-        else
-        {
-            <div class="comment-list">
-                @foreach (var comment in Model.Comments)
-                {
-                    <article class="comment-card">
-                        <strong class="comment-author">@comment.User.Username</strong>
-                        <p class="comment-content">@comment.Content</p>
-
-                        @if (Model.CurrentUser != null && (Model.CurrentUser.IsAdmin || Model.CurrentUser.Id == comment.User.Id))
-                        {
-                            <form method="post" asp-page-handler="DeleteComment" asp-route-cid="@comment.Id" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete comment</button>
-                            </form>
-                        }
-
-                        @if (comment.Replies?.Any() == true)
-                        {
-                            <button type="button"
-                                    class="reply-toggle"
-                                    data-reply-toggle
-                                    aria-expanded="false"
-                                    aria-controls="replies-@comment.Id">
-                                Show replies (@comment.Replies.Count)
-                            </button>
-
-                            <div class="replies" id="replies-@comment.Id">
-                                @foreach (var reply in comment.Replies)
-                                {
-                                    <article class="reply-item">
-                                        <strong class="comment-author">@reply.User.Username</strong>
-                                        <p class="comment-content">@reply.Content</p>
-
-                                        @if (Model.CurrentUser != null && (Model.CurrentUser.IsAdmin || Model.CurrentUser.Id == reply.User.Id))
-                                        {
-                                            <form method="post" asp-page-handler="DeleteReply" asp-route-rid="@reply.Id" class="d-inline">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete reply</button>
-                                            </form>
-                                        }
-                                    </article>
-                                }
-                            </div>
-                        }
-
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <form method="post" asp-page-handler="SubmitReply" class="reply-form">
-                                <input type="hidden" asp-for="NewReply.replyCommentId" value="@comment.Id" />
-                                <label asp-for="NewReply.ReplyText" class="visually-hidden">Write a reply</label>
-                                <textarea asp-for="NewReply.ReplyText" class="form-control" rows="2" placeholder="Write a reply..." required></textarea>
-                                <button type="submit" class="btn btn-sm btn-secondary mt-2">Reply</button>
-                            </form>
-                        }
-                    </article>
-                }
-            </div>
-        }
+        @await Html.PartialAsync("_CommentList", Model.CreateCommentsViewModel())
     </section>
 </article>
 
 @section Scripts {
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            document.querySelectorAll("[data-reply-toggle]").forEach((button) => {
-                button.addEventListener("click", () => {
-                    const replies = document.getElementById(button.getAttribute("aria-controls"));
-                    if (!replies) {
-                        return;
-                    }
-
-                    const isExpanded = button.getAttribute("aria-expanded") === "true";
-                    button.setAttribute("aria-expanded", String(!isExpanded));
-                    replies.style.display = isExpanded ? "none" : "block";
-                    button.textContent = isExpanded
-                        ? button.textContent.replace("Hide", "Show")
-                        : button.textContent.replace("Show", "Hide");
-                });
-            });
-
-            const container = document.getElementById("postContent");
-            if (!container) {
-                return;
-            }
-
-            const youtubePattern = /(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:[^\s<]*)?)/g;
-            container.innerHTML = container.innerHTML.replace(youtubePattern, (_, url, videoId) => `
-                <div class="video-embed">
-                    <iframe src="https://www.youtube.com/embed/${videoId}"
-                            title="Embedded YouTube video"
-                            loading="lazy"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowfullscreen></iframe>
-                </div>
-            `);
-        });
-    </script>
+    <script src="~/js/post.js" asp-append-version="true"></script>
 }

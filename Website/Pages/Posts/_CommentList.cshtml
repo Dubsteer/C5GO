@@ -1,0 +1,119 @@
+@model Website.Models.PostCommentsViewModel
+
+<div id="commentsRegion" data-comments-region>
+    @if (Model.Comments.Count == 0)
+    {
+        <div class="empty-state">
+            <strong>No comments yet</strong>
+            <span>Start the conversation.</span>
+        </div>
+    }
+    else
+    {
+        <div class="comment-list">
+            @foreach (var comment in Model.Comments)
+            {
+                <article class="comment-card" id="comment-@comment.Id" data-comment-id="@comment.Id">
+                    <header class="comment-header">
+                        <a class="comment-author" asp-page="/UserProfile" asp-route-id="@comment.User.Id">@comment.User.Username</a>
+                        <time class="comment-time" datetime="@comment.Posted_on.ToString("O")">
+                            @comment.Posted_on.ToString("dd.MM.yyyy. HH:mm")
+                        </time>
+                    </header>
+                    <p class="comment-content">@comment.Content</p>
+
+                    <div class="comment-actions">
+                        @if (comment.Replies.Count > 0)
+                        {
+                            <button type="button"
+                                    class="reply-toggle"
+                                    data-reply-toggle
+                                    data-comment-id="@comment.Id"
+                                    data-reply-count="@comment.Replies.Count"
+                                    aria-expanded="false"
+                                    aria-controls="replies-@comment.Id">
+                                Show replies (@comment.Replies.Count)
+                            </button>
+                        }
+
+                        @if (Model.CurrentUser != null && (Model.CurrentUser.IsAdmin || Model.CurrentUser.Id == comment.User.Id))
+                        {
+                            <form method="post"
+                                  asp-page="/Posts/Post"
+                                  asp-page-handler="DeleteComment"
+                                  asp-route-id="@Model.PostId"
+                                  class="comment-action-form"
+                                  data-async-comment-form
+                                  data-focus-after="comment-input"
+                                  data-confirm-message="Delete this comment and its replies?"
+                                  data-success-message="Comment deleted.">
+                                <input type="hidden" name="cid" value="@comment.Id" />
+                                <button type="submit" class="comment-delete">Delete</button>
+                            </form>
+                        }
+                    </div>
+
+                    @if (comment.Replies.Count > 0)
+                    {
+                        <div class="replies" id="replies-@comment.Id" hidden>
+                            @foreach (var reply in comment.Replies)
+                            {
+                                <article class="reply-item" id="reply-@reply.Id">
+                                    <header class="comment-header">
+                                        <a class="comment-author" asp-page="/UserProfile" asp-route-id="@reply.User.Id">@reply.User.Username</a>
+                                        <time class="comment-time" datetime="@reply.PostedOn.ToString("O")">
+                                            @reply.PostedOn.ToString("dd.MM.yyyy. HH:mm")
+                                        </time>
+                                    </header>
+                                    <p class="comment-content">@reply.Content</p>
+
+                                    @if (Model.CurrentUser != null && (Model.CurrentUser.IsAdmin || Model.CurrentUser.Id == reply.User.Id))
+                                    {
+                                        <form method="post"
+                                              asp-page="/Posts/Post"
+                                              asp-page-handler="DeleteReply"
+                                              asp-route-id="@Model.PostId"
+                                              class="comment-action-form"
+                                              data-async-comment-form
+                                              data-focus-after="reply-input-@comment.Id"
+                                              data-expand-comment="@comment.Id"
+                                              data-confirm-message="Delete this reply?"
+                                              data-success-message="Reply deleted.">
+                                            <input type="hidden" name="rid" value="@reply.Id" />
+                                            <button type="submit" class="comment-delete">Delete</button>
+                                        </form>
+                                    }
+                                </article>
+                            }
+                        </div>
+                    }
+
+                    @if (Model.IsAuthenticated)
+                    {
+                        <form method="post"
+                              asp-page="/Posts/Post"
+                              asp-page-handler="SubmitReply"
+                              asp-route-id="@Model.PostId"
+                              class="reply-form"
+                              data-async-comment-form
+                              data-focus-after="reply-input-@comment.Id"
+                              data-expand-comment="@comment.Id"
+                              data-success-message="Reply posted.">
+                            <input type="hidden" name="NewReply.CommentId" value="@comment.Id" />
+                            <label for="reply-input-@comment.Id" class="visually-hidden">Reply to @comment.User.Username</label>
+                            <textarea id="reply-input-@comment.Id"
+                                      name="NewReply.ReplyText"
+                                      class="form-control"
+                                      rows="2"
+                                      maxlength="@LogicLayer.Managers.CommentManager.MaxContentLength"
+                                      placeholder="Write a reply..."
+                                      data-comment-focus="reply-input-@comment.Id"
+                                      required></textarea>
+                            <button type="submit" class="btn btn-sm btn-secondary mt-2">Reply</button>
+                        </form>
+                    }
+                </article>
+            }
+        </div>
+    }
+</div>

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using LogicLayer.Managers;
 using LogicLayer.Models;
+using LogicLayer.Services;
 using System.Diagnostics;
 
 namespace Website.Pages
@@ -32,12 +33,17 @@ namespace Website.Pages
             return Page();
 
         }
-       
+
         public string TruncateString(string input, int maxLength)
         {
             return input.Length > maxLength
                 ? input[..maxLength] + "..."
                 : input;
+        }
+
+        public string GetPostPreview(string content)
+        {
+            return PostContentParser.GetPreviewText(content);
         }
     }
 }

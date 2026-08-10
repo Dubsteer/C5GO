@@ -23,9 +23,6 @@ namespace DataLayer.Repos
                 conn.Open();
         }
 
-        // =========================
-        // SAFE READERS (NULL SAFE)
-        // =========================
         private string? SafeString(MySqlDataReader reader, string column)
         {
             return reader.IsDBNull(column) ? null : reader.GetString(column);
@@ -46,9 +43,6 @@ namespace DataLayer.Repos
             return !reader.IsDBNull(column) && reader.GetBoolean(column);
         }
 
-        // =========================
-        // CREATE
-        // =========================
         public void CreateUser(User user)
         {
             EnsureConnection();
@@ -81,9 +75,6 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        // =========================
-        // READ
-        // =========================
         public List<User> GetAllUsers()
         {
             EnsureConnection();
@@ -143,9 +134,6 @@ namespace DataLayer.Repos
             return MapUser(reader);
         }
 
-        // =========================
-        // UPDATE
-        // =========================
         public void UpdateUser(User user)
         {
             EnsureConnection();
@@ -193,9 +181,6 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        // =========================
-        // DELETE
-        // =========================
         public void DeleteUser(User user)
         {
             EnsureConnection();
@@ -205,9 +190,6 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        // =========================
-        // CHECKS
-        // =========================
         public bool UsernameExists(string username)
         {
             EnsureConnection();
@@ -289,9 +271,6 @@ namespace DataLayer.Repos
             return users;
         }
 
-        // =========================
-        // MAPPER (NULL SAFE)
-        // =========================
         private User MapUser(MySqlDataReader reader)
         {
             var user = new User(

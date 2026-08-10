@@ -2,9 +2,13 @@
 @inject LogicLayer.Managers.NotificationManager NotificationManager
 
 @{
-    int userId = int.Parse(User.FindFirst("id").Value);
-    var notifications = NotificationManager.GetForUser(userId);
-    int unread = NotificationManager.GetUnreadCount(userId);
+    var notifications = new List<Notification>();
+    var unread = 0;
+    if (int.TryParse(User.FindFirst("id")?.Value, out var userId))
+    {
+        notifications = NotificationManager.GetForUser(userId);
+        unread = NotificationManager.GetUnreadCount(userId);
+    }
 }
 
 <li class="nav-item dropdown">

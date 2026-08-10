@@ -37,8 +37,6 @@ namespace Unit_Tests.MockRepos
             if (existingPost != null)
             {
                 existingPost.Content = post.Content;
-                existingPost.Content = post.Content;
-                // Add additional properties here as needed.
             }
             else
             {

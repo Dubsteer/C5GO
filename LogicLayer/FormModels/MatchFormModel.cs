@@ -1,8 +1,6 @@
 ﻿using LogicLayer.Enums;
-using LogicLayer.Models;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Globalization;
 
 namespace LogicLayer.FormModels
 {
@@ -14,22 +12,21 @@ namespace LogicLayer.FormModels
 
         [Display(Name = "Name")]
         [DisplayName("Name")]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [Display(Name = "Description")]
         [DisplayName("Description")]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         [Display(Name = "Status")]
         [DisplayName("Status")]
-        public Status status { get; set; }
+        public Status Status { get; set; }
 
-        public MatchFormModel(int Id, string description, string name) 
+        public MatchFormModel(int id, string description, string name)
         {
-            Id = Id;
+            Id = id;
             Description = description;
-            Name = name; ;
-            
+            Name = name;
         }
     }
 }

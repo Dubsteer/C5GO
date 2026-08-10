@@ -23,11 +23,8 @@ namespace DataLayer.Repos
                 conn.Open();
         }
 
-        // ============================================================
-        // USER (HELPER)
-        // ============================================================
 
-        public User GetUserById(int id)
+        public User? GetUserById(int id)
         {
             EnsureOpen();
 
@@ -53,11 +50,8 @@ namespace DataLayer.Repos
             };
         }
 
-        // ============================================================
-        // TEAM READ
-        // ============================================================
 
-        public Team GetTeamById(int id)
+        public Team? GetTeamById(int id)
         {
             EnsureOpen();
 
@@ -89,7 +83,7 @@ namespace DataLayer.Repos
             return new Team(r.GetInt32("id"), r.GetString("name"), captain);
         }
 
-        public Team GetTeamByUser(int userId)
+        public Team? GetTeamByUser(int userId)
         {
             EnsureOpen();
 
@@ -192,9 +186,6 @@ namespace DataLayer.Repos
             return list;
         }
 
-        // ============================================================
-        // TEAM CREATE + ADD PLAYER
-        // ============================================================
 
         public void CreateTeam(string name, int captainId)
         {
@@ -237,9 +228,6 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        // ============================================================
-        // JOIN REQUESTS
-        // ============================================================
 
         public void CreateJoinRequest(int teamId, int userId)
         {
@@ -339,9 +327,6 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        // ============================================================
-        // ADMIN
-        // ============================================================
 
         public List<User> GetUsersWithoutTeam()
         {
@@ -387,9 +372,6 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        // ============================================================
-        // USERS IN TEAM
-        // ============================================================
 
         public List<User> GetUsersInTeam(int teamId)
         {

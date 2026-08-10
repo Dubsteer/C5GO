@@ -17,11 +17,8 @@ namespace LogicLayer.Managers
             notificationRepo = notifRepo;
         }
 
-        // ============================================
-        // BASIC GETTERS
-        // ============================================
 
-        public Team GetTeamOfUser(int userId)
+        public Team? GetTeamOfUser(int userId)
         {
             var team = teamRepo.GetTeamByUser(userId);
             if (team != null)
@@ -29,7 +26,7 @@ namespace LogicLayer.Managers
             return team;
         }
 
-        public Team GetTeam(int id)
+        public Team? GetTeam(int id)
         {
             var t = teamRepo.GetTeamById(id);
             if (t != null)
@@ -45,9 +42,6 @@ namespace LogicLayer.Managers
             return teams;
         }
 
-        // ============================================
-        // USERS
-        // ============================================
 
         public List<User> GetUsersWithoutTeam()
         {
@@ -59,22 +53,17 @@ namespace LogicLayer.Managers
             return teamRepo.GetUsersInTeam(teamId);
         }
 
-        // ============================================
-        // CREATE TEAM
-        // ============================================
 
         public void CreateTeam(string name, int captainId)
         {
             teamRepo.CreateTeam(name, captainId);
         }
 
-        // ============================================
-        // JOIN REQUESTS
-        // ============================================
 
         public void RequestJoinTeam(int teamId, int userId)
         {
-            var user = teamRepo.GetUserById(userId);
+            var user = teamRepo.GetUserById(userId)
+                ?? throw new InvalidOperationException("User was not found.");
 
             if (string.IsNullOrWhiteSpace(user.SteamId) || user.SteamId == "0")
                 throw new Exception("You must add your SteamID before joining a team.");
@@ -82,7 +71,8 @@ namespace LogicLayer.Managers
             if (teamRepo.GetTeamByUser(userId) != null)
                 throw new Exception("You are already in a team.");
 
-            var team = teamRepo.GetTeamById(teamId);
+            var team = teamRepo.GetTeamById(teamId)
+                ?? throw new InvalidOperationException("Team was not found.");
             var members = teamRepo.GetTeamMembers(teamId);
 
             if (members.Count >= 5)
@@ -91,12 +81,13 @@ namespace LogicLayer.Managers
             if (teamRepo.GetRequestsForUser(userId).Any(r => r.TeamId == teamId))
                 throw new Exception("Join request already exists.");
 
-            // CREATE REQUEST
             teamRepo.CreateJoinRequest(teamId, userId);
 
-            // 🔔 NOTIFY CAPTAIN
+            if (team.Captain.Id is not int captainId)
+                throw new InvalidOperationException("Team captain was not found.");
+
             notificationRepo.Create(
-                team.Captain.Id.Value,
+                captainId,
                 $"{user.Username} wants to join your team '{team.Name}'.",
                 $"/Teams/Details?id={team.Id}"
             );
@@ -114,9 +105,6 @@ namespace LogicLayer.Managers
             return teamRepo.GetRequestsForUser(userId);
         }
 
-        // ============================================
-        // APPROVE REQUEST
-        // ============================================
 
         public void ApproveRequest(int requestId, int captainId)
         {
@@ -133,11 +121,11 @@ namespace LogicLayer.Managers
             if (req == null)
                 throw new Exception("Request not found.");
 
-            var user = teamRepo.GetUserById(req.UserId);
+            var user = teamRepo.GetUserById(req.UserId)
+                ?? throw new InvalidOperationException("User was not found.");
             if (string.IsNullOrWhiteSpace(user.SteamId))
                 throw new Exception("User must add SteamID before joining team.");
 
-            // ADD PLAYER
             teamRepo.AddPlayerToTeam(
                 captainTeam.Id,
                 req.UserId,
@@ -145,10 +133,8 @@ namespace LogicLayer.Managers
                 "Approved"
             );
 
-            // DELETE REQUEST
             teamRepo.DeleteJoinRequest(requestId);
 
-            // 🔔 NOTIFICATION (ACCEPTED)
             notificationRepo.Create(
                 req.UserId,
                 $"Your request to join team '{captainTeam.Name}' was accepted.",
@@ -156,9 +142,6 @@ namespace LogicLayer.Managers
             );
         }
 
-        // ============================================
-        // REJECT REQUEST
-        // ============================================
 
         public void RejectRequest(int requestId, int captainId)
         {
@@ -175,19 +158,14 @@ namespace LogicLayer.Managers
             if (req == null)
                 throw new Exception("Request not found.");
 
-            // DELETE REQUEST
             teamRepo.DeleteJoinRequest(requestId);
 
-            // 🔔 NOTIFICATION (REJECTED)
             notificationRepo.Create(
                 req.UserId,
                 $"Your request to join team '{captainTeam.Name}' was rejected."
             );
         }
 
-        // ============================================
-        // LEAVE / KICK
-        // ============================================
 
         public void LeaveTeam(int userId)
         {
@@ -219,9 +197,6 @@ namespace LogicLayer.Managers
             teamRepo.RemovePlayer(team.Id, userId);
         }
 
-        // ============================================
-        // ADMIN OVERRIDE
-        // ============================================
 
         public void AddUserToTeam_AdminOverride(int teamId, int userId)
         {

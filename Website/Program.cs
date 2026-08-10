@@ -8,17 +8,11 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// =====================================================
-// FORCE HTTP (LOCAL / NGROK)
-// =====================================================
 if (builder.Environment.IsDevelopment())
 {
     builder.WebHost.UseUrls("http://localhost:5063");
 }
 
-// =====================================================
-// AUTHENTICATION (COOKIE)
-// =====================================================
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -31,9 +25,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     });
 
-// =====================================================
-// AUTHORIZATION (ADMIN POLICY)
-// =====================================================
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy =>
@@ -41,17 +32,11 @@ builder.Services.AddAuthorization(options =>
               .RequireRole("Admin"));
 });
 
-// =====================================================
-// RAZOR PAGES + ADMIN FOLDER LOCK
-// =====================================================
 builder.Services.AddRazorPages(options =>
 {
     options.Conventions.AuthorizeFolder("/Admin", "AdminOnly");
 });
 
-// =====================================================
-// DATABASE CONNECTION
-// =====================================================
 builder.Services.AddScoped<IConnection>(sp =>
 {
     var configuration = sp.GetRequiredService<IConfiguration>();
@@ -64,9 +49,6 @@ builder.Services.AddScoped<IConnection>(sp =>
     return new MySQLConnection(connStr);
 });
 
-// =====================================================
-// REPOSITORIES
-// =====================================================
 builder.Services.AddScoped<IUserRepo, UserRepo>();
 builder.Services.AddScoped<IPostRepo, PostRepo>();
 builder.Services.AddScoped<ICommentRepo, CommentRepo>();
@@ -77,9 +59,6 @@ builder.Services.AddScoped<ITeamRepo, TeamRepo>();
 builder.Services.AddScoped<ITeamMatchRepo, TeamMatchRepo>();
 builder.Services.AddScoped<INotificationRepo, NotificationRepo>();
 
-// =====================================================
-// MANAGERS
-// =====================================================
 builder.Services.AddScoped<UserManager>();
 builder.Services.AddScoped<PostManager>();
 builder.Services.AddScoped<CommentManager>();
@@ -90,9 +69,6 @@ builder.Services.AddScoped<TeamManager>();
 builder.Services.AddScoped<TeamMatchManager>();
 builder.Services.AddScoped<NotificationManager>();
 
-// =====================================================
-// SERVICES
-// =====================================================
 builder.Services.AddScoped<EmailService>();
 
 var pandaScoreApiKey = builder.Configuration["PandaScore:ApiKey"];
@@ -113,16 +89,12 @@ else
 
 var app = builder.Build();
 
-// =====================================================
-// MIDDLEWARE PIPELINE
-// =====================================================
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
 
-// app.UseHttpsRedirection(); // ? isklju?eno zbog local/ngrok
 
 app.UseStaticFiles();
 app.UseRouting();

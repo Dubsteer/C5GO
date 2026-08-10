@@ -11,8 +11,8 @@ namespace LogicLayer.Models
         public int Team1Id { get; set; }
         public int Team2Id { get; set; }
 
-        public Team Team1 { get; set; }
-        public Team Team2 { get; set; }
+        public Team Team1 { get; set; } = null!;
+        public Team Team2 { get; set; } = null!;
 
         public int Team1Score { get; set; }
         public int Team2Score { get; set; }
@@ -27,8 +27,8 @@ namespace LogicLayer.Models
             TournamentId = tournamentId;
             Team1 = t1;
             Team2 = t2;
-            Team1Id = t1?.Id ?? 0;
-            Team2Id = t2?.Id ?? 0;
+            Team1Id = t1.Id;
+            Team2Id = t2.Id;
             Team1Score = s1;
             Team2Score = s2;
             MatchDate = date;

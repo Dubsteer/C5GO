@@ -8,10 +8,10 @@ namespace LogicLayer.FormModels
         [Required]
         [DisplayName("Content")]
         [StringLength(int.MaxValue, ErrorMessage = "Content length must not exceed {1} characters.")]
-        public string Content { get; set; }
+        public string Content { get; set; } = string.Empty;
 
         public PostFormModel() { }
-        public PostFormModel( string content)
+        public PostFormModel(string content)
         {
             Content = content;
         }

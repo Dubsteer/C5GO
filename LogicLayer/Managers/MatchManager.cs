@@ -83,7 +83,6 @@ namespace LogicLayer.Managers
                 .ToList();
         }
 
-        // AUTO MATCH GENERATOR
         public void GenerateMatches(List<Player> players, int tournamentId, DateTime startDate, int rounds)
         {
             if (players == null || players.Count < 2)
@@ -109,7 +108,7 @@ namespace LogicLayer.Managers
                 for (int i = 0; i < shuffled.Count - 1; i += 2)
                 {
                     var match = new Match(
-                        0, // id se NE KORISTI jer DB auto-increment radi posao
+                        0,
                         tournamentId,
                         shuffled[i],
                         shuffled[i + 1],

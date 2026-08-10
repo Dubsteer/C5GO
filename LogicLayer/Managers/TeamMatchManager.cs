@@ -16,9 +16,6 @@ namespace LogicLayer.Managers
             this.repo = repo;
         }
 
-        // ================================
-        // BASIC GETTERS
-        // ================================
         public List<TeamMatch> GetAllTeamMatches()
         {
             return repo.GetAllTeamMatches();
@@ -37,9 +34,6 @@ namespace LogicLayer.Managers
                 ?? throw new InvalidOperationException("Team match was not found.");
         }
 
-        // ================================
-        // ADD / UPDATE / REMOVE
-        // ================================
         public void AddTeamMatch(TeamMatch match)
         {
             repo.AddTeamMatch(match);
@@ -77,9 +71,6 @@ namespace LogicLayer.Managers
             repo.RemoveTeamMatch(match);
         }
 
-        // ================================
-        // GENERATE TEAM BRACKET
-        // ================================
         public void GenerateTeamBracket(List<int> teamIds, int tournamentId, bool replaceExisting = false)
         {
             if (teamIds == null)
@@ -102,7 +93,6 @@ namespace LogicLayer.Managers
             var rnd = new Random();
             var shuffled = uniqueTeamIds.OrderBy(_ => rnd.Next()).ToList();
 
-            // PAIRING (ROUND 1)
             for (int i = 0; i < shuffled.Count - 1; i += 2)
             {
                 var match = new TeamMatch(

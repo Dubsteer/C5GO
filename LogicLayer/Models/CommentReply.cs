@@ -5,19 +5,16 @@ namespace LogicLayer.Models
     public class CommentReply
     {
         public int Id { get; set; }
-        public string Content { get; set; }
+        public string Content { get; set; } = string.Empty;
         public DateTime PostedOn { get; set; }
         public int CommentId { get; set; }
 
-        // Username prikaz – koristi se na UI-ju
-        public string Username { get; set; }
+        public string Username { get; set; } = string.Empty;
 
-        // Pravi korisnik koji je napisao reply
-        public User User { get; set; }
+        public User User { get; set; } = null!;
 
         public CommentReply() { }
 
-        // Konstruktor za kreiranje reply-a sa pravim korisnikom
         public CommentReply(int id, string content, DateTime postedOn, int commentId, User user)
         {
             Id = id;
@@ -25,10 +22,9 @@ namespace LogicLayer.Models
             PostedOn = postedOn;
             CommentId = commentId;
             User = user;
-            Username = user?.Username; // automatski upisujemo username
+            Username = user.Username;
         }
 
-        // Konstruktor za SELECT iz baze gde vraćamo samo username
         public CommentReply(int id, string content, DateTime postedOn, int commentId, string username)
         {
             Id = id;

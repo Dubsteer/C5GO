@@ -13,10 +13,10 @@ namespace Website.Pages.Teams
         private readonly UserManager userManager;
 
         [BindProperty]
-        public string TeamName { get; set; }
+        public string TeamName { get; set; } = string.Empty;
 
         [BindProperty]
-        public string ErrorMessage { get; set; }   // <--- FIX
+        public string ErrorMessage { get; set; } = string.Empty;
 
         public CreateModel(TeamManager tm, UserManager um)
         {
@@ -30,8 +30,12 @@ namespace Website.Pages.Teams
 
         public IActionResult OnPost()
         {
-            var id = int.Parse(User.FindFirst("id").Value);
-            var user = userManager.GetUserById(id);
+            if (!int.TryParse(User.FindFirst("id")?.Value, out var userId))
+                return Challenge();
+
+            var user = userManager.GetUserById(userId);
+            if (user?.Id is not int captainId)
+                return Challenge();
 
             if (string.IsNullOrWhiteSpace(TeamName))
             {
@@ -41,7 +45,7 @@ namespace Website.Pages.Teams
 
             try
             {
-                teamManager.CreateTeam(TeamName, user.Id.Value);
+                teamManager.CreateTeam(TeamName, captainId);
             }
             catch (Exception ex)
             {

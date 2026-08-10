@@ -6,15 +6,14 @@ namespace LogicLayer.Models
     {
         public int Id { get; set; }
 
-        // Novi Title — dodajemo ga
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
 
-        public string Content { get; set; }
+        public string Content { get; set; } = string.Empty;
         public DateTime Posted_on { get; set; }
         public string? ImagePath { get; set; }
 
 
-        public User User { get; set; }
+        public User User { get; set; } = null!;
 
         public Post(int id, User user, string title, string content, DateTime posted_on)
         {

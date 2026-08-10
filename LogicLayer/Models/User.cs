@@ -5,41 +5,36 @@ namespace LogicLayer.Models
 {
     public class User
     {
-        private string email;
+        private string email = string.Empty;
 
         public int? Id { get; set; }
 
-        public string Firstname { get; set; }
-        public string Lastname { get; set; }
+        public string Firstname { get; set; } = string.Empty;
+        public string Lastname { get; set; } = string.Empty;
 
         public int Age { get; set; }
         public DateTime? Birthday { get; set; }
 
-        public string Username { get; set; }
+        public string Username { get; set; } = string.Empty;
 
         public string Gmail
         {
             get => email;
-            set => email = value?.Trim();
+            set => email = value?.Trim() ?? string.Empty;
         }
 
-        public string Password { get; set; }
+        public string Password { get; set; } = string.Empty;
 
         public bool IsAdmin { get; set; }
 
-        // ✅ FIX: SteamId više NEMA default "0"
-        // Ako user ne unese SteamID → NULL
         public string? SteamId { get; set; }
 
         public int CommentAuthorId { get; set; }
 
-        public IReadOnlyList<Match> Matches { get; private set; }
+        public IReadOnlyList<Match> Matches { get; private set; } = [];
 
-        // =========================
-        // EMAIL VERIFICATION
-        // =========================
         public bool EmailConfirmed { get; set; }
-        public string EmailToken { get; set; }
+        public string? EmailToken { get; set; }
         public DateTime? TokenCreatedAt { get; set; }
 
         public User() { }
@@ -61,7 +56,7 @@ namespace LogicLayer.Models
             Gmail = gmail;
             Password = password;
             IsAdmin = isAdmin;
-            SteamId = null; // ✅ FIX
+            SteamId = null;
         }
 
         public User(
@@ -83,7 +78,7 @@ namespace LogicLayer.Models
             Gmail = gmail;
             Password = password;
             IsAdmin = isAdmin;
-            SteamId = null; // ✅ FIX
+            SteamId = null;
         }
 
         public User(
@@ -106,7 +101,7 @@ namespace LogicLayer.Models
             Gmail = gmail;
             Password = password;
             IsAdmin = isAdmin;
-            SteamId = steamId; // može biti NULL ili stvarni SteamID
+            SteamId = steamId;
         }
 
         public User(
@@ -129,11 +124,10 @@ namespace LogicLayer.Models
             Gmail = gmail;
             Password = password;
             IsAdmin = isAdmin;
-            SteamId = null; // ✅ FIX
+            SteamId = null;
             Matches = matches ?? new List<Match>();
         }
 
-        // ⛔ VERY IMPORTANT — REPO MINIMAL CONSTRUCTOR
         public User(int id)
         {
             Id = id;

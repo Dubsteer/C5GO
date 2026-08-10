@@ -81,7 +81,6 @@ namespace LogicLayer.Services
             };
         }
 
-        // ---------------- MAP ----------------
 
         private ExternalMatchDto Map(PandaMatch m)
         {

@@ -23,7 +23,6 @@ namespace LogicLayer.Managers
             this.teamMatchManager = teamMatchManager;
         }
 
-        // BASIC
         public List<Tournament> GetAllTournaments() => repo.GetAllTournaments();
         public Tournament GetTournamentById(int id) => repo.GetTournamentById(id)
             ?? throw new Exceptions.TournamentNotFoundException("Tournament was not found.");
@@ -69,7 +68,6 @@ namespace LogicLayer.Managers
             repo.RemoveTournament(tournament);
         }
 
-        // PLAYERS
         public void AddTournamentApp(Player player, Tournament tournament)
         {
             if (player?.Id == null)
@@ -96,7 +94,6 @@ namespace LogicLayer.Managers
         }
         public List<Player> GetAllPlayersInTournament(Tournament t) => repo.GetAllPlayersInTournament(t.Id);
 
-        // TEAMS
         public void AddTeamToTournament(int teamId, int tournamentId)
         {
             if (teamId <= 0)
@@ -121,15 +118,12 @@ namespace LogicLayer.Managers
             repo.RemoveTeamTournamentApp(teamId, tournamentId);
         }
 
-        // SOLO MATCHES
         public List<Match> GetAllMatchesInTournament(Tournament t)
             => matchManager.GetMatchesByTournamentId(t.Id);
 
-        // TEAM MATCHES
         public List<TeamMatch> GetAllTeamMatchesInTournament(Tournament t)
             => teamMatchManager.GetTeamMatchesByTournament(t.Id);
 
-        // STATUS
         public void UpdateTournamentStatus(Tournament t)
         {
             if (!t.IsTeamTournament)
@@ -158,7 +152,6 @@ namespace LogicLayer.Managers
             repo.UpdateTournament(t);
         }
 
-        // GENERATE SOLO BRACKET
         public void GenerateSoloBracket(List<Player> players, Tournament tournament, bool replaceExisting = false)
         {
             if (tournament.IsTeamTournament)
@@ -178,7 +171,6 @@ namespace LogicLayer.Managers
             UpdateTournamentStatus(tournament);
         }
 
-        // GENERATE TEAM BRACKET
         public void GenerateTeamBracket(List<int> teamIds, Tournament tournament, bool replaceExisting = false)
         {
             EnsureTeamTournament(tournament);

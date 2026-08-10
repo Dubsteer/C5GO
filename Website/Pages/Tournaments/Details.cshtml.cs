@@ -12,13 +12,11 @@ namespace Website.Pages.Tournaments
         private readonly TournamentManager tournamentManager;
         private readonly TeamManager teamManager;
 
-        public Tournament Tournament { get; set; }
+        public Tournament Tournament { get; set; } = null!;
 
-        // SOLO
         public List<Match> SoloMatches { get; set; } = new();
         public List<Player> SoloPlayers { get; set; } = new();
 
-        // TEAMS
         public List<TeamMatch> TeamMatches { get; set; } = new();
         public Dictionary<int, Team> TeamsById { get; set; } = new();
 
@@ -34,35 +32,25 @@ namespace Website.Pages.Tournaments
             if (Tournament == null)
                 return NotFound();
 
-            // ======================================
-            // SOLO TOURNAMENT
-            // ======================================
             if (!Tournament.IsTeamTournament)
             {
-                // LOAD SOLO PLAYERS
                 SoloPlayers = tournamentManager.GetAllPlayersInTournament(Tournament)
                                                .OrderBy(p => p.Username)
                                                .ToList();
 
                 Tournament.Players = SoloPlayers;
 
-                // LOAD SOLO MATCHES
                 SoloMatches = tournamentManager.GetAllMatchesInTournament(Tournament)
                                                .OrderBy(m => m.MatchDate)
                                                .ToList();
             }
 
-            // ======================================
-            // TEAM TOURNAMENT
-            // ======================================
             else
             {
-                // LOAD TEAM MATCHES
                 TeamMatches = tournamentManager.GetAllTeamMatchesInTournament(Tournament)
                                                .OrderBy(m => m.MatchDate)
                                                .ToList();
 
-                // LOAD TEAMS
                 var teamIds = tournamentManager.GetTeamsInTournament(Tournament);
 
                 foreach (var tid in teamIds)

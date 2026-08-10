@@ -12,13 +12,10 @@ namespace LogicLayer.Dtos
 
         public string EventName { get; set; } = "";
 
-        // može biti null ako API ne pošalje vrijeme
         public DateTime? StartTimeUtc { get; set; }
 
-        // Live / Upcoming / Finished
         public string Status { get; set; } = "";
 
-        // npr "13 - 7"
         public string Score { get; set; } = "";
     }
 }

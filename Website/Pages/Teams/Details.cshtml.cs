@@ -12,12 +12,11 @@ namespace Website.Pages.Teams
         private readonly TeamManager teamManager;
         private readonly UserManager userManager;
 
-        public Team Team { get; set; }
-        public List<User> Members { get; set; }
-        public List<TeamJoinRequest> Pending { get; set; }
-        public User CurrentUser { get; set; }
+        public Team Team { get; set; } = null!;
+        public List<User> Members { get; set; } = [];
+        public List<TeamJoinRequest> Pending { get; set; } = [];
+        public User CurrentUser { get; set; } = null!;
 
-        // ? NOVO
         public bool IsCaptain { get; set; }
 
         public DetailsModel(TeamManager tm, UserManager um)
@@ -26,24 +25,32 @@ namespace Website.Pages.Teams
             userManager = um;
         }
 
-        private void LoadUser()
+        private int? LoadUser()
         {
-            var id = int.Parse(User.FindFirst("id").Value);
-            CurrentUser = userManager.GetUserById(id);
+            if (!int.TryParse(User.FindFirst("id")?.Value, out var userId))
+                return null;
+
+            var user = userManager.GetUserById(userId);
+            if (user?.Id is not int currentUserId)
+                return null;
+
+            CurrentUser = user;
+            return currentUserId;
         }
 
         public IActionResult OnGet(int id)
         {
-            LoadUser();
+            if (LoadUser() is null)
+                return Challenge();
 
-            Team = teamManager.GetTeam(id);
-            if (Team == null)
+            var team = teamManager.GetTeam(id);
+            if (team == null)
                 return RedirectToPage("/Teams/Teams");
 
+            Team = team;
             Members = Team.Members;
             Pending = teamManager.GetJoinRequests(id);
 
-            // ? KLJU?NA LINIJA
             IsCaptain = Team.Captain.Id == CurrentUser.Id;
 
             return Page();
@@ -51,11 +58,12 @@ namespace Website.Pages.Teams
 
         public IActionResult OnPostApprove(int requestId, int teamId)
         {
-            LoadUser();
+            if (LoadUser() is not int currentUserId)
+                return Challenge();
 
             try
             {
-                teamManager.ApproveRequest(requestId, CurrentUser.Id.Value);
+                teamManager.ApproveRequest(requestId, currentUserId);
             }
             catch (Exception ex)
             {
@@ -67,11 +75,12 @@ namespace Website.Pages.Teams
 
         public IActionResult OnPostReject(int requestId, int teamId)
         {
-            LoadUser();
+            if (LoadUser() is not int currentUserId)
+                return Challenge();
 
             try
             {
-                teamManager.RejectRequest(requestId, CurrentUser.Id.Value);
+                teamManager.RejectRequest(requestId, currentUserId);
             }
             catch (Exception ex)
             {
@@ -83,11 +92,12 @@ namespace Website.Pages.Teams
 
         public IActionResult OnPostLeave(int teamId)
         {
-            LoadUser();
+            if (LoadUser() is not int currentUserId)
+                return Challenge();
 
             try
             {
-                teamManager.LeaveTeam(CurrentUser.Id.Value);
+                teamManager.LeaveTeam(currentUserId);
                 TempData["Message"] = "You left the team.";
             }
             catch (Exception ex)
@@ -100,11 +110,12 @@ namespace Website.Pages.Teams
 
         public IActionResult OnPostKick(int userId, int teamId)
         {
-            LoadUser();
+            if (LoadUser() is not int currentUserId)
+                return Challenge();
 
             try
             {
-                teamManager.KickMember(CurrentUser.Id.Value, userId);
+                teamManager.KickMember(currentUserId, userId);
             }
             catch (Exception ex)
             {
@@ -116,11 +127,12 @@ namespace Website.Pages.Teams
 
         public IActionResult OnPostJoinTeam(int teamId)
         {
-            LoadUser();
+            if (LoadUser() is not int currentUserId)
+                return Challenge();
 
             try
             {
-                teamManager.RequestJoinTeam(teamId, CurrentUser.Id.Value);
+                teamManager.RequestJoinTeam(teamId, currentUserId);
                 TempData["Success"] = "Join request sent successfully.";
             }
             catch (Exception ex)

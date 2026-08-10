@@ -30,17 +30,10 @@ namespace LogicLayer.Models
             Status = status;
         }
 
-        // ========================================
-        // EXTRA PROPERTIES USED BY ViewProfile.cshtml
-        // ========================================
-
-        // 👉 Ovo puniš u ViewProfile.cshtml.cs
         public string TournamentName { get; set; } = string.Empty;
 
-        // 👉 UI-friendly date format
         public DateTime Date => MatchDate;
 
-        // 👉 "5 : 2" format za skor
         public string PlayerScore => $"{Player1Score} : {Player2Score}";
     }
 }

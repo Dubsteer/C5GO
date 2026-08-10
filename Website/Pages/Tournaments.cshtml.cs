@@ -13,15 +13,14 @@ namespace Website.Pages
     public class TournamentsModel : PageModel
     {
         public List<Tournament> Tournaments { get; set; } = new();
-        public Player CurrentPlayer { get; set; }
-        public Team MyTeam { get; set; }
+        public Player? CurrentPlayer { get; set; }
+        public Team? MyTeam { get; set; }
 
-        public string Message { get; set; }
-        public string Error { get; set; }
+        public string? Message { get; set; }
+        public string? Error { get; set; }
 
         public string Filter { get; set; } = "all";
         public bool IsPlayer => CurrentPlayer != null;
-        public bool IsAdmin { get; set; }
 
         private readonly UserManager userManager;
         private readonly TournamentManager tournamentManager;
@@ -42,25 +41,26 @@ namespace Website.Pages
 
         private void LoadCurrent()
         {
+            CurrentPlayer = null;
+            MyTeam = null;
+
+            var claim = User.FindFirst("id")?.Value;
+            if (!int.TryParse(claim, out var userId))
+                return;
+
             try
             {
-                var uid = int.Parse(User.FindFirst("id").Value);
-                var user = userManager.GetUserById(uid);
+                var user = userManager.GetUserById(userId);
 
-                if (string.IsNullOrWhiteSpace(user.SteamId))
-                {
-                    CurrentPlayer = null;
-                    MyTeam = null;
+                if (user == null || string.IsNullOrWhiteSpace(user.SteamId) || user.SteamId == "0")
                     return;
-                }
 
                 CurrentPlayer = playerManager.GetPlayer(user);
-                MyTeam = teamManager.GetTeamOfUser(uid);
+                MyTeam = teamManager.GetTeamOfUser(userId);
             }
             catch
             {
                 CurrentPlayer = null;
-                MyTeam = null;
             }
         }
 
@@ -92,8 +92,6 @@ namespace Website.Pages
                         t.Teams.Add(team);
                 }
 
-                tournamentManager.UpdateTournamentStatus(t);
-
                 if (CurrentPlayer != null)
                 {
                     if (!t.IsTeamTournament)
@@ -102,8 +100,6 @@ namespace Website.Pages
                         t.CanLeave = t.TeamIds.Contains(MyTeam.Id);
                 }
             }
-
-            IsAdmin = CurrentPlayer != null && CurrentPlayer.IsAdmin;
 
             Tournaments = filter switch
             {
@@ -115,31 +111,106 @@ namespace Website.Pages
             return Page();
         }
 
-        // SOLO APPLY
         public IActionResult OnPostApplySolo(int id)
         {
             LoadCurrent();
 
             if (!IsPlayer)
             {
-                TempData["RequireSteam"] = true; // ? KEY LINE
+                TempData["RequireSteam"] = true;
                 return RedirectToPage("/ViewProfile");
             }
 
             try
             {
                 var t = tournamentManager.GetTournamentById(id);
-                t.Players = tournamentManager.GetAllPlayersInTournament(t);
-
-                if (!t.Players.Any(p => p.Id == CurrentPlayer.Id))
-                {
-                    tournamentManager.AddTournamentApp(CurrentPlayer, t);
-                    TempData["Message"] = "Successfully joined!";
-                }
+                tournamentManager.AddTournamentApp(CurrentPlayer!, t);
+                TempData["Message"] = "Successfully joined!";
             }
-            catch (Exception ex)
+            catch (InvalidOperationException ex)
             {
                 TempData["Error"] = ex.Message;
+            }
+            catch
+            {
+                TempData["Error"] = "The tournament registration could not be completed.";
+            }
+
+            return RedirectToPage("/Tournaments");
+        }
+
+        public IActionResult OnPostApplyTeam(int id)
+        {
+            LoadCurrent();
+
+            if (MyTeam == null)
+            {
+                TempData["Error"] = "Create or join a complete team before registering for a team tournament.";
+                return RedirectToPage("/Teams/Teams");
+            }
+
+            if (MyTeam.Captain.Id != CurrentPlayer?.Id)
+            {
+                TempData["Error"] = "Only the team captain can register the team.";
+                return RedirectToPage("/Tournaments");
+            }
+
+            try
+            {
+                var tournament = tournamentManager.GetTournamentById(id);
+                if (MyTeam.Members.Count < tournament.TeamSizeRequired)
+                {
+                    TempData["Error"] = $"Your team needs {tournament.TeamSizeRequired} players before registering.";
+                    return RedirectToPage("/Tournaments");
+                }
+
+                tournamentManager.AddTeamToTournament(MyTeam.Id, tournament.Id);
+                TempData["Message"] = "Team registered successfully!";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+            catch
+            {
+                TempData["Error"] = "The team could not be registered.";
+            }
+
+            return RedirectToPage("/Tournaments");
+        }
+
+        public IActionResult OnPostLeave(int id)
+        {
+            LoadCurrent();
+
+            try
+            {
+                var tournament = tournamentManager.GetTournamentById(id);
+
+                if (tournament.IsTeamTournament)
+                {
+                    if (MyTeam == null || MyTeam.Captain.Id != CurrentPlayer?.Id)
+                        throw new InvalidOperationException("Only the team captain can withdraw the team.");
+
+                    tournamentManager.RemoveTeamFromTournament(MyTeam.Id, tournament.Id);
+                    TempData["Message"] = "Team withdrawn from the tournament.";
+                }
+                else
+                {
+                    if (CurrentPlayer == null)
+                        throw new InvalidOperationException("Player profile was not found.");
+
+                    tournamentManager.RemovePlayerFromTournament(CurrentPlayer, tournament);
+                    TempData["Message"] = "You left the tournament.";
+                }
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+            catch
+            {
+                TempData["Error"] = "The tournament registration could not be changed.";
             }
 
             return RedirectToPage("/Tournaments");

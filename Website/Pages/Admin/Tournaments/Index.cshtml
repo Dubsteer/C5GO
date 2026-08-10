@@ -1,0 +1,85 @@
+@page
+@model Website.Pages.Admin.Tournaments.IndexModel
+@{
+    ViewData["Title"] = "Tournament administration";
+}
+
+<section class="admin-shell">
+    <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+        <a asp-page="/Admin/Index">Administration</a>
+        <span>/</span>
+        <span>Tournaments</span>
+    </nav>
+
+    <header class="admin-page-header admin-page-header-row">
+        <div>
+            <p class="admin-eyebrow">Competition control</p>
+            <h1>Tournaments</h1>
+            <p>Create competitions and manage their participants, brackets and results.</p>
+        </div>
+        <a asp-page="/Admin/Tournaments/Create" class="btn btn-success">Create tournament</a>
+    </header>
+
+    @if (TempData["SuccessMessage"] is string successMessage)
+    {
+        <div class="alert alert-success" role="status">@successMessage</div>
+    }
+    @if (TempData["ErrorMessage"] is string errorMessage)
+    {
+        <div class="alert alert-danger" role="alert">@errorMessage</div>
+    }
+
+    <form method="get" class="admin-filter-bar">
+        <input asp-for="SearchTerm" class="form-control" placeholder="Search by name or description" />
+        <select asp-for="Filter" class="form-select" aria-label="Filter tournaments">
+            <option value="all">All tournaments</option>
+            <option value="solo">Solo only</option>
+            <option value="team">Team only</option>
+            <option value="open">Open</option>
+            <option value="active">In progress</option>
+            <option value="closed">Closed</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a asp-page="/Admin/Tournaments/Index" class="btn btn-outline-light">Reset</a>
+    </form>
+
+    @if (Model.Tournaments.Count == 0)
+    {
+        <div class="admin-empty-state">
+            <h2>No tournaments found</h2>
+            <p>Create a tournament or change the current filters.</p>
+        </div>
+    }
+    else
+    {
+        <div class="admin-tournament-grid">
+            @foreach (var tournament in Model.Tournaments)
+            {
+                <article class="admin-tournament-card">
+                    <div class="admin-card-topline">
+                        <span class="admin-badge @(tournament.IsTeamTournament ? "admin-badge-team" : "admin-badge-solo")">
+                            @(tournament.IsTeamTournament ? $"Team {tournament.TeamSizeRequired}v{tournament.TeamSizeRequired}" : "Solo")
+                        </span>
+                        <span class="admin-badge admin-status-@tournament.Status.ToString().ToLowerInvariant()">
+                            @tournament.Status
+                        </span>
+                    </div>
+                    <h2>@tournament.Name</h2>
+                    <p>@tournament.Description</p>
+                    <div class="admin-card-metrics">
+                        <span>@(tournament.IsTeamTournament ? $"{tournament.TeamsCount} teams" : $"{tournament.PlayersCount} players")</span>
+                        <span>@tournament.MatchesCount matches</span>
+                    </div>
+                    <div class="admin-card-actions">
+                        <a asp-page="/Admin/Tournaments/Details" asp-route-id="@tournament.Id" class="btn btn-primary">Manage</a>
+                        <a asp-page="/Tournaments/Details" asp-route-id="@tournament.Id" class="btn btn-outline-light">Public view</a>
+                        <form method="post" asp-page-handler="Delete" asp-route-id="@tournament.Id"
+                              onsubmit="return confirm('Delete this tournament, its registrations and all of its matches?');">
+                            <button type="submit" class="btn btn-outline-danger">Delete</button>
+                        </form>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</section>

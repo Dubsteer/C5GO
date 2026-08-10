@@ -7,15 +7,21 @@ namespace Website.Pages.Admin
     {
         private readonly UserManager userManager;
         private readonly PostManager postManager;
+        private readonly TournamentManager tournamentManager;
 
         public int UserCount { get; private set; }
         public int PlayerCount { get; private set; }
         public int PostCount { get; private set; }
+        public int TournamentCount { get; private set; }
 
-        public IndexModel(UserManager userManager, PostManager postManager)
+        public IndexModel(
+            UserManager userManager,
+            PostManager postManager,
+            TournamentManager tournamentManager)
         {
             this.userManager = userManager;
             this.postManager = postManager;
+            this.tournamentManager = tournamentManager;
         }
 
         public void OnGet()
@@ -25,6 +31,7 @@ namespace Website.Pages.Admin
             PlayerCount = users.Count(user =>
                 !string.IsNullOrWhiteSpace(user.SteamId) && user.SteamId != "0");
             PostCount = postManager.GetAllPosts().Count;
+            TournamentCount = tournamentManager.GetAllTournaments().Count;
         }
     }
 }

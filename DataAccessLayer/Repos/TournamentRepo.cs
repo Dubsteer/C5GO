@@ -148,20 +148,32 @@ namespace DataLayer.Repos
         {
             EnsureConnection();
 
-            new MySqlCommand("DELETE FROM matches WHERE tournamentId=@id", conn.GetInnerConn())
-            { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
+            using var transaction = conn.GetInnerConn().BeginTransaction();
+            try
+            {
+                foreach (var table in new[] { "matches", "team_matches", "applications", "team_applications" })
+                {
+                    using var childCommand = new MySqlCommand(
+                        $"DELETE FROM {table} WHERE tournamentId=@id",
+                        conn.GetInnerConn(),
+                        transaction);
+                    childCommand.Parameters.AddWithValue("@id", t.Id);
+                    childCommand.ExecuteNonQuery();
+                }
 
-            new MySqlCommand("DELETE FROM `match` WHERE tournamentId=@id", conn.GetInnerConn())
-            { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
-
-            new MySqlCommand("DELETE FROM applications WHERE tournamentId=@id", conn.GetInnerConn())
-            { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
-
-            new MySqlCommand("DELETE FROM team_applications WHERE tournamentId=@id", conn.GetInnerConn())
-            { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
-
-            new MySqlCommand("DELETE FROM tournament WHERE id=@id", conn.GetInnerConn())
-            { Parameters = { new MySqlParameter("@id", t.Id) } }.ExecuteNonQuery();
+                using var tournamentCommand = new MySqlCommand(
+                    "DELETE FROM tournament WHERE id=@id",
+                    conn.GetInnerConn(),
+                    transaction);
+                tournamentCommand.Parameters.AddWithValue("@id", t.Id);
+                tournamentCommand.ExecuteNonQuery();
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
 
         // ===========================================================

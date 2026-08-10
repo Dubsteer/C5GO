@@ -46,7 +46,7 @@
 }
 
 .admin-stat-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     margin-bottom: 1.25rem;
 }
 
@@ -231,6 +231,315 @@ a.admin-action-card:hover {
     color: #8d99a8;
 }
 
+.admin-filter-bar,
+.admin-inline-form,
+.admin-form-actions,
+.admin-card-actions,
+.admin-card-topline,
+.admin-card-metrics,
+.admin-panel-heading,
+.admin-match-title,
+.admin-match-controls,
+.admin-score-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.admin-filter-bar {
+    margin-bottom: 1.5rem;
+}
+
+.admin-filter-bar .form-control {
+    flex: 1 1 340px;
+}
+
+.admin-filter-bar .form-select {
+    flex: 0 1 210px;
+}
+
+.admin-shell .form-control,
+.admin-shell .form-select {
+    border-color: #354150;
+    background-color: #101720;
+    color: #ffffff;
+}
+
+.admin-shell .form-control:focus,
+.admin-shell .form-select:focus {
+    border-color: #2dd4bf;
+    background-color: #101720;
+    color: #ffffff;
+    box-shadow: 0 0 0 0.2rem rgba(45, 212, 191, 0.16);
+}
+
+.admin-shell .form-select option {
+    background: #101720;
+}
+
+.admin-tournament-grid,
+.admin-workspace-grid,
+.admin-match-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.admin-tournament-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-tournament-card,
+.admin-panel {
+    border: 1px solid #303946;
+    background: #151b23;
+    border-radius: 14px;
+}
+
+.admin-tournament-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 280px;
+    padding: 1.35rem;
+}
+
+.admin-tournament-card h2 {
+    margin: 1.2rem 0 0.55rem;
+    color: #ffffff;
+    font-size: 1.35rem;
+}
+
+.admin-tournament-card > p {
+    flex: 1;
+    color: #aeb9c6;
+}
+
+.admin-card-topline,
+.admin-card-metrics {
+    justify-content: space-between;
+}
+
+.admin-card-metrics {
+    margin: 0.6rem 0 1.2rem;
+    color: #8d99a8;
+    font-size: 0.85rem;
+}
+
+.admin-card-actions {
+    flex-wrap: wrap;
+}
+
+.admin-card-actions form {
+    margin-left: auto;
+}
+
+.admin-badge-team {
+    border-color: #3b82f6;
+    color: #8ec5ff;
+}
+
+.admin-badge-solo {
+    border-color: #8b5cf6;
+    color: #c4a7ff;
+}
+
+.admin-status-open {
+    border-color: #1f9d7a;
+    color: #64e6bc;
+}
+
+.admin-status-inprogress {
+    border-color: #a87922;
+    color: #ffd166;
+}
+
+.admin-status-closed {
+    border-color: #a63c50;
+    color: #ff8fa3;
+}
+
+.admin-form-shell {
+    max-width: 820px;
+    margin: 0 auto;
+}
+
+.admin-form-card,
+.admin-panel {
+    padding: 1.35rem;
+}
+
+.admin-checkbox-card {
+    margin: 1.2rem 0;
+    padding: 1rem 1rem 1rem 2.5rem;
+    border: 1px solid #303946;
+    border-radius: 10px;
+    background: #101720;
+}
+
+.admin-checkbox-card span {
+    display: block;
+    margin-top: 0.25rem;
+    color: #8d99a8;
+    font-size: 0.85rem;
+}
+
+.admin-form-actions {
+    margin-top: 1.5rem;
+}
+
+.admin-workspace-grid {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    margin-bottom: 1rem;
+}
+
+.admin-panel-heading {
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+}
+
+.admin-panel-heading h2 {
+    display: inline;
+    margin: 0 0 0 0.55rem;
+    color: #ffffff;
+    font-size: 1.2rem;
+}
+
+.admin-panel-heading p {
+    margin: 0.45rem 0 0;
+    color: #8d99a8;
+}
+
+.admin-section-number {
+    color: #5eead4;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.admin-count-pill {
+    display: inline-flex;
+    min-width: 2rem;
+    min-height: 2rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #22303b;
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.admin-inline-form {
+    align-items: stretch;
+    margin-bottom: 1rem;
+}
+
+.admin-inline-form .form-select {
+    flex: 1;
+}
+
+.admin-inline-notice,
+.admin-empty-compact {
+    padding: 0.8rem 1rem;
+    border: 1px solid #3a4655;
+    border-radius: 9px;
+    background: #101720;
+    color: #aeb9c6;
+    font-size: 0.88rem;
+}
+
+.admin-inline-notice {
+    border-color: #725f2d;
+    color: #ffd166;
+}
+
+.admin-roster-list {
+    display: grid;
+    gap: 0.6rem;
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.admin-roster-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid #2c3642;
+    border-radius: 9px;
+    background: #111820;
+}
+
+.admin-roster-item strong,
+.admin-roster-item span {
+    display: block;
+}
+
+.admin-roster-item span {
+    margin-top: 0.2rem;
+    color: #8d99a8;
+    font-size: 0.78rem;
+}
+
+.admin-bracket-panel {
+    margin-top: 1rem;
+}
+
+.admin-match-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-match-card {
+    padding: 1rem;
+    border: 1px solid #2f3a47;
+    border-radius: 11px;
+    background: #101720;
+}
+
+.admin-match-title {
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    color: #ffffff;
+}
+
+.admin-match-title > span {
+    color: #687686;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+
+.admin-score-row {
+    margin-bottom: 0.75rem;
+}
+
+.admin-score-row label {
+    flex: 1;
+}
+
+.admin-score-row label > span {
+    display: block;
+    min-height: 2.3em;
+    margin-bottom: 0.35rem;
+    color: #aeb9c6;
+    font-size: 0.75rem;
+}
+
+.admin-score-row input {
+    text-align: center;
+    font-weight: 700;
+}
+
+.admin-match-controls {
+    align-items: stretch;
+    flex-wrap: wrap;
+}
+
+.admin-match-controls .form-control {
+    flex: 1 1 190px;
+}
+
+.admin-match-controls .form-select {
+    flex: 1 1 130px;
+}
+
 @media (max-width: 900px) {
     .admin-stat-grid,
     .admin-action-grid {
@@ -244,12 +553,26 @@ a.admin-action-card:hover {
     .admin-action-card p {
         min-height: auto;
     }
+
+    .admin-tournament-grid,
+    .admin-workspace-grid,
+    .admin-match-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 640px) {
     .admin-page-header-row,
-    .admin-search {
+    .admin-search,
+    .admin-filter-bar,
+    .admin-inline-form,
+    .admin-panel-heading-responsive,
+    .admin-form-actions {
         align-items: stretch;
         flex-direction: column;
+    }
+
+    .admin-card-actions form {
+        margin-left: 0;
     }
 }

@@ -4,14 +4,13 @@ namespace LogicLayer.IRepos
 {
     public interface IPlayerRepo
     {
+        void InitializeRole(Player player);
 
-        public void InitializeRole(Player player);
-
-        public void AddPlayerToTournament(Player player, Tournament tournament);
+        void AddPlayerToTournament(Player player, Tournament tournament);
        
-        public bool DeletePlayerRole(int userId);
-        public List<Player> GetAllPlayers();
+        bool DeletePlayerRole(int userId);
+        List<Player> GetAllPlayers();
 
-        Player GetPlayer(User user);
+        Player? GetPlayer(User user);
     }
 }

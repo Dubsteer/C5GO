@@ -10,9 +10,9 @@ namespace Website.Pages
     [Authorize]
     public class ViewProfileModel : PageModel
     {
-        public User PageUser { get; set; }
-        public Player Player { get; set; }
-        public List<Match> Matches { get; set; } = new();
+        public User PageUser { get; set; } = null!;
+        public Player? Player { get; set; }
+        public List<Match> Matches { get; set; } = [];
 
         public bool RequireSteam { get; set; }
 
@@ -23,7 +23,7 @@ namespace Website.Pages
         [BindProperty]
         [Required(ErrorMessage = "Steam ID is required")]
         [StringLength(8, MinimumLength = 8, ErrorMessage = "Steam ID must be exactly 8 characters")]
-        public string SteamId { get; set; }
+        public string SteamId { get; set; } = string.Empty;
 
         public ViewProfileModel(UserManager u, PlayerManager p, MatchManager m)
         {
@@ -34,8 +34,9 @@ namespace Website.Pages
 
         private int? GetUserId()
         {
-            var claim = User.FindFirst("id");
-            return claim == null ? null : int.Parse(claim.Value);
+            return int.TryParse(User.FindFirst("id")?.Value, out var userId)
+                ? userId
+                : null;
         }
 
         public IActionResult OnGet()
@@ -43,11 +44,15 @@ namespace Website.Pages
             var id = GetUserId();
             if (id == null) return Redirect("/Login");
 
-            PageUser = _userManager.GetUserById(id.Value);
-            Player = _playerManager.GetPlayer(PageUser);
+            var user = _userManager.GetUserById(id.Value);
+            if (user == null)
+                return Challenge();
+
+            PageUser = user;
+            Player = _playerManager.GetPlayer(user);
             Matches = Player != null
-                ? _matchManager.GetPastMatches(PageUser)
-                : new List<Match>();
+                ? _matchManager.GetPastMatches(user)
+                : [];
 
             SteamId = Player?.SteamId ?? "";
 
@@ -62,7 +67,15 @@ namespace Website.Pages
             var id = GetUserId();
             if (id == null) return Redirect("/Login");
 
-            PageUser = _userManager.GetUserById(id.Value);
+            var user = _userManager.GetUserById(id.Value);
+            if (user == null)
+                return Challenge();
+
+            PageUser = user;
+            Player = _playerManager.GetPlayer(user);
+            Matches = Player != null
+                ? _matchManager.GetPastMatches(user)
+                : [];
 
             if (PageUser.IsAdmin)
             {
@@ -73,7 +86,6 @@ namespace Website.Pages
             if (!ModelState.IsValid)
                 return Page();
 
-            // UNIQUE SteamID check
             if (_userManager.SteamIdExists(SteamId))
             {
                 ModelState.AddModelError(
@@ -83,7 +95,6 @@ namespace Website.Pages
                 return Page();
             }
 
-            // Save SteamID
             PageUser.SteamId = SteamId;
 
             var newPlayer = new Player(PageUser);

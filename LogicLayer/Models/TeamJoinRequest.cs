@@ -13,8 +13,8 @@ namespace LogicLayer.Models
         public int UserId { get; set; }
         public DateTime RequestedAt { get; set; }
 
-        public User User { get; set; }
-        public Team Team { get; set; }
+        public User User { get; set; } = null!;
+        public Team Team { get; set; } = null!;
     }
 }
 

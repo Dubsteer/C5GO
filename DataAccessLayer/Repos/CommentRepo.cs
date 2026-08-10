@@ -23,9 +23,6 @@ namespace DataLayer.Repos
                 conn.Open();
         }
 
-        // =========================
-        // ADD COMMENT
-        // =========================
         public void AddComment(Comment comment)
         {
             EnsureOpen();
@@ -43,9 +40,6 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        // =========================
-        // GET ALL COMMENTS FOR POST
-        // =========================
         public List<Comment> GetAllCommentsByPostId(int postId)
         {
             EnsureOpen();
@@ -92,10 +86,7 @@ namespace DataLayer.Repos
             return comments;
         }
 
-        // =========================
-        // GET COMMENT BY USER
-        // =========================
-        public Comment GetCommentByUserId(int userId)
+        public Comment? GetCommentByUserId(int userId)
         {
             EnsureOpen();
 
@@ -120,10 +111,7 @@ namespace DataLayer.Repos
             );
         }
 
-        // =========================
-        // GET COMMENT BY ID
-        // =========================
-        public Comment GetCommentById(int id)
+        public Comment? GetCommentById(int id)
         {
             EnsureOpen();
 
@@ -145,9 +133,6 @@ namespace DataLayer.Repos
             );
         }
 
-        // =========================
-        // UPDATE COMMENT
-        // =========================
         public void UpdateComment(Comment comment)
         {
             EnsureOpen();
@@ -167,9 +152,6 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        // =========================
-        // DELETE COMMENT
-        // =========================
         public void DeleteComment(Comment comment)
         {
             EnsureOpen();
@@ -189,9 +171,6 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        // =========================
-        // GET ALL COMMENTS
-        // =========================
         public List<Comment> GetAllComments()
         {
             EnsureOpen();
@@ -217,9 +196,6 @@ namespace DataLayer.Repos
             return list;
         }
 
-        // =========================
-        // ADD REPLY
-        // =========================
         public void AddReply(CommentReply reply)
         {
             EnsureOpen();
@@ -237,9 +213,6 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        // =========================
-        // GET REPLIES FOR COMMENT
-        // =========================
         public List<CommentReply> GetAllRepliesByCommentId(int commentId)
         {
             EnsureOpen();
@@ -286,10 +259,7 @@ namespace DataLayer.Repos
             return list;
         }
 
-        // =========================
-        // GET REPLY BY ID
-        // =========================
-        public CommentReply GetReplyById(int replyId)
+        public CommentReply? GetReplyById(int replyId)
         {
             EnsureOpen();
 
@@ -330,9 +300,6 @@ namespace DataLayer.Repos
             );
         }
 
-        // =========================
-        // DELETE REPLY
-        // =========================
         public void DeleteReply(CommentReply reply)
         {
             EnsureOpen();
@@ -345,9 +312,6 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        // =========================
-        // EXISTS CHECK
-        // =========================
         public bool CheckIfCommentExists(string text)
         {
             EnsureOpen();

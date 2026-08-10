@@ -9,16 +9,12 @@ namespace Website.Pages
     public class IndexModel : PageModel
     {
         private readonly PostManager postManager;
-        private readonly TournamentManager tournamentManager;
-        private readonly MatchManager matchManager;
-        
-        public List<Post> Posts { get; set; }
+        public List<Post> Posts { get; set; } = [];
 
 
         public IndexModel(PostManager postManager)
         {
             this.postManager = postManager;
-
         }
         public IActionResult OnGet()
         {
@@ -31,7 +27,6 @@ namespace Website.Pages
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
-                // internal server error
                 return StatusCode(500);
             }
             return Page();
@@ -40,14 +35,9 @@ namespace Website.Pages
        
         public string TruncateString(string input, int maxLength)
         {
-            if (input.Length > maxLength)
-            {
-                return input.Substring(0, maxLength) + "...";
-            }
-            else
-            {
-                return input;
-            }
+            return input.Length > maxLength
+                ? input[..maxLength] + "..."
+                : input;
         }
     }
 }

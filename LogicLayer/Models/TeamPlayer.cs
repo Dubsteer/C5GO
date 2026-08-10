@@ -10,10 +10,10 @@ namespace LogicLayer.Models
     {
         public int TeamId { get; set; }
         public int UserId { get; set; }
-        public string Role { get; set; } // Captain or Member
-        public string Status { get; set; } // Pending or Approved
+        public string Role { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
 
-        public User User { get; set; }
+        public User User { get; set; } = null!;
     }
 }
 

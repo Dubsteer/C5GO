@@ -5,16 +5,16 @@ namespace LogicLayer.Models
 {
     public class Comment
     {
-        public string Content { get; set; } = "";
+        public string Content { get; set; } = string.Empty;
 
         public int Id { get; set; }
        
         public DateTime Posted_on { get; set; }
         public int PostId { get; set; }
 
-        public User User { get; set; }
+        public User User { get; set; } = null!;
 
-        public List<CommentReply> Replies { get; set; } = new();
+        public List<CommentReply> Replies { get; set; } = [];
 
         public Comment(int id, User user, string content, DateTime posted_on, int postId)
         {

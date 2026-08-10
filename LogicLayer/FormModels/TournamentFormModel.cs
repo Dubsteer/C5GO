@@ -1,5 +1,4 @@
 ﻿using LogicLayer.Enums;
-using LogicLayer.Models;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
@@ -10,16 +9,16 @@ namespace LogicLayer.FormModels
         [Required]
         [DisplayName("Name")]
         [StringLength(50, ErrorMessage = "Content length must not exceed {1} characters.")]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [Required]
         [DisplayName("Description")]
         [StringLength(300, ErrorMessage = "Content length must not exceed {1} characters.")]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         [Display(Name = "Status")]
         [DisplayName("Status")]
-        public Status status { get; set; }
+        public Status Status { get; set; }
 
         public TournamentFormModel() { }
 

@@ -4,9 +4,7 @@ using LogicLayer.FormModels;
 using LogicLayer.Managers;
 using Microsoft.AspNetCore.Authorization;
 using LogicLayer.Models;
-using LogicLayer.Exceptions;
 using System.Diagnostics;
-using BCrypt.Net;
 
 namespace Website.Pages
 {
@@ -14,7 +12,7 @@ namespace Website.Pages
     public class EditProfileModel : PageModel
     {
         [BindProperty]
-        public FullUserFormModel FullUserFormModel { get; set; }
+        public FullUserFormModel FullUserFormModel { get; set; } = new();
 
         private readonly UserManager _userManager;
 
@@ -25,8 +23,9 @@ namespace Website.Pages
 
         public IActionResult OnGet()
         {
-            int userId = int.Parse(User.FindFirst("id").Value);
-            var user = _userManager.GetUserById(userId);
+            var user = GetCurrentUser();
+            if (user == null)
+                return Challenge();
 
             FullUserFormModel = new FullUserFormModel(
                 user.Firstname,
@@ -34,7 +33,7 @@ namespace Website.Pages
                 user.Age,
                 user.Username,
                 user.Gmail,
-                "" // password empty
+                ""
             );
 
             return Page();
@@ -45,10 +44,10 @@ namespace Website.Pages
             if (!ModelState.IsValid)
                 return Page();
 
-            int userId = int.Parse(User.FindFirst("id").Value);
-            var oldUser = _userManager.GetUserById(userId);
+            var oldUser = GetCurrentUser();
+            if (oldUser == null)
+                return Challenge();
 
-            // Ako je lozinka ostavljena prazna ? ?uvamo staru lozinku
             string finalPassword = string.IsNullOrWhiteSpace(FullUserFormModel.Password)
                 ? oldUser.Password
                 : BCrypt.Net.BCrypt.HashPassword(FullUserFormModel.Password);
@@ -57,7 +56,7 @@ namespace Website.Pages
                 oldUser.Id,
                 FullUserFormModel.Firstname,
                 FullUserFormModel.Lastname,
-                FullUserFormModel.Age.Value,
+                FullUserFormModel.Age.GetValueOrDefault(),
                 FullUserFormModel.Username,
                 FullUserFormModel.Gmail,
                 finalPassword,
@@ -77,6 +76,13 @@ namespace Website.Pages
             }
 
             return RedirectToPage("ViewProfile");
+        }
+
+        private User? GetCurrentUser()
+        {
+            return int.TryParse(User.FindFirst("id")?.Value, out var userId)
+                ? _userManager.GetUserById(userId)
+                : null;
         }
     }
 }

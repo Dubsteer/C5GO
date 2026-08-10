@@ -3,12 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using LogicLayer.Managers;
 using LogicLayer.Models;
 
-namespace Website.Pages   // ? OVO je klju?no
+namespace Website.Pages
 {
     public class UserProfileModel : PageModel
     {
-        public User ViewedUser { get; set; }
-        public Player ViewedPlayer { get; set; }
+        public User ViewedUser { get; set; } = null!;
+        public Player? ViewedPlayer { get; set; }
 
         private readonly UserManager _userManager;
         private readonly PlayerManager _playerManager;
@@ -21,12 +21,12 @@ namespace Website.Pages   // ? OVO je klju?no
 
         public IActionResult OnGet(int id)
         {
-            ViewedUser = _userManager.GetUserById(id);
+            var user = _userManager.GetUserById(id);
+            if (user == null)
+                return NotFound();
 
-            if (ViewedUser == null)
-                return Redirect("/Error");
-
-            ViewedPlayer = _playerManager.GetPlayer(ViewedUser);
+            ViewedUser = user;
+            ViewedPlayer = _playerManager.GetPlayer(user);
 
             return Page();
         }

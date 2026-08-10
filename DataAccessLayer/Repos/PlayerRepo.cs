@@ -22,9 +22,6 @@ namespace DataLayer.Repos
                 conn.Open();
         }
 
-        // =========================
-        // SAFE READERS
-        // =========================
         private string? SafeString(MySqlDataReader reader, string column)
         {
             return reader.IsDBNull(column) ? null : reader.GetString(column);
@@ -40,9 +37,6 @@ namespace DataLayer.Repos
             return !reader.IsDBNull(column) && reader.GetBoolean(column);
         }
 
-        // =========================
-        // ROLE INIT
-        // =========================
         public void InitializeRole(Player player)
         {
             EnsureConnection();
@@ -57,9 +51,6 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        // =========================
-        // GET ALL PLAYERS
-        // =========================
         public List<Player> GetAllPlayers()
         {
             EnsureConnection();
@@ -91,9 +82,6 @@ namespace DataLayer.Repos
             return list;
         }
 
-        // =========================
-        // GET PLAYER BY USER
-        // =========================
         public Player? GetPlayer(User user)
         {
             EnsureConnection();
@@ -110,7 +98,6 @@ namespace DataLayer.Repos
 
             var steamId = SafeString(r, "steam_id");
 
-            // ✅ nema steam role
             if (string.IsNullOrWhiteSpace(steamId) || steamId == "0")
                 return null;
 
@@ -129,9 +116,6 @@ namespace DataLayer.Repos
             return new Player(u);
         }
 
-        // =========================
-        // TOURNAMENT
-        // =========================
         public void AddPlayerToTournament(Player player, Tournament tournament)
         {
             EnsureConnection();
@@ -145,9 +129,6 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        // =========================
-        // DELETE ROLE
-        // =========================
         public bool DeletePlayerRole(int userId)
         {
             EnsureConnection();

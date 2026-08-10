@@ -23,9 +23,6 @@ namespace DataLayer.Repos
                 conn.Open();
         }
 
-        // =====================================================
-        // GET ALL TEAM MATCHES
-        // =====================================================
         public List<TeamMatch> GetAllTeamMatches()
         {
             EnsureOpen();
@@ -81,9 +78,6 @@ namespace DataLayer.Repos
             return list;
         }
 
-        // =====================================================
-        // ADD
-        // =====================================================
         public void AddTeamMatch(TeamMatch match)
         {
             EnsureOpen();
@@ -105,9 +99,6 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        // =====================================================
-        // UPDATE
-        // =====================================================
         public void UpdateTeamMatch(TeamMatch match)
         {
             EnsureOpen();
@@ -134,9 +125,6 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        // =====================================================
-        // DELETE
-        // =====================================================
         public void RemoveTeamMatch(TeamMatch match)
         {
             EnsureOpen();

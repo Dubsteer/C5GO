@@ -171,7 +171,7 @@
         </button>
     </div>
 
-    @if (User.Identity.IsAuthenticated && Model.MyTeam == null)
+    @if (User.Identity?.IsAuthenticated == true && Model.MyTeam == null)
     {
         <div class="create-team-box">
             <h4>You don’t have a team yet</h4>
@@ -229,7 +229,7 @@
                                 View Team
                             </a>
                         }
-                        else if (User.Identity.IsAuthenticated)
+                        else if (User.Identity?.IsAuthenticated == true)
                         {
                             if (isFull)
                             {

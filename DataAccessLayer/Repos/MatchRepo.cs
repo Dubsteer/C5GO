@@ -23,9 +23,6 @@ namespace DataLayer.Repos
                 conn.Open();
         }
 
-        // =========================
-        // GET ALL
-        // =========================
         public List<Match> GetAllMatches()
         {
             EnsureOpen();
@@ -95,9 +92,6 @@ namespace DataLayer.Repos
             return list;
         }
 
-        // =========================
-        // ADD / UPDATE / DELETE
-        // =========================
         public void AddMatch(Match match)
         {
             EnsureOpen();

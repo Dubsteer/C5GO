@@ -16,9 +16,6 @@ namespace LogicLayer.Managers
             this.userRepo = userRepo;
         }
 
-        // =====================================================
-        // READ
-        // =====================================================
         public List<User> GetAllUsers()
         {
             return userRepo.GetAllUsers();
@@ -35,9 +32,6 @@ namespace LogicLayer.Managers
         }
 
 
-        // =====================================================
-        // LOGIN
-        // =====================================================
         public User? GetLoginUser(string username, string password)
         {
             var user = userRepo.GetAllUsers()
@@ -54,7 +48,6 @@ namespace LogicLayer.Managers
             if (!passwordOk)
                 return null;
 
-            // ❗❗❗ NEMA EXCEPTIONA
             if (!user.EmailConfirmed)
                 return null;
 
@@ -62,9 +55,6 @@ namespace LogicLayer.Managers
         }
 
 
-        // =====================================================
-        // CREATE (REGISTER)
-        // =====================================================
         public void CreateUser(User user)
         {
             if (userRepo.UsernameExists(user.Username))
@@ -77,11 +67,9 @@ namespace LogicLayer.Managers
                 userRepo.SteamIdExists(user.SteamId))
                 throw new Exception("SteamID already in use");
 
-            // PASSWORD HASH
             if (!user.Password.StartsWith("$2"))
                 user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
 
-            // EMAIL VERIFICATION SETUP
             user.EmailConfirmed = false;
             user.EmailToken = Guid.NewGuid().ToString();
             user.TokenCreatedAt = DateTime.Now;
@@ -89,9 +77,6 @@ namespace LogicLayer.Managers
             userRepo.CreateUser(user);
         }
 
-        // =====================================================
-        // EMAIL VERIFICATION
-        // =====================================================
         public User? GetUserByEmailToken(string token)
         {
             if (string.IsNullOrWhiteSpace(token))
@@ -108,14 +93,14 @@ namespace LogicLayer.Managers
                 throw new Exception("Invalid or expired verification token.");
 
             if (user.EmailConfirmed)
-                return; // already confirmed
+                return;
 
-            userRepo.ConfirmEmail(user.Id.Value);
+            if (user.Id is not int userId)
+                throw new InvalidOperationException("The user account is invalid.");
+
+            userRepo.ConfirmEmail(userId);
         }
 
-        // =====================================================
-        // UPDATE / DELETE
-        // =====================================================
         public void UpdateUser(User user)
         {
             var all = userRepo.GetAllUsers();
@@ -154,9 +139,6 @@ namespace LogicLayer.Managers
             userRepo.DeleteUser(user);
         }
 
-        // =====================================================
-        // HELPERS
-        // =====================================================
         public bool CheckIfUsernameExists(string username, int selfId)
         {
             return userRepo.CheckIfUsernameExists(username, selfId);

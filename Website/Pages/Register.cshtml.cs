@@ -13,7 +13,7 @@ namespace Website.Pages
     public class RegisterModel : PageModel
     {
         [BindProperty]
-        public FullUserFormModel FullUserFormModel { get; set; }
+        public FullUserFormModel FullUserFormModel { get; set; } = new();
 
         private readonly UserManager userManager;
         private readonly EmailService emailService;
@@ -26,7 +26,7 @@ namespace Website.Pages
 
         public IActionResult OnGet()
         {
-            if (User.Identity.IsAuthenticated)
+            if (User.Identity?.IsAuthenticated == true)
                 return Redirect("/");
 
             return Page();
@@ -40,7 +40,7 @@ namespace Website.Pages
             var user = new User(
                 FullUserFormModel.Firstname,
                 FullUserFormModel.Lastname,
-                FullUserFormModel.Age.Value,
+                FullUserFormModel.Age.GetValueOrDefault(),
                 FullUserFormModel.Username,
                 FullUserFormModel.Gmail,
                 FullUserFormModel.Password,
@@ -49,13 +49,14 @@ namespace Website.Pages
 
             try
             {
-                // CREATE USER + TOKEN
                 userManager.CreateUser(user);
 
-                // SEND VERIFICATION EMAIL
+                var token = user.EmailToken
+                    ?? throw new InvalidOperationException("Verification token was not created.");
+
                 await emailService.SendVerificationEmail(
                     user.Gmail,
-                    user.EmailToken
+                    token
                 );
             }
             catch (UsernameAlreadyInUseException)

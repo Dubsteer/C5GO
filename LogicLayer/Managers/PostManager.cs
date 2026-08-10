@@ -28,7 +28,7 @@ namespace LogicLayer.Managers
             repo.DeletePost(post);
         }
 
-        public Post GetPostById(int id)
+        public Post? GetPostById(int id)
         {
             return repo.GetAllPosts().Find(p => p.Id == id);
         }

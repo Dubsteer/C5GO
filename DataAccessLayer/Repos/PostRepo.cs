@@ -23,9 +23,6 @@ namespace DataLayer.Repos
                 conn.Open();
         }
 
-        // =========================
-        // CREATE
-        // =========================
         public void CreatePost(Post post)
         {
             EnsureOpen();
@@ -48,9 +45,6 @@ namespace DataLayer.Repos
         }
 
 
-        // =========================
-        // READ ALL
-        // =========================
         public List<Post> GetAllPosts()
         {
             EnsureOpen();
@@ -70,7 +64,6 @@ namespace DataLayer.Repos
                         reader.GetDateTime("posted_on")
                     );
 
-                    // ✅ IMAGE PATH
                     post.ImagePath = reader.IsDBNull("image_path")
                         ? null
                         : reader.GetString("image_path");
@@ -83,9 +76,6 @@ namespace DataLayer.Repos
         }
 
 
-        // =========================
-        // READ BY ID
-        // =========================
         public Post? GetPostById(int id)
         {
             EnsureOpen();
@@ -109,7 +99,6 @@ namespace DataLayer.Repos
                     reader.GetDateTime("posted_on")
                 );
 
-                // ✅ IMAGE PATH
                 post.ImagePath = reader.IsDBNull("image_path")
                     ? null
                     : reader.GetString("image_path");
@@ -119,9 +108,6 @@ namespace DataLayer.Repos
         }
 
 
-        // =========================
-        // UPDATE
-        // =========================
         public void UpdatePost(Post post)
         {
             EnsureOpen();
@@ -146,9 +132,6 @@ namespace DataLayer.Repos
         }
 
 
-        // =========================
-        // DELETE
-        // =========================
         public void DeletePost(Post post)
         {
             EnsureOpen();
@@ -161,9 +144,6 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        // =========================
-        // CHECK UNIQUE TITLE
-        // =========================
         public bool CheckIfPostNameExists(string postTitle, int selfId)
         {
             EnsureOpen();

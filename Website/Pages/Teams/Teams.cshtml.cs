@@ -15,10 +15,10 @@ namespace Website.Pages.Teams
         private readonly TeamManager teamManager;
         private readonly UserManager userManager;
 
-        public List<Team> AllTeams { get; set; } = new();
-        public Team MyTeam { get; set; }
-        public User CurrentUser { get; set; }
-        public List<int> PendingRequests { get; set; } = new();
+        public List<Team> AllTeams { get; set; } = [];
+        public Team? MyTeam { get; set; }
+        public User CurrentUser { get; set; } = null!;
+        public List<int> PendingRequests { get; set; } = [];
 
         public TeamManager TeamManager => teamManager;
 
@@ -28,28 +28,34 @@ namespace Website.Pages.Teams
             userManager = um;
         }
 
-        private void LoadUser()
+        private int? LoadUser()
         {
-            var id = int.Parse(User.FindFirst("id").Value);
-            CurrentUser = userManager.GetUserById(id);
-            MyTeam = teamManager.GetTeamOfUser(id);
+            if (!int.TryParse(User.FindFirst("id")?.Value, out var userId))
+                return null;
+
+            var user = userManager.GetUserById(userId);
+            if (user?.Id is not int currentUserId)
+                return null;
+
+            CurrentUser = user;
+            MyTeam = teamManager.GetTeamOfUser(currentUserId);
+            return currentUserId;
         }
 
-        private void LoadRequests()
+        private void LoadRequests(int userId)
         {
-            if (CurrentUser?.Id == null)
-                return;
-
             PendingRequests = teamManager
-                .GetRequestsForUser(CurrentUser.Id.Value)
+                .GetRequestsForUser(userId)
                 .Select(r => r.TeamId)
                 .ToList();
         }
 
         public IActionResult OnGet()
         {
-            LoadUser();
-            LoadRequests();
+            if (LoadUser() is not int currentUserId)
+                return Challenge();
+
+            LoadRequests(currentUserId);
 
             AllTeams = teamManager.GetAllTeams();
             return Page();
@@ -57,7 +63,8 @@ namespace Website.Pages.Teams
 
         public IActionResult OnPostCreateTeam(string teamName)
         {
-            LoadUser();
+            if (LoadUser() is not int currentUserId)
+                return Challenge();
 
             if (MyTeam != null)
             {
@@ -71,7 +78,7 @@ namespace Website.Pages.Teams
                 return Redirect("/ViewProfile");
             }
 
-            teamManager.CreateTeam(teamName, CurrentUser.Id.Value);
+            teamManager.CreateTeam(teamName, currentUserId);
 
             TempData["Message"] = "Team created!";
             return RedirectToPage("/Teams/Teams");
@@ -79,9 +86,9 @@ namespace Website.Pages.Teams
 
         public IActionResult OnPostJoin(int teamId)
         {
-            LoadUser();
+            if (LoadUser() is not int currentUserId)
+                return Challenge();
 
-            // ? HARD BLOCK — NULL ILI "0"
             if (string.IsNullOrWhiteSpace(CurrentUser.SteamId) || CurrentUser.SteamId == "0")
             {
                 TempData["Error"] = "You must add your SteamID before requesting to join a team.";
@@ -90,7 +97,7 @@ namespace Website.Pages.Teams
 
             try
             {
-                teamManager.RequestJoinTeam(teamId, CurrentUser.Id.Value);
+                teamManager.RequestJoinTeam(teamId, currentUserId);
                 TempData["Message"] = "Join request sent!";
             }
             catch (Exception ex)
@@ -105,11 +112,12 @@ namespace Website.Pages.Teams
 
         public IActionResult OnPostApprove(int requestId)
         {
-            LoadUser();
+            if (LoadUser() is not int currentUserId)
+                return Challenge();
 
             try
             {
-                teamManager.ApproveRequest(requestId, CurrentUser.Id.Value);
+                teamManager.ApproveRequest(requestId, currentUserId);
                 TempData["Message"] = "Player approved!";
             }
             catch (Exception ex)
@@ -122,11 +130,12 @@ namespace Website.Pages.Teams
 
         public IActionResult OnPostReject(int requestId)
         {
-            LoadUser();
+            if (LoadUser() is not int currentUserId)
+                return Challenge();
 
             try
             {
-                teamManager.RejectRequest(requestId, CurrentUser.Id.Value);
+                teamManager.RejectRequest(requestId, currentUserId);
                 TempData["Message"] = "Request rejected.";
             }
             catch (Exception ex)

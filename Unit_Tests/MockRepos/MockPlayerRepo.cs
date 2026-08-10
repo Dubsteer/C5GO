@@ -15,7 +15,6 @@ namespace Unit_Tests.MockRepos
 
         public void AddPlayerToTournament(Player player, Tournament tournament)
         {
-            // You can add your logic to associate the player with the tournament in memory
         }
 
         public bool DeletePlayerRole(int userId)
@@ -29,7 +28,7 @@ namespace Unit_Tests.MockRepos
             return players;
         }
 
-        public Player GetPlayer(User user)
+        public Player? GetPlayer(User user)
         {
             return players.Find(p => p.Id == user.Id);
         }

@@ -23,9 +23,6 @@ namespace DataLayer.Repos
                 conn.Open();
         }
 
-        // ===========================================================
-        // GET ALL
-        // ===========================================================
         public List<Tournament> GetAllTournaments()
         {
             EnsureConnection();
@@ -66,10 +63,7 @@ namespace DataLayer.Repos
             return list;
         }
 
-        // ===========================================================
-        // GET BY ID
-        // ===========================================================
-        public Tournament GetTournamentById(int id)
+        public Tournament? GetTournamentById(int id)
         {
             EnsureConnection();
 
@@ -102,9 +96,6 @@ namespace DataLayer.Repos
             return t;
         }
 
-        // ===========================================================
-        // ADD / UPDATE / DELETE
-        // ===========================================================
         public void AddTournament(Tournament t)
         {
             EnsureConnection();
@@ -176,9 +167,6 @@ namespace DataLayer.Repos
             }
         }
 
-        // ===========================================================
-        // COUNTS  ✅ POPRAVLJENO
-        // ===========================================================
         private int GetPlayersCount(int tournamentId)
         {
             EnsureConnection();
@@ -217,9 +205,6 @@ namespace DataLayer.Repos
             return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
-        // ===========================================================
-        // SOLO
-        // ===========================================================
         public void AddTournamentApp(Player p, Tournament t)
         {
             EnsureConnection();
@@ -283,9 +268,6 @@ namespace DataLayer.Repos
             return list;
         }
 
-        // ===========================================================
-        // TEAMS
-        // ===========================================================
         public void AddTeamTournamentApp(int teamId, int tournamentId)
         {
             EnsureConnection();

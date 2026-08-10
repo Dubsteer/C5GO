@@ -16,13 +16,13 @@ namespace Website.Pages.Posts
         [BindProperty(SupportsGet = true)]
         public int Id { get; set; }
 
-        public Post Post { get; set; }
-        public List<Comment> Comments { get; set; }
-        public User CurrentUser { get; set; }
+        public Post Post { get; set; } = null!;
+        public List<Comment> Comments { get; set; } = [];
+        public User? CurrentUser { get; set; }
 
 
-        [BindProperty] public CommentModel NewComment { get; set; }
-        [BindProperty] public ReplyModel NewReply { get; set; }
+        [BindProperty] public CommentModel NewComment { get; set; } = new();
+        [BindProperty] public ReplyModel NewReply { get; set; } = new();
 
         public PostModel(
             PostManager postManager,
@@ -39,19 +39,19 @@ namespace Website.Pages.Posts
             if (Id <= 0)
                 return false;
 
-            Post = postManager.GetPostById(Id);
-            if (Post == null)
+            var post = postManager.GetPostById(Id);
+            if (post == null)
                 return false;
 
-            // samo decode – NIŠTA VIŠE
+            Post = post;
             Post.Content = WebUtility.HtmlDecode(Post.Content);
 
             Comments = commentManager.GetAllCommentsWithReplies(Id);
 
             if (User.Identity?.IsAuthenticated == true)
             {
-                int uid = int.Parse(User.FindFirst("id").Value);
-                CurrentUser = userManager.GetUserById(uid);
+                if (int.TryParse(User.FindFirst("id")?.Value, out var userId))
+                    CurrentUser = userManager.GetUserById(userId);
             }
 
             return true;
@@ -70,6 +70,9 @@ namespace Website.Pages.Posts
             if (!LoadData())
                 return RedirectToPage("/Error");
 
+            if (CurrentUser == null)
+                return Challenge();
+
             var comment = new Comment(
                 0,
                 CurrentUser,
@@ -86,6 +89,9 @@ namespace Website.Pages.Posts
         {
             if (!LoadData())
                 return RedirectToPage("/Error");
+
+            if (CurrentUser == null)
+                return Challenge();
 
             var reply = new CommentReply(
                 0,
@@ -104,6 +110,9 @@ namespace Website.Pages.Posts
             if (!LoadData())
                 return RedirectToPage("/Error");
 
+            if (CurrentUser == null)
+                return Challenge();
+
             var comment = commentManager.GetCommentById(cid);
 
             if (comment != null &&
@@ -120,6 +129,9 @@ namespace Website.Pages.Posts
         {
             if (!LoadData())
                 return RedirectToPage("/Error");
+
+            if (CurrentUser == null)
+                return Challenge();
 
             var reply = commentManager.GetReplyById(rid);
 

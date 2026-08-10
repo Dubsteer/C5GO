@@ -18,25 +18,24 @@ namespace LogicLayer.Services
 
         public EmailService(IConfiguration configuration)
         {
-            smtpServer = configuration["EmailSettings:SmtpServer"];
-            smtpUser = configuration["EmailSettings:Username"];
-            smtpPassword = configuration["EmailSettings:Password"];
-            fromEmail = configuration["EmailSettings:SenderEmail"];
-            baseUrl = configuration["AppSettings:AuthUrl"]?.TrimEnd('/');
+            smtpServer = GetRequiredSetting(configuration, "EmailSettings:SmtpServer");
+            smtpUser = GetRequiredSetting(configuration, "EmailSettings:Username");
+            smtpPassword = GetRequiredSetting(configuration, "EmailSettings:Password");
+            fromEmail = GetRequiredSetting(configuration, "EmailSettings:SenderEmail");
+            baseUrl = GetRequiredSetting(configuration, "AppSettings:AuthUrl").TrimEnd('/');
 
             if (!int.TryParse(configuration["EmailSettings:Port"], out smtpPort))
             {
-                throw new Exception("SMTP Port is not configured correctly.");
+                throw new InvalidOperationException("SMTP port is not configured correctly.");
             }
+        }
 
-            if (string.IsNullOrWhiteSpace(smtpServer) ||
-                string.IsNullOrWhiteSpace(smtpUser) ||
-                string.IsNullOrWhiteSpace(smtpPassword) ||
-                string.IsNullOrWhiteSpace(fromEmail) ||
-                string.IsNullOrWhiteSpace(baseUrl))
-            {
-                throw new Exception("Email configuration is missing.");
-            }
+        private static string GetRequiredSetting(IConfiguration configuration, string key)
+        {
+            var value = configuration[key];
+            return string.IsNullOrWhiteSpace(value)
+                ? throw new InvalidOperationException($"Configuration value '{key}' is missing.")
+                : value;
         }
 
         public async Task SendVerificationEmail(string toEmail, string token)

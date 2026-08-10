@@ -10,7 +10,7 @@ namespace Website.Pages
     {
         private readonly UserManager userManager;
 
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
         public bool IsSuccess { get; set; }
 
         public VerifyEmailModel(UserManager userManager)

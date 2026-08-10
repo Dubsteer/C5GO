@@ -20,7 +20,7 @@ namespace Website.Pages.Admin.Posts
         }
 
         [BindProperty] public string Title { get; set; } = "";
-        [BindProperty] public string Content { get; set; } = "";
+        [BindProperty] public string PostContent { get; set; } = "";
         [BindProperty] public IFormFile? Image { get; set; }
 
         public IActionResult OnGet()
@@ -59,7 +59,7 @@ namespace Website.Pages.Admin.Posts
             var post = new Post
             {
                 Title = Title,
-                Content = Content,
+                Content = PostContent,
                 Posted_on = DateTime.Now,
                 ImagePath = imagePath,
                 User = author

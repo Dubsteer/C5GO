@@ -18,13 +18,10 @@ namespace Unit_Tests.MockRepos
             // You can add your logic to associate the player with the tournament in memory
         }
 
-        public void DeletePlayerRole(Player player)
+        public bool DeletePlayerRole(int userId)
         {
-            var existingPlayer = players.Find(p => p.Id == player.Id);
-            if (existingPlayer != null)
-            {
-                players.Remove(existingPlayer);
-            }
+            var existingPlayer = players.Find(p => p.Id == userId);
+            return existingPlayer != null && players.Remove(existingPlayer);
         }
 
         public List<Player> GetAllPlayers()

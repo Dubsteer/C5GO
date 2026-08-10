@@ -9,7 +9,7 @@ namespace LogicLayer.IRepos
 
         public void AddPlayerToTournament(Player player, Tournament tournament);
        
-        public void DeletePlayerRole(Player player);
+        public bool DeletePlayerRole(int userId);
         public List<Player> GetAllPlayers();
 
         Player GetPlayer(User user);

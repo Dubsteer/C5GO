@@ -1,0 +1,255 @@
+.admin-nav-link {
+    color: #ffd166 !important;
+    font-weight: 700 !important;
+}
+
+.admin-shell {
+    color: #edf2f7;
+}
+
+.admin-page-header {
+    margin-bottom: 2rem;
+}
+
+.admin-page-header-row {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1.5rem;
+}
+
+.admin-page-header h1 {
+    margin: 0 0 0.5rem;
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    font-weight: 700;
+}
+
+.admin-page-header p {
+    max-width: 700px;
+    margin: 0;
+    color: #aeb9c6;
+}
+
+.admin-eyebrow {
+    margin-bottom: 0.5rem !important;
+    color: #5eead4 !important;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.admin-stat-grid,
+.admin-action-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.admin-stat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-bottom: 1.25rem;
+}
+
+.admin-stat-card,
+.admin-action-card,
+.admin-table-wrap,
+.admin-empty-state {
+    border: 1px solid #303946;
+    background: #151b23;
+    border-radius: 14px;
+}
+
+.admin-stat-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.4rem;
+}
+
+.admin-stat-card span {
+    color: #aeb9c6;
+}
+
+.admin-stat-card strong {
+    color: #ffffff;
+    font-size: 1.75rem;
+}
+
+.admin-action-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-action-card {
+    min-height: 250px;
+    padding: 1.5rem;
+    color: #edf2f7;
+    text-decoration: none;
+    transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+a.admin-action-card:hover {
+    transform: translateY(-3px);
+    border-color: #2dd4bf;
+    background: #19232c;
+    color: #ffffff;
+}
+
+.admin-action-card h2 {
+    margin-top: 2rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.admin-action-card p {
+    min-height: 72px;
+    color: #aeb9c6;
+}
+
+.admin-action-card strong,
+.admin-action-number {
+    color: #5eead4;
+}
+
+.admin-action-card-muted {
+    opacity: 0.7;
+}
+
+.admin-breadcrumb {
+    display: flex;
+    gap: 0.55rem;
+    margin-bottom: 1.25rem;
+    color: #7f8b99;
+    font-size: 0.9rem;
+}
+
+.admin-breadcrumb a {
+    color: #5eead4;
+    text-decoration: none;
+}
+
+.admin-search {
+    display: flex;
+    gap: 0.75rem;
+    max-width: 760px;
+    margin-bottom: 1.5rem;
+}
+
+.admin-search .form-control {
+    border-color: #354150;
+    background: #111820;
+    color: #ffffff;
+}
+
+.admin-search .form-control::placeholder {
+    color: #7f8b99;
+}
+
+.admin-table-wrap {
+    overflow: hidden;
+}
+
+.admin-table {
+    margin: 0;
+    --bs-table-bg: transparent;
+    --bs-table-color: #edf2f7;
+    --bs-table-border-color: #303946;
+    --bs-table-hover-bg: #1b2530;
+    --bs-table-hover-color: #ffffff;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 1rem 1.1rem;
+    vertical-align: middle;
+}
+
+.admin-table th {
+    color: #8d99a8;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.admin-secondary-text {
+    display: block;
+    margin-top: 0.2rem;
+    color: #8d99a8;
+    font-size: 0.85rem;
+}
+
+.admin-badge {
+    display: inline-flex;
+    align-items: center;
+    margin: 0.2rem 0.2rem 0 0;
+    padding: 0.24rem 0.5rem;
+    border: 1px solid #465364;
+    border-radius: 999px;
+    color: #b8c2ce;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.admin-badge-success {
+    border-color: #1f9d7a;
+    color: #64e6bc;
+}
+
+.admin-badge-warning {
+    border-color: #a87922;
+    color: #ffd166;
+}
+
+.admin-badge-admin {
+    border-color: #b88b2d;
+    color: #ffd166;
+}
+
+.admin-row-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.admin-protected-label {
+    color: #7f8b99;
+    font-size: 0.8rem;
+}
+
+.admin-empty-state {
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+
+.admin-empty-state h2 {
+    font-size: 1.25rem;
+}
+
+.admin-empty-state p {
+    margin: 0;
+    color: #8d99a8;
+}
+
+@media (max-width: 900px) {
+    .admin-stat-grid,
+    .admin-action-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-action-card {
+        min-height: auto;
+    }
+
+    .admin-action-card p {
+        min-height: auto;
+    }
+}
+
+@media (max-width: 640px) {
+    .admin-page-header-row,
+    .admin-search {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}

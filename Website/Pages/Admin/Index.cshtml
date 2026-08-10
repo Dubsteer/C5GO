@@ -1,0 +1,53 @@
+@page
+@model Website.Pages.Admin.IndexModel
+@{
+    ViewData["Title"] = "Administration";
+}
+
+<section class="admin-shell">
+    <header class="admin-page-header">
+        <div>
+            <p class="admin-eyebrow">C5GO control panel</p>
+            <h1>Administration</h1>
+            <p>Manage the website from one protected area.</p>
+        </div>
+    </header>
+
+    <div class="admin-stat-grid" aria-label="Website statistics">
+        <article class="admin-stat-card">
+            <span>Users</span>
+            <strong>@Model.UserCount</strong>
+        </article>
+        <article class="admin-stat-card">
+            <span>Players</span>
+            <strong>@Model.PlayerCount</strong>
+        </article>
+        <article class="admin-stat-card">
+            <span>Posts</span>
+            <strong>@Model.PostCount</strong>
+        </article>
+    </div>
+
+    <div class="admin-action-grid">
+        <a asp-page="/Admin/Users/Index" class="admin-action-card">
+            <span class="admin-action-number">01</span>
+            <h2>User management</h2>
+            <p>Search accounts, review their status and manage player access.</p>
+            <strong>Open users</strong>
+        </a>
+
+        <a asp-page="/Admin/Posts/Manage" class="admin-action-card">
+            <span class="admin-action-number">02</span>
+            <h2>Post management</h2>
+            <p>Create, update and remove news posts shown on the website.</p>
+            <strong>Open posts</strong>
+        </a>
+
+        <article class="admin-action-card admin-action-card-muted">
+            <span class="admin-action-number">03</span>
+            <h2>Tournament management</h2>
+            <p>Web tournament, bracket and result tools are the next project step.</p>
+            <strong>Coming next</strong>
+        </article>
+    </div>
+</section>

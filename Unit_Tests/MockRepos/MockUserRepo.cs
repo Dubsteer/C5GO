@@ -16,6 +16,10 @@ namespace Unit_Tests.MockRepos
 
         public User? GetUserById(int id) => Users.FirstOrDefault(u => u.Id == id);
 
+        public User? GetUserByEmail(string email) =>
+            Users.FirstOrDefault(u =>
+                string.Equals(u.Gmail, email, StringComparison.OrdinalIgnoreCase));
+
         public User? GetUserByEmailToken(string token) =>
             Users.FirstOrDefault(u => u.EmailToken == token);
 
@@ -29,6 +33,13 @@ namespace Unit_Tests.MockRepos
         {
             Users.RemoveAll(u => u.Id == user.Id);
             Users.Add(user);
+        }
+
+        public void UpdatePassword(int userId, string passwordHash)
+        {
+            var user = GetUserById(userId);
+            if (user != null)
+                user.Password = passwordHash;
         }
 
         public void DeleteUser(User user) => Users.RemoveAll(u => u.Id == user.Id);

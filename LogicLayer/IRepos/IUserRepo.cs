@@ -7,10 +7,12 @@ namespace LogicLayer.IRepos
     {
         List<User> GetAllUsers();
         User? GetUserById(int id);
+        User? GetUserByEmail(string email);
         User? GetUserByEmailToken(string token);
 
         void CreateUser(User user);
         void UpdateUser(User user);
+        void UpdatePassword(int userId, string passwordHash);
         void DeleteUser(User user);
 
         void ConfirmEmail(int userId);

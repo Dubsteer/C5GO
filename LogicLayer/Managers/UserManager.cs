@@ -26,6 +26,13 @@ namespace LogicLayer.Managers
             return userRepo.GetUserById(id);
         }
 
+        public User? GetUserByEmail(string email)
+        {
+            return string.IsNullOrWhiteSpace(email)
+                ? null
+                : userRepo.GetUserByEmail(email.Trim());
+        }
+
         public User? GetByUsername(string username)
         {
             return userRepo.GetUserByUsername(username);
@@ -109,6 +116,22 @@ namespace LogicLayer.Managers
                 throw new Exception("Username already exists!");
 
             userRepo.UpdateUser(user);
+        }
+
+        public bool ResetPassword(int userId, string currentPasswordHash, string newPassword)
+        {
+            if (newPassword.Length is < 8 or > 72)
+                throw new ArgumentException("Password must be between 8 and 72 characters.", nameof(newPassword));
+
+            var user = userRepo.GetUserById(userId);
+            if (user == null || !user.EmailConfirmed)
+                return false;
+
+            if (!string.Equals(user.Password, currentPasswordHash, StringComparison.Ordinal))
+                return false;
+
+            userRepo.UpdatePassword(userId, BCrypt.Net.BCrypt.HashPassword(newPassword));
+            return true;
         }
 
         public void DeleteUser(User user)

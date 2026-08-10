@@ -160,6 +160,55 @@ namespace Unit_Tests
         }
 
         [TestMethod]
+        public void TestGetUserByEmailIsCaseInsensitive()
+        {
+            userManager.CreateUser(CreateUser(1, "dubsteer", "Dubsteer@Test.Local"));
+
+            var result = userManager.GetUserByEmail("  dubsteer@test.local  ");
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual("dubsteer", result.Username);
+        }
+
+        [TestMethod]
+        public void TestResetPasswordChangesLoginAndInvalidatesOldHash()
+        {
+            const string oldPassword = "old-password";
+            const string newPassword = "new-password";
+            var user = CreateUser(1, "dubsteer", "dubsteer@test.local", oldPassword);
+            userManager.CreateUser(user);
+            user.EmailConfirmed = true;
+            var oldPasswordHash = user.Password;
+
+            var changed = userManager.ResetPassword(
+                user.Id!.Value,
+                oldPasswordHash,
+                newPassword);
+
+            Assert.IsTrue(changed);
+            Assert.IsNull(userManager.GetLoginUser(user.Username, oldPassword));
+            Assert.IsNotNull(userManager.GetLoginUser(user.Username, newPassword));
+            Assert.IsFalse(userManager.ResetPassword(
+                user.Id.Value,
+                oldPasswordHash,
+                "another-password"));
+        }
+
+        [TestMethod]
+        public void TestResetPasswordRejectsUnconfirmedUser()
+        {
+            var user = CreateUser(1, "dubsteer", "dubsteer@test.local");
+            userManager.CreateUser(user);
+
+            var changed = userManager.ResetPassword(
+                user.Id!.Value,
+                user.Password,
+                "new-password");
+
+            Assert.IsFalse(changed);
+        }
+
+        [TestMethod]
         public void TestSearchUser()
         {
             userManager.CreateUser(CreateUser(1, "dubsteer", "one@test.local"));

@@ -21,6 +21,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LogicLayer\LogicLayer.csproj" />
+    <ProjectReference Include="..\Website\Website.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
 </Project>

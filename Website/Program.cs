@@ -5,6 +5,9 @@ using LogicLayer.IRepos;
 using LogicLayer.Managers;
 using LogicLayer.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
+using Website.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +38,22 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddRazorPages(options =>
 {
     options.Conventions.AuthorizeFolder("/Admin", "AdminOnly");
+});
+
+builder.Services.AddDataProtection();
+builder.Services.AddSingleton<PasswordResetTokenService>();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("password-reset", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(15),
+                QueueLimit = 0
+            }));
 });
 
 builder.Services.AddScoped<IConnection>(sp =>
@@ -98,6 +117,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseStaticFiles();
 app.UseRouting();
+app.UseRateLimiter();
 
 app.UseStatusCodePagesWithRedirects("/errors/{0}");
 

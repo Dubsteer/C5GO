@@ -134,6 +134,24 @@ namespace DataLayer.Repos
             return MapUser(reader);
         }
 
+        public User? GetUserByEmail(string email)
+        {
+            EnsureConnection();
+
+            var cmd = new MySqlCommand(@"
+                SELECT id, first_name, last_name, birthday, age, username, email, password,
+                       is_moderator, steam_id, email_confirmed, email_token, token_created_at
+                FROM user
+                WHERE LOWER(email) = LOWER(@EMAIL)
+                LIMIT 1
+            ", conn.GetInnerConn());
+
+            cmd.Parameters.AddWithValue("@EMAIL", email.Trim());
+
+            using var reader = cmd.ExecuteReader();
+            return reader.Read() ? MapUser(reader) : null;
+        }
+
         public void UpdateUser(User user)
         {
             EnsureConnection();
@@ -162,6 +180,21 @@ namespace DataLayer.Repos
             cmd.Parameters.AddWithValue("@STEAM_ID",
                 string.IsNullOrWhiteSpace(user.SteamId) ? (object)DBNull.Value : user.SteamId);
 
+            cmd.ExecuteNonQuery();
+        }
+
+        public void UpdatePassword(int userId, string passwordHash)
+        {
+            EnsureConnection();
+
+            var cmd = new MySqlCommand(@"
+                UPDATE user
+                SET password = @PASSWORD
+                WHERE id = @ID
+            ", conn.GetInnerConn());
+
+            cmd.Parameters.AddWithValue("@ID", userId);
+            cmd.Parameters.AddWithValue("@PASSWORD", passwordHash);
             cmd.ExecuteNonQuery();
         }
 

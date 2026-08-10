@@ -63,5 +63,30 @@ namespace LogicLayer.Services
             await smtp.SendAsync(email);
             await smtp.DisconnectAsync(true);
         }
+
+        public async Task SendPasswordResetEmail(string toEmail, string token)
+        {
+            var resetLink = $"{baseUrl}/ResetPassword?token={Uri.EscapeDataString(token)}";
+
+            var email = new MimeMessage();
+            email.From.Add(new MailboxAddress("C5GO Platform", fromEmail));
+            email.To.Add(MailboxAddress.Parse(toEmail));
+            email.Subject = "Reset your password - C5G0";
+            email.Body = new TextPart("plain")
+            {
+                Text =
+                    "Primili smo zahtjev za promjenu lozinke na C5G0 nalogu.\n\n" +
+                    "Lozinku možeš promijeniti klikom na link ispod:\n\n" +
+                    resetLink + "\n\n" +
+                    "Link važi jedan sat i može se iskoristiti samo jednom. " +
+                    "Ako nisi tražio promjenu lozinke, ignoriši ovaj email."
+            };
+
+            using var smtp = new SmtpClient();
+            await smtp.ConnectAsync(smtpServer, smtpPort, SecureSocketOptions.StartTls);
+            await smtp.AuthenticateAsync(smtpUser, smtpPassword);
+            await smtp.SendAsync(email);
+            await smtp.DisconnectAsync(true);
+        }
     }
 }

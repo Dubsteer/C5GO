@@ -265,6 +265,23 @@ label {
     color: #fda4af;
 }
 
+.auth-intro {
+    margin: -0.5rem 0 1.4rem;
+    color: var(--site-text-muted);
+    text-align: center;
+}
+
+.auth-help-link {
+    margin: -0.35rem 0 0.85rem;
+    text-align: right;
+}
+
+.auth-help-link a {
+    font-size: 0.9rem;
+    font-weight: 650;
+    text-decoration: none;
+}
+
 .field-error {
     display: block;
     min-height: 1.15rem;
@@ -374,6 +391,11 @@ label {
 .status-icon-error {
     background: rgba(251, 113, 133, 0.12);
     color: var(--site-danger);
+}
+
+.status-icon-email {
+    background: rgba(96, 165, 250, 0.12);
+    color: var(--site-blue);
 }
 
 .status-card p {

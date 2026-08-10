@@ -1,67 +1,24 @@
-﻿@page
+@page
 @model Website.Pages.VerifyEmailModel
 @{
-    ViewData["Title"] = "Verify Email";
+    ViewData["Title"] = "Verify email";
 }
 
-<style>
-    body {
-        background-color: #0d1117;
-        color: white;
-        font-family: "Segoe UI", Roboto, sans-serif;
-    }
-
-    .verify-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 80vh;
-    }
-
-    .verify-card {
-        background: #161b22;
-        padding: 40px;
-        border-radius: 12px;
-        border: 1px solid #2d333b;
-        max-width: 420px;
-        width: 100%;
-        text-align: center;
-        box-shadow: 0 0 12px rgba(99,102,241,0.25);
-    }
-
-        .verify-card h2 {
-            margin-bottom: 15px;
-        }
-
-    .success {
-        color: #22c55e;
-    }
-
-    .error {
-        color: #f87171;
-    }
-
-    a {
-        color: #58a6ff;
-        text-decoration: none;
-        display: inline-block;
-        margin-top: 20px;
-    }
-</style>
-
-<div class="verify-container">
-    <div class="verify-card">
+<section class="status-container" aria-labelledby="verificationTitle">
+    <div class="status-card">
         @if (Model.IsSuccess)
         {
-            <h2 class="success">✅ Email Verified</h2>
+            <div class="status-icon" aria-hidden="true">&#10003;</div>
+            <h1 id="verificationTitle">Email verified</h1>
             <p>@Model.Message</p>
-            <a href="/Login">Go to Login</a>
+            <a asp-page="/Login" class="btn btn-primary">Go to login</a>
         }
         else
         {
-            <h2 class="error">❌ Verification Failed</h2>
+            <div class="status-icon status-icon-error" aria-hidden="true">!</div>
+            <h1 id="verificationTitle">Verification failed</h1>
             <p>@Model.Message</p>
-            <a href="/Register">Back to Register</a>
+            <a asp-page="/Register" class="btn btn-primary">Back to registration</a>
         }
     </div>
-</div>
+</section>

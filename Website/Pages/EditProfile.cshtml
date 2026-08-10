@@ -1,53 +1,53 @@
-﻿@page
+@page
 @model Website.Pages.EditProfileModel
 @{
-    ViewData["Title"] = "Edit Profile";
+    ViewData["Title"] = "Edit profile";
     Layout = "_ProfileLayout";
 }
 
-@if (ViewData["Error"] != null)
+@if (ViewData["Error"] is string errorMessage)
 {
-    <div class="alert alert-danger">@ViewData["Error"]</div>
+    <div class="alert alert-danger" role="alert">@errorMessage</div>
 }
 
 <form method="post">
-    <div class="mb-3">
-        <span class="profile-label">First Name</span>
-        <input asp-for="FullUserFormModel.Firstname" class="form-control" />
-        <span asp-validation-for="FullUserFormModel.Firstname" class="text-danger"></span>
+    <div asp-validation-summary="ModelOnly" class="validation-summary-errors" role="alert"></div>
+    <div class="profile-form-grid">
+        <div>
+            <label asp-for="FullUserFormModel.Firstname" class="profile-label">First name</label>
+            <input asp-for="FullUserFormModel.Firstname" class="form-control" autocomplete="given-name" />
+            <span asp-validation-for="FullUserFormModel.Firstname" class="field-error"></span>
+        </div>
+        <div>
+            <label asp-for="FullUserFormModel.Lastname" class="profile-label">Last name</label>
+            <input asp-for="FullUserFormModel.Lastname" class="form-control" autocomplete="family-name" />
+            <span asp-validation-for="FullUserFormModel.Lastname" class="field-error"></span>
+        </div>
+        <div>
+            <label asp-for="FullUserFormModel.Age" class="profile-label">Age</label>
+            <input asp-for="FullUserFormModel.Age" class="form-control" type="number" inputmode="numeric" />
+            <span asp-validation-for="FullUserFormModel.Age" class="field-error"></span>
+        </div>
+        <div>
+            <label asp-for="FullUserFormModel.Username" class="profile-label">Username</label>
+            <input asp-for="FullUserFormModel.Username" class="form-control" autocomplete="username" />
+            <span asp-validation-for="FullUserFormModel.Username" class="field-error"></span>
+        </div>
+        <div class="profile-form-wide">
+            <label asp-for="FullUserFormModel.Gmail" class="profile-label">Email</label>
+            <input asp-for="FullUserFormModel.Gmail" class="form-control" type="email" autocomplete="email" />
+            <span asp-validation-for="FullUserFormModel.Gmail" class="field-error"></span>
+        </div>
+        <div class="profile-form-wide">
+            <label asp-for="FullUserFormModel.Password" class="profile-label">New password (optional)</label>
+            <input asp-for="FullUserFormModel.Password" class="form-control" type="password" autocomplete="new-password" />
+            <span asp-validation-for="FullUserFormModel.Password" class="field-error"></span>
+        </div>
     </div>
-
-    <div class="mb-3">
-        <span class="profile-label">Last Name</span>
-        <input asp-for="FullUserFormModel.Lastname" class="form-control" />
-        <span asp-validation-for="FullUserFormModel.Lastname" class="text-danger"></span>
+    <div class="d-flex flex-column flex-sm-row gap-2 mt-3">
+        <button type="submit" class="btn-main">Save changes</button>
+        <a asp-page="/ViewProfile" class="btn btn-outline-light">Cancel</a>
     </div>
-
-    <div class="mb-3">
-        <span class="profile-label">Age</span>
-        <input asp-for="FullUserFormModel.Age" class="form-control" />
-        <span asp-validation-for="FullUserFormModel.Age" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <span class="profile-label">Username</span>
-        <input asp-for="FullUserFormModel.Username" class="form-control" />
-        <span asp-validation-for="FullUserFormModel.Username" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <span class="profile-label">Email</span>
-        <input asp-for="FullUserFormModel.Gmail" class="form-control" />
-        <span asp-validation-for="FullUserFormModel.Gmail" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <span class="profile-label">New Password (optional)</span>
-        <input type="password" asp-for="FullUserFormModel.Password" class="form-control" />
-        <span asp-validation-for="FullUserFormModel.Password" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn-main w-100 mt-3">Save Changes</button>
 </form>
 
 @section Scripts {

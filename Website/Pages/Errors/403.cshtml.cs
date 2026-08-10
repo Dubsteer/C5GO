@@ -4,6 +4,8 @@ namespace Website.Pages.Errors
 {
     public class _403Model : PageModel
     {
-        public void OnGet() { }
+        public void OnGet()
+        {
+        }
     }
 }

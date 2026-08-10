@@ -1,118 +1,42 @@
-﻿@page
+@page
 @model Website.Pages.LoginModel
 @{
     ViewData["Title"] = "Login";
 }
 
-<style>
-    body {
-        background-color: #0d1117;
-        font-family: "Segoe UI", Roboto, sans-serif;
-        color: #fff;
-    }
-
-    .auth-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-    }
-
-    .auth-card {
-        background: #161b22;
-        padding: 35px;
-        width: 420px;
-        border-radius: 12px;
-        border: 1px solid #2d333b;
-        box-shadow: 0 0 10px rgba(99,102,241,0.25);
-    }
-
-        .auth-card h2 {
-            text-align: center;
-            margin-bottom: 25px;
-            font-weight: 700;
-            color: #fff;
-        }
-
-    .auth-input {
-        width: 100%;
-        padding: 10px;
-        margin-top: 6px;
-        margin-bottom: 15px;
-        background: #0d1117;
-        border: 1px solid #2d333b;
-        color: #fff;
-        border-radius: 8px;
-    }
-
-        .auth-input:focus {
-            outline: none;
-            border-color: #6366f1;
-        }
-
-    .auth-btn {
-        width: 100%;
-        padding: 12px;
-        background-color: #4f46e5;
-        border: none;
-        border-radius: 8px;
-        color: white;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: 0.2s;
-        margin-top: 10px;
-    }
-
-        .auth-btn:hover {
-            background-color: #6366f1;
-        }
-
-    .small-text {
-        text-align: center;
-        color: #9ca3af;
-        margin-top: 15px;
-    }
-
-    a {
-        color: #58a6ff;
-        text-decoration: none;
-    }
-
-        a:hover {
-            text-decoration: underline;
-        }
-</style>
-
-<div class="auth-container">
+<section class="auth-container" aria-labelledby="loginTitle">
     <div class="auth-card">
+        <h1 id="loginTitle">Log in</h1>
 
-        <h2>Log In</h2>
-
-        @if (ViewData["Error"] != null)
+        @if (ViewData["Error"] is string errorMessage)
         {
-            <div style="color:#f87171; text-align:center; margin-bottom:15px;">
-                @ViewData["Error"]
-            </div>
+            <div class="auth-error" role="alert">@errorMessage</div>
         }
 
         <form method="post">
-            <label>Username</label>
-            <input asp-for="LoginFormModel.Username" class="auth-input" />
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors" role="alert"></div>
 
-            <label>Password</label>
-            <input asp-for="LoginFormModel.Password" type="password" class="auth-input" />
+            <div class="auth-field">
+                <label asp-for="LoginFormModel.Username">Username</label>
+                <input asp-for="LoginFormModel.Username" class="auth-input" autocomplete="username" />
+                <span asp-validation-for="LoginFormModel.Username" class="field-error"></span>
+            </div>
 
-            <input type="submit" class="auth-btn" value="Log In" />
+            <div class="auth-field">
+                <label asp-for="LoginFormModel.Password">Password</label>
+                <input asp-for="LoginFormModel.Password" class="auth-input" type="password" autocomplete="current-password" />
+                <span asp-validation-for="LoginFormModel.Password" class="field-error"></span>
+            </div>
+
+            <button type="submit" class="auth-btn">Log in</button>
         </form>
 
-        <div class="small-text">
-            Don't have an account? <a href="/Register">Register</a>
-        </div>
-
-        <section scripts>
-            <partial name="_ValidationScriptsPartial" />
-        </section>
-
+        <p class="small-text">
+            Don't have an account? <a asp-page="/Register">Register</a>
+        </p>
     </div>
-</div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

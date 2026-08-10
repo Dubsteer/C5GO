@@ -1,38 +1,21 @@
-﻿@page "{id:int}"
+@page "{id:int}"
 @model Website.Pages.UserProfileModel
 @{
-    ViewData["Title"] = "Profile";
+    ViewData["Title"] = "User profile";
     Layout = "_ProfileLayout";
 }
 
-<div>
+<div class="profile-actions">
+    <div><span class="profile-label">Username</span><div class="profile-username">@Model.ViewedUser.Username</div></div>
+    <span class="tag @(Model.ViewedUser.IsAdmin ? "tag-status-running" : "tag-solo")">
+        @(Model.ViewedUser.IsAdmin ? "Administrator" : Model.ViewedPlayer != null ? "Player" : "Member")
+    </span>
+</div>
 
-    <h3 class="profile-value">@Model.ViewedUser.Username</h3>
-
-    <div>
-        <span class="profile-label">First Name</span>
-        <div class="profile-value">@Model.ViewedUser.Firstname</div>
-
-        <span class="profile-label">Last Name</span>
-        <div class="profile-value">@Model.ViewedUser.Lastname</div>
-
-        <span class="profile-label">Email</span>
-        <div class="profile-value">@Model.ViewedUser.Gmail</div>
-
-        <span class="profile-label">Birthday</span>
-        <div class="profile-value">
-            @(Model.ViewedUser.Birthday?.ToString("yyyy-MM-dd") ?? "N/A")
-        </div>
-
-        <span class="profile-label">Steam ID</span>
-        <div class="profile-value">
-            @(Model.ViewedPlayer?.SteamId ?? "N/A")
-        </div>
-
-        <span class="profile-label">Role</span>
-        <div class="profile-value">
-            @(Model.ViewedUser.IsAdmin ? "Admin" : "Player")
-        </div>
-    </div>
-
+<div class="profile-info-grid">
+    <div class="profile-info-item"><span class="profile-label">First name</span><div class="profile-value">@Model.ViewedUser.Firstname</div></div>
+    <div class="profile-info-item"><span class="profile-label">Last name</span><div class="profile-value">@Model.ViewedUser.Lastname</div></div>
+    <div class="profile-info-item"><span class="profile-label">Email</span><div class="profile-value">@Model.ViewedUser.Gmail</div></div>
+    <div class="profile-info-item"><span class="profile-label">Birthday</span><div class="profile-value">@(Model.ViewedUser.Birthday?.ToString("dd.MM.yyyy") ?? "Not provided")</div></div>
+    <div class="profile-info-item profile-info-wide"><span class="profile-label">Steam ID</span><div class="profile-value">@(Model.ViewedPlayer?.SteamId ?? "No player profile")</div></div>
 </div>

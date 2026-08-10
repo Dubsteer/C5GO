@@ -1,23 +1,22 @@
-﻿@page "{id:int}"
+@page "{id:int}"
 @model Website.Pages.Admin.Posts.DeleteModel
+@{
+    ViewData["Title"] = "Delete post";
+}
 
-<h2 class="text-danger fw-bold mb-3">Delete post</h2>
+<section class="admin-shell admin-form-shell">
+    <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+        <a asp-page="/Admin/Index">Administration</a><span>/</span><a asp-page="/Admin/Posts/Manage">Posts</a><span>/</span><span>Delete</span>
+    </nav>
 
-<div class="alert alert-warning">
-    Are you sure you want to delete this post?
-</div>
-
-<div class="mb-4">
-    <strong>@Model.Post.Title</strong>
-</div>
-
-<form method="post">
-    <button type="submit" class="btn btn-danger">
-        Yes, delete
-    </button>
-
-    <a asp-page="Manage" class="btn btn-secondary ms-2">
-        Cancel
-    </a>
-</form>
-
+    <div class="admin-panel admin-form-card">
+        <p class="admin-eyebrow">Permanent action</p>
+        <h1 class="h2">Delete post</h1>
+        <p class="text-secondary">This post and its public content will be permanently removed.</p>
+        <div class="admin-inline-notice mb-3"><strong>@Model.Post.Title</strong></div>
+        <form method="post" class="admin-form-actions">
+            <button type="submit" class="btn btn-danger">Delete post</button>
+            <a asp-page="/Admin/Posts/Manage" class="btn btn-outline-light">Cancel</a>
+        </form>
+    </div>
+</section>

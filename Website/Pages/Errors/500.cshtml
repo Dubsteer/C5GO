@@ -1,16 +1,12 @@
-﻿@page
+@page
 @model Website.Pages.Errors._500Model
 @{
+    ViewData["Title"] = "Server error";
 }
 
-<h1>
-    500 Internal Server Error
-</h1>
-
-<br />
-
-<p>
-    Something unexpected came up, sit tight.
-</p>
-
-<img src="https://http.cat/500" style="display: block; margin-left: auto; margin-right: auto;">
+<section class="error-page">
+    <p class="error-code">500</p>
+    <h1>Server error</h1>
+    <p>Something unexpected happened. Try again in a moment.</p>
+    <a asp-page="/Index" class="btn btn-primary">Return home</a>
+</section>

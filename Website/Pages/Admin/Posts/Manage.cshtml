@@ -1,61 +1,59 @@
-﻿@page
+@page
 @model Website.Pages.Admin.Posts.ManageModel
 @{
     ViewData["Title"] = "Post management";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 >🛠 Post management</h2>
+<section class="admin-shell">
+    <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+        <a asp-page="/Admin/Index">Administration</a><span>/</span><span>Posts</span>
+    </nav>
 
-    <a asp-page="Create" class="btn btn-success">
-        + New post
-    </a>
-</div>
+    <header class="admin-page-header admin-page-header-row">
+        <div>
+            <p class="admin-eyebrow">Website content</p>
+            <h1>Post management</h1>
+            <p>Create and maintain announcements shown on the home page.</p>
+        </div>
+        <a asp-page="/Admin/Posts/Create" class="btn btn-success">Create post</a>
+    </header>
 
-<table class="table table-dark table-hover align-middle">
-    <thead>
-        <tr>
-            <th>Title</th>
-            <th>Author</th>
-            <th>Date</th>
-            <th>Image</th>
-            <th class="text-end">Actions</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        @foreach (var post in Model.Posts)
-        {
-            <tr>
-                <td class="fw-semibold">@post.Title</td>
-                <td>@post.User.Username</td>
-                <td>@post.Posted_on.ToString("dd.MM.yyyy HH:mm")</td>
-
-                <td>
-                    @if (!string.IsNullOrEmpty(post.ImagePath))
+    @if (!Model.Posts.Any())
+    {
+        <div class="admin-empty-state"><h2>No posts yet</h2><p>Create the first announcement for the website.</p></div>
+    }
+    else
+    {
+        <div class="table-responsive admin-table-wrap">
+            <table class="table admin-table align-middle">
+                <thead><tr><th>Post</th><th>Author</th><th>Published</th><th>Image</th><th class="text-end">Actions</th></tr></thead>
+                <tbody>
+                    @foreach (var post in Model.Posts)
                     {
-                        <img src="@post.ImagePath"
-                             style="width:60px; height:40px; object-fit:cover; border-radius:6px;" />
+                        <tr>
+                            <td><strong>@post.Title</strong></td>
+                            <td>@post.User.Username</td>
+                            <td>@post.Posted_on.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(post.ImagePath))
+                                {
+                                    <img src="@post.ImagePath" class="admin-post-image" alt="" />
+                                }
+                                else
+                                {
+                                    <span class="admin-badge">No image</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="admin-row-actions">
+                                    <a asp-page="/Admin/Posts/Edit" asp-route-id="@post.Id" class="btn btn-sm btn-primary">Edit</a>
+                                    <a asp-page="/Admin/Posts/Delete" asp-route-id="@post.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
                     }
-                    else
-                    {
-                        <span class="badge bg-secondary">No</span>
-                    }
-                </td>
-
-
-                <td class="text-end">
-                    <a asp-page="Edit" asp-route-id="@post.Id"
-                       class="btn btn-sm btn-primary me-2">
-                        Edit
-                    </a>
-
-                    <a asp-page="Delete" asp-route-id="@post.Id"
-                       class="btn btn-sm btn-danger">
-                        Delete
-                    </a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

@@ -1,37 +1,37 @@
-﻿@page
+@page
 @model Website.Pages.Admin.Posts.CreateModel
+@{
+    ViewData["Title"] = "Create post";
+}
 
-<h2 class="mb-4 fw-bold">Create post</h2>
+<section class="admin-shell admin-form-shell">
+    <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+        <a asp-page="/Admin/Index">Administration</a><span>/</span><a asp-page="/Admin/Posts/Manage">Posts</a><span>/</span><span>Create</span>
+    </nav>
 
-<form method="post" enctype="multipart/form-data" class="col-md-8">
+    <header class="admin-page-header">
+        <p class="admin-eyebrow">New announcement</p>
+        <h1>Create post</h1>
+        <p>Add a title, content and an optional cover image.</p>
+    </header>
 
-    <div class="mb-3">
-        <label class="form-label">Title</label>
-        <input asp-for="Title" class="form-control" required />
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Content</label>
-        <textarea asp-for="PostContent"
-                  class="form-control"
-                  rows="8"
-                  required></textarea>
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Image (optional)</label>
-        <input asp-for="Image" type="file" class="form-control" />
-    </div>
-
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-success">
-            Save
-        </button>
-
-        <a asp-page="Manage" class="btn btn-secondary">
-            Cancel
-        </a>
-    </div>
-
-</form>
-
+    <form method="post" enctype="multipart/form-data" class="admin-panel admin-form-card">
+        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+        <div class="mb-3">
+            <label asp-for="Title" class="form-label">Title</label>
+            <input asp-for="Title" class="form-control" maxlength="200" required />
+        </div>
+        <div class="mb-3">
+            <label asp-for="PostContent" class="form-label">Content</label>
+            <textarea asp-for="PostContent" class="form-control" rows="10" required></textarea>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Image" class="form-label">Cover image (optional)</label>
+            <input asp-for="Image" class="form-control" type="file" accept="image/*" />
+        </div>
+        <div class="admin-form-actions">
+            <button type="submit" class="btn btn-success">Publish post</button>
+            <a asp-page="/Admin/Posts/Manage" class="btn btn-outline-light">Cancel</a>
+        </div>
+    </form>
+</section>

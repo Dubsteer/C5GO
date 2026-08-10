@@ -1,6 +1,7 @@
 ﻿using LogicLayer;
 using LogicLayer.IRepos;
 using LogicLayer.Models;
+using LogicLayer.Services;
 using MySql.Data.MySqlClient;
 using System.Collections.Generic;
 using System.Data;
@@ -64,6 +65,12 @@ namespace DataLayer.Repos
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
+                if (!SteamIdParser.TryNormalize(SafeString(reader, "steam_id"), out var steamId) ||
+                    steamId == null)
+                {
+                    continue;
+                }
+
                 var u = new User(
                     reader.GetInt32("id"),
                     SafeString(reader, "first_name") ?? "",
@@ -73,7 +80,7 @@ namespace DataLayer.Repos
                     SafeString(reader, "email") ?? "",
                     SafeString(reader, "password") ?? "",
                     SafeBool(reader, "is_moderator"),
-                    SafeString(reader, "steam_id") ?? "0"
+                    steamId
                 );
 
                 list.Add(new Player(u));
@@ -98,7 +105,8 @@ namespace DataLayer.Repos
 
             var steamId = SafeString(r, "steam_id");
 
-            if (string.IsNullOrWhiteSpace(steamId) || steamId == "0")
+            if (!SteamIdParser.TryNormalize(steamId, out var normalizedSteamId) ||
+                normalizedSteamId == null)
                 return null;
 
             var u = new User(
@@ -110,7 +118,7 @@ namespace DataLayer.Repos
                 SafeString(r, "email") ?? "",
                 SafeString(r, "password") ?? "",
                 SafeBool(r, "is_moderator"),
-                steamId
+                normalizedSteamId
             );
 
             return new Player(u);

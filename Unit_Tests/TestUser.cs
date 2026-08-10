@@ -52,6 +52,58 @@ namespace Unit_Tests
         }
 
         [TestMethod]
+        public void TestUpdateUserNormalizesSteamProfileUrl()
+        {
+            const string steamId = "76561198012345678";
+            var user = CreateUser(1, "dubsteer", "dubsteer@test.local");
+            userManager.CreateUser(user);
+            user.SteamId = $"https://steamcommunity.com/profiles/{steamId}/";
+
+            userManager.UpdateUser(user);
+
+            Assert.AreEqual(steamId, users[0].SteamId);
+        }
+
+        [TestMethod]
+        public void TestUpdateUserRejectsInvalidSteamId()
+        {
+            var user = CreateUser(1, "dubsteer", "dubsteer@test.local");
+            userManager.CreateUser(user);
+            user.SteamId = "steam123";
+
+            Assert.ThrowsExactly<InvalidSteamIdException>(() =>
+                userManager.UpdateUser(user));
+        }
+
+        [TestMethod]
+        public void TestUpdateUserRejectsDuplicateSteamId()
+        {
+            const string steamId = "76561198012345678";
+            var firstUser = CreateUser(1, "first", "first@test.local");
+            var secondUser = CreateUser(2, "second", "second@test.local");
+            userManager.CreateUser(firstUser);
+            userManager.CreateUser(secondUser);
+            firstUser.SteamId = steamId;
+            userManager.UpdateUser(firstUser);
+            secondUser.SteamId = steamId;
+
+            Assert.ThrowsExactly<SteamIdAlreadyInUseException>(() =>
+                userManager.UpdateUser(secondUser));
+        }
+
+        [TestMethod]
+        public void TestUpdateUserRejectsSteamProfileForAdministrator()
+        {
+            var admin = CreateUser(1, "admin", "admin@test.local");
+            admin.IsAdmin = true;
+            userManager.CreateUser(admin);
+            admin.SteamId = "76561198012345678";
+
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                userManager.UpdateUser(admin));
+        }
+
+        [TestMethod]
         public void TestDeleteUser()
         {
             var user = CreateUser(1, "dubsteer", "dubsteer@test.local");

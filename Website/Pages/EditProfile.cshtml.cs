@@ -1,25 +1,30 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Security.Claims;
+using LogicLayer.Exceptions;
 using LogicLayer.FormModels;
 using LogicLayer.Managers;
-using Microsoft.AspNetCore.Authorization;
 using LogicLayer.Models;
-using System.Diagnostics;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Website.Pages
 {
     [Authorize]
     public class EditProfileModel : PageModel
     {
-        [BindProperty]
-        public FullUserFormModel FullUserFormModel { get; set; } = new();
-
-        private readonly UserManager _userManager;
+        private readonly UserManager userManager;
 
         public EditProfileModel(UserManager userManager)
         {
-            _userManager = userManager;
+            this.userManager = userManager;
         }
+
+        [BindProperty]
+        public EditProfileFormModel Form { get; set; } = new();
+
+        public bool CanManageSteamId { get; private set; }
 
         public IActionResult OnGet()
         {
@@ -27,62 +32,106 @@ namespace Website.Pages
             if (user == null)
                 return Challenge();
 
-            FullUserFormModel = new FullUserFormModel(
-                user.Firstname,
-                user.Lastname,
-                user.Age,
-                user.Username,
-                user.Gmail,
-                ""
-            );
+            CanManageSteamId = !user.IsAdmin;
+            Form = new EditProfileFormModel
+            {
+                Firstname = user.Firstname,
+                Lastname = user.Lastname,
+                Age = user.Age,
+                Username = user.Username,
+                Email = user.Gmail,
+                SteamProfile = user.SteamId is null or "0" ? null : user.SteamId
+            };
 
             return Page();
         }
 
-        public IActionResult OnPost()
+        public async Task<IActionResult> OnPostAsync()
         {
+            var existingUser = GetCurrentUser();
+            if (existingUser == null)
+                return Challenge();
+
+            CanManageSteamId = !existingUser.IsAdmin;
             if (!ModelState.IsValid)
                 return Page();
 
-            var oldUser = GetCurrentUser();
-            if (oldUser == null)
-                return Challenge();
+            var passwordHash = string.IsNullOrWhiteSpace(Form.NewPassword)
+                ? existingUser.Password
+                : BCrypt.Net.BCrypt.HashPassword(Form.NewPassword);
 
-            string finalPassword = string.IsNullOrWhiteSpace(FullUserFormModel.Password)
-                ? oldUser.Password
-                : BCrypt.Net.BCrypt.HashPassword(FullUserFormModel.Password);
+            var requestedSteamProfile = CanManageSteamId
+                ? string.IsNullOrWhiteSpace(Form.SteamProfile)
+                    ? existingUser.SteamId
+                    : Form.SteamProfile
+                : null;
 
-            var updated = new User(
-                oldUser.Id,
-                FullUserFormModel.Firstname,
-                FullUserFormModel.Lastname,
-                FullUserFormModel.Age.GetValueOrDefault(),
-                FullUserFormModel.Username,
-                FullUserFormModel.Gmail,
-                finalPassword,
-                oldUser.IsAdmin,
-                oldUser.SteamId
-            );
+            var updatedUser = new User(
+                existingUser.Id,
+                Form.Firstname.Trim(),
+                Form.Lastname.Trim(),
+                Form.Age.GetValueOrDefault(),
+                Form.Username.Trim(),
+                Form.Email.Trim(),
+                passwordHash,
+                existingUser.IsAdmin,
+                requestedSteamProfile);
 
             try
             {
-                _userManager.UpdateUser(updated);
+                userManager.UpdateUser(updatedUser);
             }
-            catch (Exception ex)
+            catch (UsernameAlreadyInUseException)
             {
-                ViewData["Error"] = ex.Message;
-                Debug.WriteLine(ex.Message);
+                ModelState.AddModelError("Form.Username", "This username is already taken.");
+                return Page();
+            }
+            catch (EmailAlreadyInUseException)
+            {
+                ModelState.AddModelError("Form.Email", "This email is already registered.");
+                return Page();
+            }
+            catch (InvalidSteamIdException exception)
+            {
+                ModelState.AddModelError("Form.SteamProfile", exception.Message);
+                return Page();
+            }
+            catch (SteamIdAlreadyInUseException exception)
+            {
+                ModelState.AddModelError("Form.SteamProfile", exception.Message);
                 return Page();
             }
 
-            return RedirectToPage("ViewProfile");
+            await RefreshAuthenticationAsync(updatedUser);
+            TempData["ProfileMessage"] = "Profile updated successfully.";
+            return RedirectToPage("/ViewProfile");
         }
 
         private User? GetCurrentUser()
         {
             return int.TryParse(User.FindFirst("id")?.Value, out var userId)
-                ? _userManager.GetUserById(userId)
+                ? userManager.GetUserById(userId)
                 : null;
+        }
+
+        private async Task RefreshAuthenticationAsync(User user)
+        {
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.Name, user.Username),
+                new("id", user.Id!.Value.ToString())
+            };
+
+            if (user.IsAdmin)
+                claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+
+            var identity = new ClaimsIdentity(
+                claims,
+                CookieAuthenticationDefaults.AuthenticationScheme);
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(identity));
         }
     }
 }

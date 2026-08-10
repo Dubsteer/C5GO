@@ -315,7 +315,7 @@ namespace DataLayer.Repos
                 SafeString(reader, "email") ?? "",
                 SafeString(reader, "password") ?? "",
                 SafeBool(reader, "is_moderator"),
-                SafeString(reader, "steam_id") ?? "0"
+                SafeString(reader, "steam_id")
             );
 
             user.Birthday = SafeDateTime(reader, "birthday");

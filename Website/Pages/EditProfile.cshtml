@@ -5,46 +5,69 @@
     Layout = "_ProfileLayout";
 }
 
-@if (ViewData["Error"] is string errorMessage)
-{
-    <div class="alert alert-danger" role="alert">@errorMessage</div>
-}
-
-<form method="post">
+<form method="post" novalidate>
     <div asp-validation-summary="ModelOnly" class="validation-summary-errors" role="alert"></div>
-    <div class="profile-form-grid">
-        <div>
-            <label asp-for="FullUserFormModel.Firstname" class="profile-label">First name</label>
-            <input asp-for="FullUserFormModel.Firstname" class="form-control" autocomplete="given-name" />
-            <span asp-validation-for="FullUserFormModel.Firstname" class="field-error"></span>
+
+    <section aria-labelledby="accountDetailsTitle">
+        <h2 id="accountDetailsTitle" class="profile-section-title">Account details</h2>
+        <div class="profile-form-grid">
+            <div>
+                <label asp-for="Form.Firstname" class="profile-label">First name</label>
+                <input asp-for="Form.Firstname" class="form-control" autocomplete="given-name" />
+                <span asp-validation-for="Form.Firstname" class="field-error"></span>
+            </div>
+            <div>
+                <label asp-for="Form.Lastname" class="profile-label">Last name</label>
+                <input asp-for="Form.Lastname" class="form-control" autocomplete="family-name" />
+                <span asp-validation-for="Form.Lastname" class="field-error"></span>
+            </div>
+            <div>
+                <label asp-for="Form.Age" class="profile-label">Age</label>
+                <input asp-for="Form.Age" class="form-control" type="number" inputmode="numeric" />
+                <span asp-validation-for="Form.Age" class="field-error"></span>
+            </div>
+            <div>
+                <label asp-for="Form.Username" class="profile-label">Username</label>
+                <input asp-for="Form.Username" class="form-control" autocomplete="username" />
+                <span asp-validation-for="Form.Username" class="field-error"></span>
+            </div>
+            <div class="profile-form-wide">
+                <label asp-for="Form.Email" class="profile-label">Email</label>
+                <input asp-for="Form.Email" class="form-control" type="email" autocomplete="email" />
+                <span asp-validation-for="Form.Email" class="field-error"></span>
+            </div>
+            <div class="profile-form-wide">
+                <label asp-for="Form.NewPassword" class="profile-label">New password</label>
+                <input asp-for="Form.NewPassword" class="form-control" type="password" autocomplete="new-password" />
+                <span class="form-hint">Leave empty to keep your current password.</span>
+                <span asp-validation-for="Form.NewPassword" class="field-error"></span>
+            </div>
         </div>
-        <div>
-            <label asp-for="FullUserFormModel.Lastname" class="profile-label">Last name</label>
-            <input asp-for="FullUserFormModel.Lastname" class="form-control" autocomplete="family-name" />
-            <span asp-validation-for="FullUserFormModel.Lastname" class="field-error"></span>
-        </div>
-        <div>
-            <label asp-for="FullUserFormModel.Age" class="profile-label">Age</label>
-            <input asp-for="FullUserFormModel.Age" class="form-control" type="number" inputmode="numeric" />
-            <span asp-validation-for="FullUserFormModel.Age" class="field-error"></span>
-        </div>
-        <div>
-            <label asp-for="FullUserFormModel.Username" class="profile-label">Username</label>
-            <input asp-for="FullUserFormModel.Username" class="form-control" autocomplete="username" />
-            <span asp-validation-for="FullUserFormModel.Username" class="field-error"></span>
-        </div>
-        <div class="profile-form-wide">
-            <label asp-for="FullUserFormModel.Gmail" class="profile-label">Email</label>
-            <input asp-for="FullUserFormModel.Gmail" class="form-control" type="email" autocomplete="email" />
-            <span asp-validation-for="FullUserFormModel.Gmail" class="field-error"></span>
-        </div>
-        <div class="profile-form-wide">
-            <label asp-for="FullUserFormModel.Password" class="profile-label">New password (optional)</label>
-            <input asp-for="FullUserFormModel.Password" class="form-control" type="password" autocomplete="new-password" />
-            <span asp-validation-for="FullUserFormModel.Password" class="field-error"></span>
-        </div>
-    </div>
-    <div class="d-flex flex-column flex-sm-row gap-2 mt-3">
+    </section>
+
+    <hr class="section-divider" />
+
+    <section id="steam-profile" aria-labelledby="steamProfileTitle">
+        <h2 id="steamProfileTitle" class="profile-section-title">Steam profile</h2>
+        @if (Model.CanManageSteamId)
+        {
+            <div class="profile-form-narrow">
+                <label asp-for="Form.SteamProfile" class="profile-label">SteamID64 or profile URL</label>
+                <input asp-for="Form.SteamProfile"
+                       class="form-control"
+                       placeholder="7656119... or steamcommunity.com/profiles/..."
+                       autocomplete="off" />
+                <span class="form-hint">Connecting a Steam account activates your player profile. Vanity URLs such as <code>/id/username</code> are not supported.</span>
+                <span asp-validation-for="Form.SteamProfile" class="field-error"></span>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">Administrator accounts cannot be connected to a player profile.</div>
+        }
+    </section>
+
+    <div class="d-flex flex-column flex-sm-row gap-2 mt-4">
         <button type="submit" class="btn-main">Save changes</button>
         <a asp-page="/ViewProfile" class="btn btn-outline-light">Cancel</a>
     </div>

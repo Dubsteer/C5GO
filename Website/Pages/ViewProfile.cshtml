@@ -5,6 +5,11 @@
     Layout = "_ProfileLayout";
 }
 
+@if (TempData["ProfileMessage"] is string profileMessage)
+{
+    <div class="alert alert-success" role="status">@profileMessage</div>
+}
+
 <div class="profile-actions">
     <div>
         <span class="profile-label">Username</span>
@@ -27,24 +32,40 @@
 
     @if (Model.RequireSteam)
     {
-        <div class="alert alert-info" role="alert">Add your Steam ID before joining a tournament. You can find it on your Steam profile.</div>
+        <div class="alert alert-info" role="alert">Connect your Steam profile before joining a tournament.</div>
+    }
+    else if (Model.NeedsSteamUpdate)
+    {
+        <div class="alert alert-warning" role="alert">Your saved Steam ID is not a valid SteamID64. Update it to activate your player profile.</div>
     }
 
     @if (Model.Player == null)
     {
-        <form method="post" class="profile-form-narrow">
-            <label asp-for="SteamId" class="profile-label">Steam ID</label>
-            <input asp-for="SteamId" class="form-control" placeholder="Enter your Steam ID" autocomplete="off" />
-            <span asp-validation-for="SteamId" class="field-error"></span>
-            <button type="submit" class="btn btn-success mt-2">Save and become a player</button>
-        </form>
+        <div class="profile-info-item profile-steam-empty">
+            <div>
+                <span class="profile-label">Steam profile</span>
+                <div class="profile-value">Not connected</div>
+            </div>
+            @if (!Model.PageUser.IsAdmin)
+            {
+                <a asp-page="/EditProfile" asp-fragment="steam-profile" class="btn btn-success">
+                    @(Model.NeedsSteamUpdate ? "Update Steam ID" : "Add Steam ID")
+                </a>
+            }
+        </div>
     }
     else
     {
-        <div class="profile-info-item">
-            <span class="profile-label">Steam ID</span>
-            <div class="profile-value">@Model.Player.SteamId</div>
-            <span class="text-success fw-semibold">Player profile active</span>
+        <div class="profile-info-item profile-steam-connected">
+            <div>
+                <span class="profile-label">SteamID64</span>
+                <div class="profile-value">@Model.Player.SteamId</div>
+                <span class="text-success fw-semibold">Player profile active</span>
+            </div>
+            <a href="@Model.SteamProfileUrl"
+               class="btn btn-outline-light"
+               target="_blank"
+               rel="noopener noreferrer">Open Steam profile</a>
         </div>
     }
 </section>
@@ -80,7 +101,7 @@
                                 }
                                 else
                                 {
-                                    @:–
+                                    @:—
                                 }
                             </td>
                         </tr>

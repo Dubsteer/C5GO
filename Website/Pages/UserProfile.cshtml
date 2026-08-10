@@ -15,7 +15,17 @@
 <div class="profile-info-grid">
     <div class="profile-info-item"><span class="profile-label">First name</span><div class="profile-value">@Model.ViewedUser.Firstname</div></div>
     <div class="profile-info-item"><span class="profile-label">Last name</span><div class="profile-value">@Model.ViewedUser.Lastname</div></div>
-    <div class="profile-info-item"><span class="profile-label">Email</span><div class="profile-value">@Model.ViewedUser.Gmail</div></div>
     <div class="profile-info-item"><span class="profile-label">Birthday</span><div class="profile-value">@(Model.ViewedUser.Birthday?.ToString("dd.MM.yyyy") ?? "Not provided")</div></div>
-    <div class="profile-info-item profile-info-wide"><span class="profile-label">Steam ID</span><div class="profile-value">@(Model.ViewedPlayer?.SteamId ?? "No player profile")</div></div>
+    <div class="profile-info-item profile-info-wide">
+        <span class="profile-label">Steam profile</span>
+        @if (Model.SteamProfileUrl != null)
+        {
+            <div class="profile-value">@Model.ViewedPlayer!.SteamId</div>
+            <a href="@Model.SteamProfileUrl" target="_blank" rel="noopener noreferrer">Open Steam profile</a>
+        }
+        else
+        {
+            <div class="profile-value">No player profile</div>
+        }
+    </div>
 </div>

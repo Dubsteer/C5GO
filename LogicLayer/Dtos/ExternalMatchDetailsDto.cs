@@ -11,6 +11,7 @@
         public string Team2LogoUrl { get; set; } = "";
 
         public string EventName { get; set; } = "";
+        public string Format { get; set; } = "";
 
         public string Status { get; set; } = "";
         public string Score { get; set; } = "";

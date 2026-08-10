@@ -1,4 +1,4 @@
-﻿using LogicLayer.Dtos;
+using LogicLayer.Dtos;
 
 namespace LogicLayer.Services
 {
@@ -45,39 +45,78 @@ namespace LogicLayer.Services
 
         public Task<ExternalMatchDetailsDto?> GetMatchDetailsAsync(string matchId)
         {
-            var details = new ExternalMatchDetailsDto
+            var matches = new Dictionary<string, ExternalMatchDetailsDto>
             {
-                Id = matchId,
-                Team1Name = "FOKUS",
-                Team2Name = "Wildcard",
-                EventName = "CCT Europe",
-                Status = "Live",
-                Score = "13 - 7",
-                StartTimeUtc = DateTime.UtcNow.AddMinutes(-30),
-                Maps = new List<ExternalMapDto>
+                ["1"] = new ExternalMatchDetailsDto
                 {
-                    new ExternalMapDto { MapName = "Mirage", Score = "13 - 7" }
-                },
-                Streams = new List<ExternalStreamDto>
-                {
-                    new ExternalStreamDto
+                    Id = "1",
+                    Team1Name = "Eternal Fire",
+                    Team2Name = "ENCE",
+                    EventName = "BLAST Premier",
+                    Format = "Best of 3",
+                    Status = "Live",
+                    Score = "13 - 10",
+                    StartTimeUtc = DateTime.UtcNow.AddMinutes(-20),
+                    Maps = new List<ExternalMapDto>
                     {
-                        Platform = "Twitch",
-                        StreamerName = "Trotah",
-                        Url = "https://twitch.tv/trotah",
-                        Viewers = 640
+                        new ExternalMapDto { MapName = "Inferno", Score = "13 - 10" }
                     },
-                    new ExternalStreamDto
+                    Streams = new List<ExternalStreamDto>
                     {
-                        Platform = "Kick",
-                        StreamerName = "Hyper",
-                        Url = "https://kick.com/hyper",
-                        Viewers = 596
+                        new ExternalStreamDto
+                        {
+                            Platform = "Twitch",
+                            StreamerName = "BLAST",
+                            Url = "https://twitch.tv/blast",
+                            Viewers = 12000
+                        }
                     }
+                },
+
+                ["2"] = new ExternalMatchDetailsDto
+                {
+                    Id = "2",
+                    Team1Name = "FOKUS",
+                    Team2Name = "Wildcard",
+                    EventName = "CCT Europe",
+                    Format = "Best of 3",
+                    Status = "Live",
+                    Score = "7 - 3",
+                    StartTimeUtc = DateTime.UtcNow.AddMinutes(-10),
+                    Maps = new List<ExternalMapDto>
+                    {
+                        new ExternalMapDto { MapName = "Mirage", Score = "7 - 3" }
+                    },
+                    Streams = new List<ExternalStreamDto>
+                    {
+                        new ExternalStreamDto
+                        {
+                            Platform = "Kick",
+                            StreamerName = "Hyper",
+                            Url = "https://kick.com/hyper",
+                            Viewers = 596
+                        }
+                    }
+                },
+
+                ["3"] = new ExternalMatchDetailsDto
+                {
+                    Id = "3",
+                    Team1Name = "MOUZ NXT",
+                    Team2Name = "BESTIA",
+                    EventName = "ESL Challenger",
+                    Format = "Best of 3",
+                    Status = "Upcoming",
+                    Score = "-",
+                    StartTimeUtc = DateTime.UtcNow.AddHours(2),
+                    Maps = new List<ExternalMapDto>(),
+                    Streams = new List<ExternalStreamDto>()
                 }
             };
 
-            return Task.FromResult<ExternalMatchDetailsDto?>(details);
+            matches.TryGetValue(matchId, out var result);
+
+            return Task.FromResult(result);
         }
     }
 }

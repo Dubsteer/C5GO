@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc;
 using LogicLayer.Managers;
 using LogicLayer.Models;
+using LogicLayer.Services;
 
 namespace Website.Pages
 {
@@ -9,6 +10,7 @@ namespace Website.Pages
     {
         public User ViewedUser { get; set; } = null!;
         public Player? ViewedPlayer { get; set; }
+        public string? SteamProfileUrl { get; set; }
 
         private readonly UserManager _userManager;
         private readonly PlayerManager _playerManager;
@@ -27,6 +29,9 @@ namespace Website.Pages
 
             ViewedUser = user;
             ViewedPlayer = _playerManager.GetPlayer(user);
+
+            if (ViewedPlayer?.SteamId is string steamId)
+                SteamProfileUrl = SteamIdParser.BuildProfileUrl(steamId);
 
             return Page();
         }

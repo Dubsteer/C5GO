@@ -1,6 +1,7 @@
 ﻿using LogicLayer.Exceptions;
 using LogicLayer.IRepos;
 using LogicLayer.Models;
+using LogicLayer.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -110,11 +111,40 @@ namespace LogicLayer.Managers
 
         public void UpdateUser(User user)
         {
+            if (user.Id is not int userId)
+                throw new InvalidOperationException("The user account is invalid.");
+
             var all = userRepo.GetAllUsers();
 
-            if (all.Any(u => u.Username == user.Username && u.Id != user.Id))
-                throw new Exception("Username already exists!");
+            if (all.Any(u =>
+                    u.Id != userId &&
+                    string.Equals(u.Username, user.Username, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new UsernameAlreadyInUseException();
+            }
 
+            if (all.Any(u =>
+                    u.Id != userId &&
+                    string.Equals(u.Gmail, user.Gmail, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new EmailAlreadyInUseException();
+            }
+
+            if (!SteamIdParser.TryNormalize(user.SteamId, out var normalizedSteamId))
+                throw new InvalidSteamIdException();
+
+            if (user.IsAdmin && normalizedSteamId != null)
+                throw new InvalidOperationException("Administrator accounts cannot have a player profile.");
+
+            if (normalizedSteamId != null && all.Any(u =>
+                    u.Id != userId &&
+                    SteamIdParser.TryNormalize(u.SteamId, out var existingSteamId) &&
+                    string.Equals(existingSteamId, normalizedSteamId, StringComparison.Ordinal)))
+            {
+                throw new SteamIdAlreadyInUseException();
+            }
+
+            user.SteamId = normalizedSteamId;
             userRepo.UpdateUser(user);
         }
 

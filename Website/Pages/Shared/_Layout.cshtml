@@ -1,6 +1,10 @@
 @{
     var currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? string.Empty;
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var username = User.Identity?.Name ?? "Profile";
+    var userInitial = string.IsNullOrWhiteSpace(username)
+        ? "?"
+        : char.ToUpperInvariant(username[0]).ToString();
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -59,13 +63,38 @@
                     }
                 </ul>
 
-                <ul class="navbar-nav ms-lg-auto align-items-lg-center">
+                <ul class="navbar-nav ms-lg-auto align-items-lg-center nav-account-list">
                     @if (isAuthenticated)
                     {
-                        @await Html.PartialAsync("_NotificationsBell")
-                        <li class="nav-item nav-user-box">
-                            <a class="nav-username" asp-page="/ViewProfile">@User.Identity!.Name</a>
-                            <a class="logout-link" asp-page="/Logout">Logout</a>
+                        <li class="nav-item nav-account-shell">
+                            @await Html.PartialAsync("_NotificationsBell")
+
+                            <div class="dropdown profile-menu">
+                                <button class="profile-menu-trigger dropdown-toggle @(currentPage is "/ViewProfile" or "/EditProfile" ? "profile-menu-active" : string.Empty)"
+                                        id="profileDropdown"
+                                        type="button"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false"
+                                        aria-label="Open profile menu for @username">
+                                    <span class="profile-avatar" aria-hidden="true">@userInitial</span>
+                                    <span class="profile-menu-name">@username</span>
+                                </button>
+
+                                <ul class="dropdown-menu dropdown-menu-end profile-menu-dropdown" aria-labelledby="profileDropdown">
+                                    <li>
+                                        <a class="dropdown-item" asp-page="/ViewProfile">My profile</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-page="/EditProfile">Edit profile</a>
+                                    </li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li>
+                                        <form method="post" asp-page="/Logout">
+                                            <button class="dropdown-item profile-logout" type="submit">Log out</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
                         </li>
                     }
                     else

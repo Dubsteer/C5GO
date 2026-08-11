@@ -1,6 +1,5 @@
 using DataLayer;
 using DataLayer.Repos;
-using LogicLayer;
 using LogicLayer.IRepos;
 using LogicLayer.Managers;
 using LogicLayer.Services;
@@ -202,4 +201,8 @@ static RateLimitPartition<string> CreateFixedWindowLimiter(
             Window = window,
             QueueLimit = 0
         });
+}
+
+public partial class Program
+{
 }

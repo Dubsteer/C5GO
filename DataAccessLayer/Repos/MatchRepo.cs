@@ -38,11 +38,15 @@ namespace DataLayer.Repos
                     m.match_date,
                     m.status_int,
 
-                    u1.id AS u1_id, u1.first_name, u1.last_name, u1.age,
-                    u1.username, u1.email, u1.password, u1.is_moderator, u1.steam_id,
+                    u1.id AS u1_id, u1.first_name AS u1_first_name,
+                    u1.last_name AS u1_last_name, u1.age AS u1_age,
+                    u1.username AS u1_username, u1.email AS u1_email,
+                    u1.is_moderator AS u1_is_moderator, u1.steam_id AS u1_steam_id,
 
-                    u2.id AS u2_id, u2.first_name, u2.last_name, u2.age,
-                    u2.username, u2.email, u2.password, u2.is_moderator, u2.steam_id
+                    u2.id AS u2_id, u2.first_name AS u2_first_name,
+                    u2.last_name AS u2_last_name, u2.age AS u2_age,
+                    u2.username AS u2_username, u2.email AS u2_email,
+                    u2.is_moderator AS u2_is_moderator, u2.steam_id AS u2_steam_id
                 FROM matches m
                 JOIN user u1 ON m.user_id1 = u1.id
                 JOIN user u2 ON m.user_id2 = u2.id
@@ -54,26 +58,26 @@ namespace DataLayer.Repos
                 {
                     var p1 = new Player(new User(
                         r.GetInt32("u1_id"),
-                        r.GetString("first_name"),
-                        r.GetString("last_name"),
-                        r.GetInt32("age"),
-                        r.GetString("username"),
-                        r.GetString("email"),
-                        r.GetString("password"),
-                        r.GetBoolean("is_moderator"),
-                        r.GetString("steam_id")
+                        r.GetString("u1_first_name"),
+                        r.GetString("u1_last_name"),
+                        r.GetInt32("u1_age"),
+                        r.GetString("u1_username"),
+                        r.GetString("u1_email"),
+                        string.Empty,
+                        r.GetBoolean("u1_is_moderator"),
+                        r.GetString("u1_steam_id")
                     ));
 
                     var p2 = new Player(new User(
                         r.GetInt32("u2_id"),
-                        r.GetString("first_name"),
-                        r.GetString("last_name"),
-                        r.GetInt32("age"),
-                        r.GetString("username"),
-                        r.GetString("email"),
-                        r.GetString("password"),
-                        r.GetBoolean("is_moderator"),
-                        r.GetString("steam_id")
+                        r.GetString("u2_first_name"),
+                        r.GetString("u2_last_name"),
+                        r.GetInt32("u2_age"),
+                        r.GetString("u2_username"),
+                        r.GetString("u2_email"),
+                        string.Empty,
+                        r.GetBoolean("u2_is_moderator"),
+                        r.GetString("u2_steam_id")
                     ));
 
                     list.Add(new Match(

@@ -42,16 +42,38 @@ namespace LogicLayer.Managers
 
         public User? GetLoginUser(string username, string password)
         {
-            var user = userRepo.GetAllUsers()
-                .FirstOrDefault(u => u.Username == username);
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrEmpty(password))
+                return null;
+
+            var user = userRepo.GetUserByUsername(username.Trim());
 
             if (user == null)
                 return null;
 
-            bool passwordOk =
-                user.Password == password ||
-                (user.Password.StartsWith("$2") &&
-                 BCrypt.Net.BCrypt.Verify(password, user.Password));
+            var passwordOk = false;
+            var isBcryptHash = user.Password.StartsWith("$2", StringComparison.Ordinal);
+
+            if (isBcryptHash)
+            {
+                try
+                {
+                    passwordOk = BCrypt.Net.BCrypt.Verify(password, user.Password);
+                }
+                catch (BCrypt.Net.SaltParseException)
+                {
+                    return null;
+                }
+            }
+            else if (string.Equals(user.Password, password, StringComparison.Ordinal))
+            {
+                passwordOk = true;
+
+                if (user.Id is int userId)
+                {
+                    user.Password = BCrypt.Net.BCrypt.HashPassword(password);
+                    userRepo.UpdatePassword(userId, user.Password);
+                }
+            }
 
             if (!passwordOk)
                 return null;
@@ -79,8 +101,8 @@ namespace LogicLayer.Managers
                 user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
 
             user.EmailConfirmed = false;
-            user.EmailToken = Guid.NewGuid().ToString();
-            user.TokenCreatedAt = DateTime.Now;
+            user.EmailToken = Guid.NewGuid().ToString("N");
+            user.TokenCreatedAt = DateTime.UtcNow;
 
             userRepo.CreateUser(user);
         }
@@ -102,6 +124,12 @@ namespace LogicLayer.Managers
 
             if (user.EmailConfirmed)
                 return;
+
+            if (!user.TokenCreatedAt.HasValue ||
+                DateTime.UtcNow - user.TokenCreatedAt.Value > TimeSpan.FromHours(24))
+            {
+                throw new Exception("Invalid or expired verification token.");
+            }
 
             if (user.Id is not int userId)
                 throw new InvalidOperationException("The user account is invalid.");

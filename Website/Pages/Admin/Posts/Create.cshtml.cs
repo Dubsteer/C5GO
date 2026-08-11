@@ -3,24 +3,38 @@ using LogicLayer.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.ComponentModel.DataAnnotations;
 using System;
-using System.IO;
+using Website.Services;
 
 namespace Website.Pages.Admin.Posts
 {
+    [RequestFormLimits(MultipartBodyLengthLimit = 6 * 1024 * 1024)]
     public class CreateModel : PageModel
     {
         private readonly PostManager postManager;
         private readonly UserManager userManager;
+        private readonly PostImageStorage imageStorage;
 
-        public CreateModel(PostManager postManager, UserManager userManager)
+        public CreateModel(
+            PostManager postManager,
+            UserManager userManager,
+            PostImageStorage imageStorage)
         {
             this.postManager = postManager;
             this.userManager = userManager;
+            this.imageStorage = imageStorage;
         }
 
-        [BindProperty] public string Title { get; set; } = "";
-        [BindProperty] public string PostContent { get; set; } = "";
+        [BindProperty]
+        [Required]
+        [StringLength(200)]
+        public string Title { get; set; } = "";
+
+        [BindProperty]
+        [Required]
+        public string PostContent { get; set; } = "";
+
         [BindProperty] public IFormFile? Image { get; set; }
 
         public IActionResult OnGet()
@@ -28,8 +42,11 @@ namespace Website.Pages.Admin.Posts
             return Page();
         }
 
-        public IActionResult OnPost()
+        public async Task<IActionResult> OnPostAsync(CancellationToken cancellationToken)
         {
+            if (!ModelState.IsValid)
+                return Page();
+
             var author = userManager.GetByUsername(User.Identity!.Name!);
             if (author == null)
                 return StatusCode(403);
@@ -38,29 +55,22 @@ namespace Website.Pages.Admin.Posts
 
             if (Image != null)
             {
-                var fileName = Guid.NewGuid() + Path.GetExtension(Image.FileName);
-
-                var savePath = Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "wwwroot",
-                    "images",
-                    "posts",
-                    fileName
-                );
-
-                Directory.CreateDirectory(Path.GetDirectoryName(savePath)!);
-
-                using var stream = new FileStream(savePath, FileMode.Create);
-                Image.CopyTo(stream);
-
-                imagePath = "/images/posts/" + fileName;
+                try
+                {
+                    imagePath = await imageStorage.SaveAsync(Image, cancellationToken);
+                }
+                catch (ImageUploadException exception)
+                {
+                    ModelState.AddModelError(nameof(Image), exception.Message);
+                    return Page();
+                }
             }
 
             var post = new Post
             {
-                Title = Title,
-                Content = PostContent,
-                Posted_on = DateTime.Now,
+                Title = Title.Trim(),
+                Content = PostContent.Trim(),
+                Posted_on = DateTime.UtcNow,
                 ImagePath = imagePath,
                 User = author
             };

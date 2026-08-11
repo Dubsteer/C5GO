@@ -21,6 +21,7 @@ namespace LogicLayer.FormModels
         public int? Age { get; set; }
 
         [Required(ErrorMessage = "Username is required")]
+        [StringLength(30, ErrorMessage = "Username must not exceed {1} characters")]
         public string Username { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Email is required")]

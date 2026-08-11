@@ -40,15 +40,15 @@
             foreach (var notification in notifications)
             {
                 <li>
-                    <a class="dropdown-item @(notification.IsRead ? string.Empty : "fw-bold")"
-                       asp-page="/Notifications/Read"
-                       asp-route-id="@notification.Id"
-                       asp-route-link="@notification.Link">
-                        @notification.Message
-                        <span class="d-block text-secondary small">
-                            @notification.CreatedAt.ToString("dd.MM.yyyy HH:mm")
-                        </span>
-                    </a>
+                    <form method="post" asp-page="/Notifications/Read">
+                        <input type="hidden" name="id" value="@notification.Id" />
+                        <button type="submit" class="dropdown-item @(notification.IsRead ? string.Empty : "fw-bold")">
+                            @notification.Message
+                            <span class="d-block text-secondary small">
+                                @notification.CreatedAt.ToString("dd.MM.yyyy HH:mm")
+                            </span>
+                        </button>
+                    </form>
                 </li>
             }
         }

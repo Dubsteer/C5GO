@@ -68,7 +68,6 @@ desktop.ini
 appsettings.Development.json
 appsettings.Local.json
 appsettings.*.json
-!appsettings.Production.json  # Only allow safe config
 .env
 *.env
 

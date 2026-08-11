@@ -56,8 +56,19 @@ namespace Website.Pages
             if (!ModelState.IsValid)
                 return Page();
 
+            var authenticatedUser = userManager.GetLoginUser(
+                existingUser.Username,
+                Form.CurrentPassword);
+            if (authenticatedUser == null)
+            {
+                ModelState.AddModelError(
+                    "Form.CurrentPassword",
+                    "The current password is incorrect.");
+                return Page();
+            }
+
             var passwordHash = string.IsNullOrWhiteSpace(Form.NewPassword)
-                ? existingUser.Password
+                ? authenticatedUser.Password
                 : BCrypt.Net.BCrypt.HashPassword(Form.NewPassword);
 
             var requestedSteamProfile = CanManageSteamId

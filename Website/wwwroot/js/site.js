@@ -27,4 +27,28 @@ document.addEventListener("DOMContentLoaded", () => {
             closeLoginModal();
         }
     });
+
+    document.querySelectorAll("form[data-confirm]").forEach((form) => {
+        form.addEventListener("submit", (event) => {
+            if (!window.confirm(form.dataset.confirm)) {
+                event.preventDefault();
+            }
+        });
+    });
+
+    document.querySelectorAll("img[data-fallback-image]").forEach((image) => {
+        const applyFallback = () => {
+            if (image.dataset.fallbackApplied === "true") {
+                return;
+            }
+
+            image.dataset.fallbackApplied = "true";
+            image.src = image.dataset.fallbackImage;
+        };
+
+        image.addEventListener("error", applyFallback);
+        if (image.complete && image.naturalWidth === 0) {
+            applyFallback();
+        }
+    });
 });

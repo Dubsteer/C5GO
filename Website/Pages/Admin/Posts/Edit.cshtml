@@ -38,7 +38,9 @@
 
         <div class="mb-3">
             <label asp-for="Image" class="form-label">Replace image (optional)</label>
-            <input asp-for="Image" class="form-control" type="file" accept="image/*" />
+            <input asp-for="Image" class="form-control" type="file" accept="image/jpeg,image/png,image/webp" />
+            <span class="form-text">JPEG, PNG or WebP, up to 5 MB.</span>
+            <span asp-validation-for="Image" class="text-danger"></span>
         </div>
 
         <div class="admin-form-actions">

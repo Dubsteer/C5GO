@@ -15,12 +15,20 @@ namespace Website.Pages.Notifications
             manager = m;
         }
 
-        public IActionResult OnGet(int id, string link)
+        public IActionResult OnPost(int id)
         {
-            manager.MarkAsRead(id);
+            if (!int.TryParse(User.FindFirst("id")?.Value, out var userId))
+                return Challenge();
 
-            if (!string.IsNullOrEmpty(link))
-                return Redirect(link);
+            var notification = manager.MarkAsRead(id, userId);
+            if (notification == null)
+                return NotFound();
+
+            if (!string.IsNullOrWhiteSpace(notification.Link) &&
+                Url.IsLocalUrl(notification.Link))
+            {
+                return LocalRedirect(notification.Link);
+            }
 
             return RedirectToPage("/Index");
         }

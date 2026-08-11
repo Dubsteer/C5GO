@@ -2,6 +2,8 @@
 @model Website.Pages.Teams.TeamsModel
 @{
     ViewData["Title"] = "Teams";
+    var toastMessage = TempData["Error"] as string ?? TempData["Message"] as string;
+    var toastType = TempData["Error"] is string ? "warning" : "success";
 }
 
 <section aria-labelledby="teamsTitle">
@@ -71,7 +73,7 @@
                             {
                                 if (string.IsNullOrWhiteSpace(Model.CurrentUser.SteamId) || Model.CurrentUser.SteamId == "0")
                                 {
-                                    <button type="button" class="btn btn-secondary btn-sm btn-disabled" onclick="requireSteamId()">Request to join</button>
+                                    <button type="button" class="btn btn-secondary btn-sm btn-disabled" data-require-steam-id>Request to join</button>
                                 }
                                 else
                                 {
@@ -94,7 +96,12 @@
 </section>
 
 <div class="toast-container">
-    <div id="appToast" class="toast align-items-center" role="status" aria-live="polite">
+    <div id="appToast"
+         class="toast align-items-center"
+         role="status"
+         aria-live="polite"
+         data-toast-message="@toastMessage"
+         data-toast-type="@toastType">
         <div class="d-flex">
             <div class="toast-body" id="toastMessage"></div>
             <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close notification"></button>
@@ -103,51 +110,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        function showToast(message, type) {
-            const toastElement = document.getElementById("appToast");
-            const toastBody = document.getElementById("toastMessage");
-            toastElement.classList.remove("toast-success", "toast-warning");
-            toastElement.classList.add(type === "success" ? "toast-success" : "toast-warning");
-            toastBody.textContent = message;
-            new bootstrap.Toast(toastElement, { delay: 3000 }).show();
-        }
-
-        function requireSteamId() {
-            showToast("Add your Steam ID in your profile before requesting to join a team.", "warning");
-        }
-
-        document.querySelectorAll("[data-team-filter]").forEach((button) => {
-            button.addEventListener("click", () => {
-                const filter = button.dataset.teamFilter;
-                document.querySelectorAll("[data-team-filter]").forEach((item) => {
-                    const isActive = item === button;
-                    item.classList.toggle("active", isActive);
-                    item.setAttribute("aria-pressed", String(isActive));
-                });
-
-                document.querySelectorAll(".team-item").forEach((card) => {
-                    card.hidden = filter !== "all" && card.dataset.status !== filter;
-                });
-            });
-        });
-    </script>
-
-    @if (TempData["Error"] is string errorMessage)
-    {
-        <script>
-            document.addEventListener("DOMContentLoaded", () => {
-                showToast(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(errorMessage)), "warning");
-            });
-        </script>
-    }
-
-    @if (TempData["Message"] is string successMessage)
-    {
-        <script>
-            document.addEventListener("DOMContentLoaded", () => {
-                showToast(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(successMessage)), "success");
-            });
-        </script>
-    }
+    <script src="~/js/teams.js" asp-append-version="true"></script>
 }

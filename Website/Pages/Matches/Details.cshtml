@@ -22,14 +22,14 @@
             <div class="teams">
                 <div class="team-side">
                     <img class="team-logo" src="@(string.IsNullOrEmpty(Model.Match.Team1LogoUrl) ? "/Images/default-team.svg" : Model.Match.Team1LogoUrl)"
-                         onerror="this.onerror=null;this.src='/Images/default-team.svg';" alt="" />
+                         data-fallback-image="/Images/default-team.svg" alt="" />
                     <span class="team-name">@Model.Match.Team1Name</span>
                 </div>
                 <div class="score">@(string.IsNullOrEmpty(Model.Match.Score) ? "-" : Model.Match.Score)</div>
                 <div class="team-side right">
                     <span class="team-name">@Model.Match.Team2Name</span>
                     <img class="team-logo" src="@(string.IsNullOrEmpty(Model.Match.Team2LogoUrl) ? "/Images/default-team.svg" : Model.Match.Team2LogoUrl)"
-                         onerror="this.onerror=null;this.src='/Images/default-team.svg';" alt="" />
+                         data-fallback-image="/Images/default-team.svg" alt="" />
                 </div>
             </div>
 

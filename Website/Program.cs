@@ -5,7 +5,10 @@ using LogicLayer.IRepos;
 using LogicLayer.Managers;
 using LogicLayer.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.FileProviders;
 using System.Threading.RateLimiting;
 using Website.Services;
 
@@ -16,16 +19,28 @@ if (builder.Environment.IsDevelopment())
     builder.WebHost.UseUrls("http://localhost:5063");
 }
 
+builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto;
+    options.ForwardLimit = 1;
+});
+
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.LoginPath = "/Login";
-        options.AccessDeniedPath = "/AccessDenied";
+        options.AccessDeniedPath = "/Errors/403";
         options.ExpireTimeSpan = TimeSpan.FromHours(12);
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
         options.Cookie.SameSite = SameSiteMode.Lax;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+            ? CookieSecurePolicy.SameAsRequest
+            : CookieSecurePolicy.Always;
     });
 
 builder.Services.AddAuthorization(options =>
@@ -40,20 +55,28 @@ builder.Services.AddRazorPages(options =>
     options.Conventions.AuthorizeFolder("/Admin", "AdminOnly");
 });
 
-builder.Services.AddDataProtection();
+var dataProtection = builder.Services
+    .AddDataProtection()
+    .SetApplicationName("C5GO");
+
+var dataProtectionKeysPath = builder.Configuration["DataProtection:KeysPath"];
+if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
+{
+    var fullKeysPath = Path.IsPathRooted(dataProtectionKeysPath)
+        ? dataProtectionKeysPath
+        : Path.Combine(builder.Environment.ContentRootPath, dataProtectionKeysPath);
+
+    Directory.CreateDirectory(fullKeysPath);
+    dataProtection.PersistKeysToFileSystem(new DirectoryInfo(fullKeysPath));
+}
+
 builder.Services.AddSingleton<PasswordResetTokenService>();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    options.AddPolicy("password-reset", httpContext =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 5,
-                Window = TimeSpan.FromMinutes(15),
-                QueueLimit = 0
-            }));
+    options.AddPolicy("login", context => CreateFixedWindowLimiter(context, 10, TimeSpan.FromMinutes(5)));
+    options.AddPolicy("register", context => CreateFixedWindowLimiter(context, 5, TimeSpan.FromHours(1)));
+    options.AddPolicy("password-reset", context => CreateFixedWindowLimiter(context, 5, TimeSpan.FromMinutes(15)));
 });
 
 builder.Services.AddScoped<IConnection>(sp =>
@@ -89,6 +112,7 @@ builder.Services.AddScoped<TeamMatchManager>();
 builder.Services.AddScoped<NotificationManager>();
 
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<PostImageStorage>();
 
 var pandaScoreApiKey = builder.Configuration["PandaScore:ApiKey"];
 
@@ -108,13 +132,47 @@ else
 
 var app = builder.Build();
 
+app.UseForwardedHeaders();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
 
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    context.Response.Headers.Append("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+    context.Response.Headers["Content-Security-Policy"] =
+        "default-src 'self'; " +
+        "base-uri 'self'; " +
+        "connect-src 'self'; " +
+        "font-src 'self' data:; " +
+        "form-action 'self'; " +
+        "frame-ancestors 'none'; " +
+        "frame-src https://www.youtube-nocookie.com; " +
+        "img-src 'self' data: https:; " +
+        "object-src 'none'; " +
+        "script-src 'self'; " +
+        "style-src 'self';";
 
+    await next();
+});
+
+var postImagesDirectory = Path.Combine(
+    app.Environment.WebRootPath,
+    "Images",
+    "posts");
+Directory.CreateDirectory(postImagesDirectory);
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(postImagesDirectory),
+    RequestPath = "/images/posts"
+});
 app.UseStaticFiles();
 app.UseRouting();
 app.UseRateLimiter();
@@ -125,5 +183,23 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 
 app.Run();
+
+static RateLimitPartition<string> CreateFixedWindowLimiter(
+    HttpContext context,
+    int permitLimit,
+    TimeSpan window)
+{
+    var partitionKey = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+    return RateLimitPartition.GetFixedWindowLimiter(
+        partitionKey,
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = permitLimit,
+            Window = window,
+            QueueLimit = 0
+        });
+}

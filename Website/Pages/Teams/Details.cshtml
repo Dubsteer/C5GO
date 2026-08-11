@@ -27,7 +27,7 @@
             <h2 id="membersTitle" class="section-heading mb-0">Members</h2>
             @if (Model.IsCaptain)
             {
-                <form method="post" asp-page-handler="Leave" onsubmit="return confirm('Delete this team?');">
+                <form method="post" asp-page-handler="Leave" data-confirm="Delete this team?">
                     <input type="hidden" name="teamId" value="@Model.Team.Id" />
                     <button type="submit" class="btn btn-outline-danger btn-sm">Delete team</button>
                 </form>
@@ -50,7 +50,7 @@
                         <div class="d-flex gap-2">
                             @if (Model.IsCaptain && member.Id != Model.Team.Captain.Id)
                             {
-                                <form method="post" asp-page-handler="Kick" onsubmit="return confirm('Remove this member from the team?');">
+                                <form method="post" asp-page-handler="Kick" data-confirm="Remove this member from the team?">
                                     <input type="hidden" name="userId" value="@member.Id" />
                                     <input type="hidden" name="teamId" value="@Model.Team.Id" />
                                     <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
@@ -59,7 +59,7 @@
 
                             @if (member.Id == Model.CurrentUser.Id && !Model.IsCaptain)
                             {
-                                <form method="post" asp-page-handler="Leave" onsubmit="return confirm('Leave this team?');">
+                                <form method="post" asp-page-handler="Leave" data-confirm="Leave this team?">
                                     <input type="hidden" name="teamId" value="@Model.Team.Id" />
                                     <button type="submit" class="btn btn-outline-warning btn-sm">Leave team</button>
                                 </form>

@@ -23,9 +23,9 @@ namespace LogicLayer.Managers
             return repo.GetUnreadCount(userId);
         }
 
-        public void MarkAsRead(int notificationId)
+        public Notification? MarkAsRead(int notificationId, int userId)
         {
-            repo.MarkAsRead(notificationId);
+            return repo.MarkAsRead(notificationId, userId);
         }
     }
 }

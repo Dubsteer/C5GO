@@ -24,14 +24,14 @@
                 <div class="teams">
                     <div class="team-box">
                         <img class="team-logo" src="@(string.IsNullOrEmpty(match.Team1LogoUrl) ? "/Images/default-team.svg" : match.Team1LogoUrl)"
-                             onerror="this.onerror=null;this.src='/Images/default-team.svg';" alt="" />
+                             data-fallback-image="/Images/default-team.svg" alt="" />
                         <span class="team">@match.Team1Name</span>
                     </div>
                     <div class="score">@(string.IsNullOrEmpty(match.Score) ? "-" : match.Score)</div>
                     <div class="team-box right">
                         <span class="team">@match.Team2Name</span>
                         <img class="team-logo" src="@(string.IsNullOrEmpty(match.Team2LogoUrl) ? "/Images/default-team.svg" : match.Team2LogoUrl)"
-                             onerror="this.onerror=null;this.src='/Images/default-team.svg';" alt="" />
+                             data-fallback-image="/Images/default-team.svg" alt="" />
                     </div>
                 </div>
 

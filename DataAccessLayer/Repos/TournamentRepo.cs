@@ -240,7 +240,7 @@ namespace DataLayer.Repos
             var list = new List<Player>();
 
             var cmd = new MySqlCommand(
-                @"SELECT user.id, first_name, last_name, age, username, email, password, steam_id, is_moderator
+                @"SELECT user.id, first_name, last_name, age, username, email, steam_id, is_moderator
                   FROM user
                   JOIN applications ON user.id = applications.playerId
                   WHERE applications.tournamentId=@id",
@@ -259,9 +259,9 @@ namespace DataLayer.Repos
                     r.GetInt32(3),
                     r.GetString(4),
                     r.GetString(5),
+                    string.Empty,
                     r.GetString(6),
-                    r.GetString(7),
-                    r.GetBoolean(8)
+                    r.GetBoolean(7)
                 ));
             }
 

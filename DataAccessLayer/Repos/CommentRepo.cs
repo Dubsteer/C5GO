@@ -48,7 +48,7 @@ namespace DataLayer.Repos
                 SELECT 
                     c.id, c.authorid, c.content, c.posted_on, c.post_id,
                     u.first_name, u.last_name, u.age, u.username, u.email,
-                    u.password, u.is_moderator, u.steam_id
+                    u.is_moderator, u.steam_id
                 FROM comment c
                 JOIN user u ON u.id = c.authorid
                 WHERE c.post_id = @pid
@@ -69,7 +69,7 @@ namespace DataLayer.Repos
                     r.IsDBNull("age") ? 0 : r.GetInt32("age"),
                     r.GetString("username"),
                     r.GetString("email"),
-                    r.GetString("password"),
+                    string.Empty,
                     r.GetBoolean("is_moderator"),
                     r.IsDBNull("steam_id") ? "0" : r.GetString("steam_id")
                 );
@@ -221,7 +221,7 @@ namespace DataLayer.Repos
                 SELECT 
                     cr.id, cr.content, cr.posted_on, cr.comment_id, cr.user_id,
                     u.first_name, u.last_name, u.age, u.username, u.email,
-                    u.password, u.is_moderator, u.steam_id
+                    u.is_moderator, u.steam_id
                 FROM commentreply cr
                 JOIN user u ON u.id = cr.user_id
                 WHERE cr.comment_id=@cid
@@ -242,7 +242,7 @@ namespace DataLayer.Repos
                     r.IsDBNull("age") ? 0 : r.GetInt32("age"),
                     r.GetString("username"),
                     r.GetString("email"),
-                    r.GetString("password"),
+                    string.Empty,
                     r.GetBoolean("is_moderator"),
                     r.IsDBNull("steam_id") ? "0" : r.GetString("steam_id")
                 );
@@ -267,7 +267,7 @@ namespace DataLayer.Repos
                 SELECT 
                     cr.id, cr.content, cr.posted_on, cr.comment_id, cr.user_id,
                     u.first_name, u.last_name, u.age, u.username, u.email,
-                    u.password, u.is_moderator, u.steam_id
+                    u.is_moderator, u.steam_id
                 FROM commentreply cr
                 JOIN user u ON u.id = cr.user_id
                 WHERE cr.id=@rid
@@ -286,7 +286,7 @@ namespace DataLayer.Repos
                 r.IsDBNull("age") ? 0 : r.GetInt32("age"),
                 r.GetString("username"),
                 r.GetString("email"),
-                r.GetString("password"),
+                string.Empty,
                 r.GetBoolean("is_moderator"),
                 r.IsDBNull("steam_id") ? "0" : r.GetString("steam_id")
             );

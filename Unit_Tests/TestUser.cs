@@ -212,6 +212,57 @@ namespace Unit_Tests
         }
 
         [TestMethod]
+        public void TestLegacyPlainTextPasswordIsRehashedAfterLogin()
+        {
+            const string password = "legacy-password";
+            var user = CreateUser(1, "legacy", "legacy@test.local", password);
+            user.EmailConfirmed = true;
+            users.Add(user);
+
+            var result = userManager.GetLoginUser(user.Username, password);
+
+            Assert.IsNotNull(result);
+            Assert.IsTrue(user.Password.StartsWith("$2", StringComparison.Ordinal));
+            Assert.IsTrue(BCrypt.Net.BCrypt.Verify(password, user.Password));
+        }
+
+        [TestMethod]
+        public void TestMalformedPasswordHashDoesNotCrashLogin()
+        {
+            var user = CreateUser(1, "broken", "broken@test.local", "$2-not-a-valid-hash");
+            user.EmailConfirmed = true;
+            users.Add(user);
+
+            var result = userManager.GetLoginUser(user.Username, "password");
+
+            Assert.IsNull(result);
+        }
+
+        [TestMethod]
+        public void TestConfirmEmailRejectsExpiredToken()
+        {
+            var user = CreateUser(1, "member", "member@test.local");
+            userManager.CreateUser(user);
+            user.TokenCreatedAt = DateTime.UtcNow.Subtract(TimeSpan.FromHours(25));
+
+            Assert.ThrowsExactly<Exception>(() =>
+                userManager.ConfirmEmail(user.EmailToken!));
+            Assert.IsFalse(user.EmailConfirmed);
+        }
+
+        [TestMethod]
+        public void TestConfirmEmailAcceptsCurrentToken()
+        {
+            var user = CreateUser(1, "member", "member@test.local");
+            userManager.CreateUser(user);
+
+            userManager.ConfirmEmail(user.EmailToken!);
+
+            Assert.IsTrue(user.EmailConfirmed);
+            Assert.IsNull(user.EmailToken);
+        }
+
+        [TestMethod]
         public void TestGetUserByEmailIsCaseInsensitive()
         {
             userManager.CreateUser(CreateUser(1, "dubsteer", "Dubsteer@Test.Local"));

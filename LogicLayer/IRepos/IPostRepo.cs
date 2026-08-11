@@ -8,10 +8,10 @@ namespace LogicLayer.IRepos
 
         public List<Post> GetAllPosts();
 
+        public Post? GetPostById(int id);
+
         public void UpdatePost(Post post);
 
         public void DeletePost(Post post);
-
-        public bool CheckIfPostNameExists(string postName, int selfId);
     }
 }

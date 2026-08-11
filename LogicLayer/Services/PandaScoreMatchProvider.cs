@@ -5,6 +5,11 @@ namespace LogicLayer.Services
 {
     public class PandaScoreMatchProvider : IExternalMatchProvider
     {
+        private static readonly JsonSerializerOptions SerializerOptions = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
         private readonly HttpClient _http;
 
         public PandaScoreMatchProvider(HttpClient http)
@@ -103,7 +108,7 @@ namespace LogicLayer.Services
             };
         }
 
-        private string NormalizeStatus(string? status)
+        private static string NormalizeStatus(string? status)
         {
             return status switch
             {
@@ -127,7 +132,7 @@ namespace LogicLayer.Services
             };
         }
 
-        private string BuildScore(PandaMatch m)
+        private static string BuildScore(PandaMatch m)
         {
             if (m.Status == "not_started")
                 return "";
@@ -157,7 +162,7 @@ namespace LogicLayer.Services
 
                 return await JsonSerializer.DeserializeAsync<List<PandaMatch>>(
                     stream,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    SerializerOptions)
                     ?? new List<PandaMatch>();
             }
             catch (HttpRequestException)

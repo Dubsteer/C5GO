@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using LogicLayer;
 using LogicLayer.IRepos;
@@ -19,7 +19,7 @@ namespace DataLayer.Repos
 
         private void EnsureOpen()
         {
-            if (conn.GetInnerConn().State != ConnectionState.Open)
+            if (conn.Connection.State != ConnectionState.Open)
                 conn.Open();
         }
 
@@ -30,7 +30,7 @@ namespace DataLayer.Repos
             var cmd = new MySqlCommand(@"
                 INSERT INTO comment (authorid, content, posted_on, post_id)
                 VALUES (@aid, @content, @posted, @pid)
-            ", conn.GetInnerConn());
+            ", conn.Connection);
 
             cmd.Parameters.AddWithValue("@aid", comment.User.Id);
             cmd.Parameters.AddWithValue("@content", comment.Content);
@@ -53,7 +53,7 @@ namespace DataLayer.Repos
                 JOIN user u ON u.id = c.authorid
                 WHERE c.post_id = @pid
                 ORDER BY c.posted_on DESC
-            ", conn.GetInnerConn());
+            ", conn.Connection);
 
             cmd.Parameters.AddWithValue("@pid", postId);
 
@@ -95,7 +95,7 @@ namespace DataLayer.Repos
                 WHERE authorid = @uid
                 ORDER BY posted_on DESC
                 LIMIT 1
-            ", conn.GetInnerConn());
+            ", conn.Connection);
 
             cmd.Parameters.AddWithValue("@uid", userId);
 
@@ -117,7 +117,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 "SELECT * FROM comment WHERE id=@id",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", id);
 
@@ -141,7 +141,7 @@ namespace DataLayer.Repos
                 UPDATE comment SET
                 authorid=@aid, content=@content, posted_on=@posted, post_id=@pid
                 WHERE id=@id
-            ", conn.GetInnerConn());
+            ", conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", comment.Id);
             cmd.Parameters.AddWithValue("@aid", comment.User.Id);
@@ -158,14 +158,14 @@ namespace DataLayer.Repos
 
             var cmd0 = new MySqlCommand(
                 "DELETE FROM commentreply WHERE comment_id=@cid",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd0.Parameters.AddWithValue("@cid", comment.Id);
             cmd0.ExecuteNonQuery();
 
             var cmd = new MySqlCommand(
                 "DELETE FROM comment WHERE id=@id",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", comment.Id);
             cmd.ExecuteNonQuery();
@@ -177,7 +177,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 "SELECT * FROM comment",
-                conn.GetInnerConn());
+                conn.Connection);
 
             List<Comment> list = new();
 
@@ -203,7 +203,7 @@ namespace DataLayer.Repos
             var cmd = new MySqlCommand(@"
                 INSERT INTO commentreply (content, posted_on, comment_id, user_id)
                 VALUES (@content, @posted, @cid, @uid)
-            ", conn.GetInnerConn());
+            ", conn.Connection);
 
             cmd.Parameters.AddWithValue("@content", reply.Content);
             cmd.Parameters.AddWithValue("@posted", reply.PostedOn);
@@ -226,7 +226,7 @@ namespace DataLayer.Repos
                 JOIN user u ON u.id = cr.user_id
                 WHERE cr.comment_id=@cid
                 ORDER BY cr.posted_on ASC
-            ", conn.GetInnerConn());
+            ", conn.Connection);
 
             cmd.Parameters.AddWithValue("@cid", commentId);
 
@@ -272,7 +272,7 @@ namespace DataLayer.Repos
                 JOIN user u ON u.id = cr.user_id
                 WHERE cr.id=@rid
                 LIMIT 1
-            ", conn.GetInnerConn());
+            ", conn.Connection);
 
             cmd.Parameters.AddWithValue("@rid", replyId);
 
@@ -306,7 +306,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 "DELETE FROM commentreply WHERE id=@id",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", reply.Id);
             cmd.ExecuteNonQuery();
@@ -318,7 +318,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 "SELECT EXISTS(SELECT 1 FROM comment WHERE content=@txt)",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@txt", text);
             return Convert.ToInt32(cmd.ExecuteScalar()) == 1;

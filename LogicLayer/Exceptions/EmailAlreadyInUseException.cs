@@ -1,6 +1,6 @@
 ﻿namespace LogicLayer.Exceptions
 {
-    public class EmailAlreadyInUseException: Exception
+    public class EmailAlreadyInUseException : Exception
     {
         public EmailAlreadyInUseException() { }
 

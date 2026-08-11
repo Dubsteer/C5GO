@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using LogicLayer.IRepos;
 using LogicLayer.Models;
 
@@ -8,12 +7,7 @@ namespace Unit_Tests.MockRepos
 {
     public class MockPostRepo : IPostRepo
     {
-        private List<Post> posts = new();
-
-        public bool CheckIfPostNameExists(string postName, int selfId)
-        {
-            return posts.Any(p => p.Content == postName && p.Id != selfId);
-        }
+        private readonly List<Post> posts = new();
 
         public void CreatePost(Post post)
         {
@@ -28,6 +22,11 @@ namespace Unit_Tests.MockRepos
         public List<Post> GetAllPosts()
         {
             return new List<Post>(posts);
+        }
+
+        public Post? GetPostById(int id)
+        {
+            return posts.Find(post => post.Id == id);
         }
 
         public void UpdatePost(Post post)

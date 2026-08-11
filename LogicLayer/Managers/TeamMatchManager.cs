@@ -73,8 +73,7 @@ namespace LogicLayer.Managers
 
         public void GenerateTeamBracket(List<int> teamIds, int tournamentId, bool replaceExisting = false)
         {
-            if (teamIds == null)
-                throw new ArgumentNullException(nameof(teamIds));
+            ArgumentNullException.ThrowIfNull(teamIds);
 
             var uniqueTeamIds = teamIds.Distinct().ToList();
             if (uniqueTeamIds.Count != teamIds.Count)

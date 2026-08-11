@@ -69,11 +69,11 @@ namespace Website.Pages
             LoadCurrent();
             Filter = filter;
 
-            if (TempData.ContainsKey("Message"))
-                Message = TempData["Message"]?.ToString();
+            if (TempData.TryGetValue("Message", out var message))
+                Message = message?.ToString();
 
-            if (TempData.ContainsKey("Error"))
-                Error = TempData["Error"]?.ToString();
+            if (TempData.TryGetValue("Error", out var error))
+                Error = error?.ToString();
 
             Tournaments = tournamentManager.GetAllTournaments();
 

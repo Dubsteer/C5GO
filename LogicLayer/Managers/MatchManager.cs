@@ -97,8 +97,7 @@ namespace LogicLayer.Managers
                 throw new InvalidOperationException("Bracket players must be unique and have valid accounts.");
             }
 
-            if (rounds < 1)
-                throw new ArgumentOutOfRangeException(nameof(rounds));
+            ArgumentOutOfRangeException.ThrowIfLessThan(rounds, 1);
 
             var rnd = new Random();
             var shuffled = players.OrderBy(x => rnd.Next()).ToList();

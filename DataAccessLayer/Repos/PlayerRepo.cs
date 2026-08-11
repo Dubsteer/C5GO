@@ -1,4 +1,4 @@
-﻿using LogicLayer;
+using LogicLayer;
 using LogicLayer.IRepos;
 using LogicLayer.Models;
 using LogicLayer.Services;
@@ -19,21 +19,21 @@ namespace DataLayer.Repos
 
         private void EnsureConnection()
         {
-            if (conn.GetInnerConn().State != ConnectionState.Open)
+            if (conn.Connection.State != ConnectionState.Open)
                 conn.Open();
         }
 
-        private string? SafeString(MySqlDataReader reader, string column)
+        private static string? SafeString(MySqlDataReader reader, string column)
         {
             return reader.IsDBNull(column) ? null : reader.GetString(column);
         }
 
-        private int SafeInt(MySqlDataReader reader, string column)
+        private static int SafeInt(MySqlDataReader reader, string column)
         {
             return reader.IsDBNull(column) ? 0 : reader.GetInt32(column);
         }
 
-        private bool SafeBool(MySqlDataReader reader, string column)
+        private static bool SafeBool(MySqlDataReader reader, string column)
         {
             return !reader.IsDBNull(column) && reader.GetBoolean(column);
         }
@@ -44,7 +44,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 "UPDATE user SET steam_id = @steam_id WHERE id = @id",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@steam_id", player.SteamId);
             cmd.Parameters.AddWithValue("@id", player.Id);
@@ -61,7 +61,7 @@ namespace DataLayer.Repos
                          is_moderator, steam_id
                   FROM user
                   WHERE steam_id IS NOT NULL AND steam_id != '0'",
-                conn.GetInnerConn());
+                conn.Connection);
 
             var list = new List<Player>();
 
@@ -101,7 +101,7 @@ namespace DataLayer.Repos
                          is_moderator, steam_id
                   FROM user
                   WHERE id=@id",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", user.Id);
 
@@ -136,7 +136,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 "INSERT INTO applications (tournamentId, playerid) VALUES (@tid, @pid)",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@tid", tournament.Id);
             cmd.Parameters.AddWithValue("@pid", player.Id);
@@ -149,7 +149,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 "UPDATE user SET steam_id = NULL WHERE id=@id AND steam_id IS NOT NULL AND steam_id != '0'",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", userId);
             return cmd.ExecuteNonQuery() > 0;

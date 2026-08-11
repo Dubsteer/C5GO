@@ -1,4 +1,4 @@
-﻿using LogicLayer;
+using LogicLayer;
 using LogicLayer.IRepos;
 using LogicLayer.Models;
 using MySql.Data.MySqlClient;
@@ -19,7 +19,7 @@ namespace DataLayer.Repos
 
         private void EnsureOpen()
         {
-            if (conn.GetInnerConn().State != ConnectionState.Open)
+            if (conn.Connection.State != ConnectionState.Open)
                 conn.Open();
         }
 
@@ -30,7 +30,7 @@ namespace DataLayer.Repos
             var cmd = new MySqlCommand(
                 @"INSERT INTO post (authorid, title, content, posted_on, image_path)
           VALUES (@AUTHORID, @TITLE, @CONTENT, @POSTED_ON, @IMAGE_PATH)",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@AUTHORID", post.User.Id);
             cmd.Parameters.AddWithValue("@TITLE", post.Title);
@@ -50,7 +50,7 @@ namespace DataLayer.Repos
             EnsureOpen();
 
             var posts = new List<Post>();
-            var cmd = new MySqlCommand("SELECT * FROM post", conn.GetInnerConn());
+            var cmd = new MySqlCommand("SELECT * FROM post", conn.Connection);
 
             using (var reader = cmd.ExecuteReader())
             {
@@ -82,7 +82,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 "SELECT * FROM post WHERE id = @id",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", id);
 
@@ -118,7 +118,7 @@ namespace DataLayer.Repos
             content = @CONTENT,
             image_path = @IMAGE_PATH
           WHERE id = @ID",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@ID", post.Id);
             cmd.Parameters.AddWithValue("@TITLE", post.Title);
@@ -138,27 +138,10 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 "DELETE FROM post WHERE id=@ID",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@ID", post.Id);
             cmd.ExecuteNonQuery();
-        }
-
-        public bool CheckIfPostNameExists(string postTitle, int selfId)
-        {
-            EnsureOpen();
-
-            var cmd = new MySqlCommand(
-                @"SELECT EXISTS(
-                    SELECT 1 FROM post
-                    WHERE title = BINARY @TITLE AND id != @ID
-                  )",
-                conn.GetInnerConn());
-
-            cmd.Parameters.AddWithValue("@TITLE", postTitle);
-            cmd.Parameters.AddWithValue("@ID", selfId);
-
-            return Convert.ToInt32(cmd.ExecuteScalar()) == 1;
         }
     }
 }

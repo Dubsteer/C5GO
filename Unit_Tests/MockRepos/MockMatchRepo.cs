@@ -13,7 +13,7 @@ namespace Unit_Tests.MockRepos
     {
         public List<Match> Matches = new();
 
-        public MockMatchRepo(List<Match> matches) 
+        public MockMatchRepo(List<Match> matches)
         {
             Matches = matches;
         }

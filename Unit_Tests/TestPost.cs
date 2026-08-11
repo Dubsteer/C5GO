@@ -51,6 +51,16 @@ namespace Unit_Tests
             Assert.AreEqual(0, mockPostRepo.GetAllPosts().Count);
         }
 
+        [TestMethod]
+        public void TestGetPostById()
+        {
+            var post = CreatePost();
+            postManager.AddPost(post);
+
+            Assert.AreSame(post, postManager.GetPostById(post.Id));
+            Assert.IsNull(postManager.GetPostById(999));
+        }
+
         private static Post CreatePost() =>
             new Post(1, new User(1), "Test title", "Test content", DateTime.Now);
     }

@@ -1,4 +1,4 @@
-﻿using LogicLayer;
+using LogicLayer;
 using LogicLayer.Enums;
 using LogicLayer.IRepos;
 using LogicLayer.Models;
@@ -19,7 +19,7 @@ namespace DataLayer.Repos
 
         private void EnsureOpen()
         {
-            if (conn.GetInnerConn().State != ConnectionState.Open)
+            if (conn.Connection.State != ConnectionState.Open)
                 conn.Open();
         }
 
@@ -44,7 +44,7 @@ namespace DataLayer.Repos
                 FROM team_matches tm
                 JOIN team t1 ON tm.team_id1 = t1.id
                 JOIN team t2 ON tm.team_id2 = t2.id
-            ", conn.GetInnerConn());
+            ", conn.Connection);
 
             using (var r = cmd.ExecuteReader())
             {
@@ -86,7 +86,7 @@ namespace DataLayer.Repos
                 INSERT INTO team_matches 
                 (tournamentId, team_id1, team_id2, team1_score, team2_score, match_date, status_int)
                 VALUES (@tid, @t1, @t2, @s1, @s2, @date, @status)
-            ", conn.GetInnerConn());
+            ", conn.Connection);
 
             cmd.Parameters.AddWithValue("@tid", match.TournamentId);
             cmd.Parameters.AddWithValue("@t1", match.Team1.Id);
@@ -112,7 +112,7 @@ namespace DataLayer.Repos
                     match_date=@date,
                     status_int=@status
                 WHERE id=@id
-            ", conn.GetInnerConn());
+            ", conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", match.Id);
             cmd.Parameters.AddWithValue("@s1", match.Team1Score);
@@ -131,7 +131,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 "DELETE FROM team_matches WHERE id=@id",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", match.Id);
             cmd.ExecuteNonQuery();

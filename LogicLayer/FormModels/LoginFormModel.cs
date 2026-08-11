@@ -12,6 +12,7 @@ namespace LogicLayer.FormModels
 
         [Required]
         [DisplayName("Password")]
+        [StringLength(72, ErrorMessage = "Password length must not exceed {1} characters.")]
         public string Password { get; set; } = string.Empty;
 
         public LoginFormModel() { }

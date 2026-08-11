@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.RateLimiting;
 using LogicLayer.FormModels;
 using LogicLayer.Managers;
 using LogicLayer.Models;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace Website.Pages
 {
+    [EnableRateLimiting("register")]
     public class RegisterModel : PageModel
     {
         [BindProperty]

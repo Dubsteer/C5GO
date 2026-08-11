@@ -42,6 +42,12 @@
                 <span class="form-hint">Leave empty to keep your current password.</span>
                 <span asp-validation-for="Form.NewPassword" class="field-error"></span>
             </div>
+            <div class="profile-form-wide">
+                <label asp-for="Form.CurrentPassword" class="profile-label">Current password</label>
+                <input asp-for="Form.CurrentPassword" class="form-control" type="password" autocomplete="current-password" />
+                <span class="form-hint">Required to confirm and save account changes.</span>
+                <span asp-validation-for="Form.CurrentPassword" class="field-error"></span>
+            </div>
         </div>
     </section>
 

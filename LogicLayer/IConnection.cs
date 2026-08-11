@@ -1,6 +1,6 @@
 ﻿namespace LogicLayer
 {
-    public interface IConnection
+    public interface IConnection : IDisposable
     {
         public void Open();
 

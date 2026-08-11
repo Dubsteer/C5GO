@@ -57,7 +57,10 @@ namespace DataLayer.Repos
             EnsureConnection();
 
             var cmd = new MySqlCommand(
-                "SELECT * FROM user WHERE steam_id IS NOT NULL AND steam_id != '0'",
+                @"SELECT id, first_name, last_name, age, username, email,
+                         is_moderator, steam_id
+                  FROM user
+                  WHERE steam_id IS NOT NULL AND steam_id != '0'",
                 conn.GetInnerConn());
 
             var list = new List<Player>();
@@ -78,7 +81,7 @@ namespace DataLayer.Repos
                     SafeInt(reader, "age"),
                     SafeString(reader, "username") ?? "",
                     SafeString(reader, "email") ?? "",
-                    SafeString(reader, "password") ?? "",
+                    string.Empty,
                     SafeBool(reader, "is_moderator"),
                     steamId
                 );
@@ -94,7 +97,10 @@ namespace DataLayer.Repos
             EnsureConnection();
 
             var cmd = new MySqlCommand(
-                "SELECT * FROM user WHERE id=@id",
+                @"SELECT id, first_name, last_name, age, username, email,
+                         is_moderator, steam_id
+                  FROM user
+                  WHERE id=@id",
                 conn.GetInnerConn());
 
             cmd.Parameters.AddWithValue("@id", user.Id);
@@ -116,7 +122,7 @@ namespace DataLayer.Repos
                 SafeInt(r, "age"),
                 SafeString(r, "username") ?? "",
                 SafeString(r, "email") ?? "",
-                SafeString(r, "password") ?? "",
+                string.Empty,
                 SafeBool(r, "is_moderator"),
                 normalizedSteamId
             );

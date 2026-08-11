@@ -74,7 +74,7 @@
                         <a asp-page="/Admin/Tournaments/Details" asp-route-id="@tournament.Id" class="btn btn-primary">Manage</a>
                         <a asp-page="/Tournaments/Details" asp-route-id="@tournament.Id" class="btn btn-outline-light">Public view</a>
                         <form method="post" asp-page-handler="Delete" asp-route-id="@tournament.Id"
-                              onsubmit="return confirm('Delete this tournament, its registrations and all of its matches?');">
+                              data-confirm="Delete this tournament, its registrations and all of its matches?">
                             <button type="submit" class="btn btn-outline-danger">Delete</button>
                         </form>
                     </div>

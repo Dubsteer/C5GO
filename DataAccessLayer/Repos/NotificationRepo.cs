@@ -84,16 +84,47 @@ namespace DataLayer.Repos
             return System.Convert.ToInt32(cmd.ExecuteScalar());
         }
 
-        public void MarkAsRead(int notificationId)
+        public Notification? MarkAsRead(int notificationId, int userId)
         {
             EnsureOpen();
 
-            var cmd = new MySqlCommand(
-                @"UPDATE notification SET is_read=1 WHERE id=@id",
+            using var selectCommand = new MySqlCommand(
+                @"SELECT id, user_id, message, link, is_read, created_at
+                  FROM notification
+                  WHERE id=@id AND user_id=@userId",
                 conn.GetInnerConn());
 
-            cmd.Parameters.AddWithValue("@id", notificationId);
-            cmd.ExecuteNonQuery();
+            selectCommand.Parameters.AddWithValue("@id", notificationId);
+            selectCommand.Parameters.AddWithValue("@userId", userId);
+
+            Notification? notification;
+            using (var reader = selectCommand.ExecuteReader())
+            {
+                if (!reader.Read())
+                    return null;
+
+                notification = new Notification
+                {
+                    Id = reader.GetInt32("id"),
+                    UserId = reader.GetInt32("user_id"),
+                    Message = reader.GetString("message"),
+                    Link = reader.IsDBNull("link") ? null : reader.GetString("link"),
+                    IsRead = true,
+                    CreatedAt = reader.GetDateTime("created_at")
+                };
+            }
+
+            using var updateCommand = new MySqlCommand(
+                @"UPDATE notification
+                  SET is_read=1
+                  WHERE id=@id AND user_id=@userId",
+                conn.GetInnerConn());
+
+            updateCommand.Parameters.AddWithValue("@id", notificationId);
+            updateCommand.Parameters.AddWithValue("@userId", userId);
+            updateCommand.ExecuteNonQuery();
+
+            return notification;
         }
     }
 }

@@ -27,6 +27,10 @@ namespace LogicLayer.FormModels
         [StringLength(72, MinimumLength = 8, ErrorMessage = "Password must be between 8 and 72 characters")]
         public string? NewPassword { get; set; }
 
+        [Required(ErrorMessage = "Current password is required")]
+        [StringLength(72, ErrorMessage = "Password must not exceed {1} characters")]
+        public string CurrentPassword { get; set; } = string.Empty;
+
         [StringLength(100, ErrorMessage = "Steam profile value must not exceed {1} characters")]
         public string? SteamProfile { get; set; }
     }

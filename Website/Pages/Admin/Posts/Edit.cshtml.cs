@@ -4,17 +4,20 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System;
-using System.IO;
+using Website.Services;
 
 namespace Website.Pages.Admin.Posts
 {
+    [RequestFormLimits(MultipartBodyLengthLimit = 6 * 1024 * 1024)]
     public class EditModel : PageModel
     {
         private readonly PostManager postManager;
+        private readonly PostImageStorage imageStorage;
 
-        public EditModel(PostManager postManager)
+        public EditModel(PostManager postManager, PostImageStorage imageStorage)
         {
             this.postManager = postManager;
+            this.imageStorage = imageStorage;
         }
 
         [BindProperty]
@@ -33,37 +36,46 @@ namespace Website.Pages.Admin.Posts
             return Page();
         }
 
-        public IActionResult OnPost()
+        public async Task<IActionResult> OnPostAsync(CancellationToken cancellationToken)
         {
             var postFromDb = postManager.GetPostById(Post.Id);
             if (postFromDb == null)
                 return NotFound();
 
             if (string.IsNullOrWhiteSpace(Post.Title))
-                Post.Title = "Untitled post";
+            {
+                ModelState.AddModelError("Post.Title", "Title is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(Post.Content))
+            {
+                ModelState.AddModelError("Post.Content", "Content is required.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                Post.ImagePath = postFromDb.ImagePath;
+                return Page();
+            }
 
             string? imagePath = postFromDb.ImagePath;
 
             if (Image != null)
             {
-                var fileName = Guid.NewGuid() + Path.GetExtension(Image.FileName);
-                var savePath = Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "wwwroot",
-                    "images",
-                    "posts",
-                    fileName
-                );
-
-                Directory.CreateDirectory(Path.GetDirectoryName(savePath)!);
-                using var stream = new FileStream(savePath, FileMode.Create);
-                Image.CopyTo(stream);
-
-                imagePath = "/images/posts/" + fileName;
+                try
+                {
+                    imagePath = await imageStorage.SaveAsync(Image, cancellationToken);
+                }
+                catch (ImageUploadException exception)
+                {
+                    Post.ImagePath = postFromDb.ImagePath;
+                    ModelState.AddModelError(nameof(Image), exception.Message);
+                    return Page();
+                }
             }
 
-            postFromDb.Title = Post.Title;
-            postFromDb.Content = Post.Content;
+            postFromDb.Title = Post.Title.Trim();
+            postFromDb.Content = Post.Content.Trim();
             postFromDb.ImagePath = imagePath;
 
             postManager.UpdatePost(postFromDb);

@@ -26,5 +26,11 @@ namespace DataLayer
         {
             return conn;
         }
+
+        public void Dispose()
+        {
+            conn.Dispose();
+            GC.SuppressFinalize(this);
+        }
     }
 }

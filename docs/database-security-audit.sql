@@ -41,6 +41,30 @@ WHERE steam_id IS NOT NULL
   )
 ORDER BY id;
 
+SELECT 'applications(tournamentId,playerid)' AS relationship_name, COUNT(*) AS duplicate_group_count
+FROM (
+    SELECT 1
+    FROM applications
+    GROUP BY tournamentId, playerid
+    HAVING COUNT(*) > 1
+) duplicate_applications
+UNION ALL
+SELECT 'team_applications(teamId,tournamentId)', COUNT(*)
+FROM (
+    SELECT 1
+    FROM team_applications
+    GROUP BY teamId, tournamentId
+    HAVING COUNT(*) > 1
+) duplicate_team_applications
+UNION ALL
+SELECT 'team_join_request(team_id,user_id)', COUNT(*)
+FROM (
+    SELECT 1
+    FROM team_join_request
+    GROUP BY team_id, user_id
+    HAVING COUNT(*) > 1
+) duplicate_join_requests;
+
 SELECT 'post.authorid' AS relationship_name, COUNT(*) AS orphan_count
 FROM post p LEFT JOIN `user` u ON u.id = p.authorid
 WHERE u.id IS NULL
@@ -77,13 +101,93 @@ SELECT 'team_player.user_id', COUNT(*)
 FROM team_player tp LEFT JOIN `user` u ON u.id = tp.user_id
 WHERE u.id IS NULL
 UNION ALL
+SELECT 'applications.tournamentId', COUNT(*)
+FROM applications a LEFT JOIN tournament t ON t.id = a.tournamentId
+WHERE t.id IS NULL
+UNION ALL
+SELECT 'applications.playerid', COUNT(*)
+FROM applications a LEFT JOIN `user` u ON u.id = a.playerid
+WHERE u.id IS NULL
+UNION ALL
+SELECT 'team_applications.teamId', COUNT(*)
+FROM team_applications ta LEFT JOIN team t ON t.id = ta.teamId
+WHERE t.id IS NULL
+UNION ALL
+SELECT 'team_applications.tournamentId', COUNT(*)
+FROM team_applications ta LEFT JOIN tournament t ON t.id = ta.tournamentId
+WHERE t.id IS NULL
+UNION ALL
+SELECT 'team_join_request.team_id', COUNT(*)
+FROM team_join_request tjr LEFT JOIN team t ON t.id = tjr.team_id
+WHERE t.id IS NULL
+UNION ALL
+SELECT 'team_join_request.user_id', COUNT(*)
+FROM team_join_request tjr LEFT JOIN `user` u ON u.id = tjr.user_id
+WHERE u.id IS NULL
+UNION ALL
 SELECT 'matches.tournamentId', COUNT(*)
 FROM matches m LEFT JOIN tournament t ON t.id = m.tournamentId
 WHERE t.id IS NULL
 UNION ALL
+SELECT 'matches.user_id1', COUNT(*)
+FROM matches m LEFT JOIN `user` u ON u.id = m.user_id1
+WHERE u.id IS NULL
+UNION ALL
+SELECT 'matches.user_id2', COUNT(*)
+FROM matches m LEFT JOIN `user` u ON u.id = m.user_id2
+WHERE u.id IS NULL
+UNION ALL
 SELECT 'team_matches.tournamentId', COUNT(*)
 FROM team_matches tm LEFT JOIN tournament t ON t.id = tm.tournamentId
+WHERE t.id IS NULL
+UNION ALL
+SELECT 'team_matches.team_id1', COUNT(*)
+FROM team_matches tm LEFT JOIN team t ON t.id = tm.team_id1
+WHERE t.id IS NULL
+UNION ALL
+SELECT 'team_matches.team_id2', COUNT(*)
+FROM team_matches tm LEFT JOIN team t ON t.id = tm.team_id2
 WHERE t.id IS NULL;
+
+SELECT 'invalid_tournament_status' AS check_name, COUNT(*) AS problem_count
+FROM tournament
+WHERE status_int NOT BETWEEN 0 AND 2
+UNION ALL
+SELECT 'invalid_tournament_team_size', COUNT(*)
+FROM tournament
+WHERE team_size_required NOT BETWEEN 1 AND 5
+UNION ALL
+SELECT 'invalid_match_status', COUNT(*)
+FROM matches
+WHERE status_int NOT BETWEEN 0 AND 2
+UNION ALL
+SELECT 'invalid_team_match_status', COUNT(*)
+FROM team_matches
+WHERE status_int IS NULL OR status_int NOT BETWEEN 0 AND 2
+UNION ALL
+SELECT 'same_match_players', COUNT(*)
+FROM matches
+WHERE user_id1 = user_id2
+UNION ALL
+SELECT 'same_match_teams', COUNT(*)
+FROM team_matches
+WHERE team_id1 = team_id2
+UNION ALL
+SELECT 'invalid_match_scores', COUNT(*)
+FROM matches
+WHERE player1Score IS NULL OR player2Score IS NULL
+   OR player1Score NOT BETWEEN 0 AND 99
+   OR player2Score NOT BETWEEN 0 AND 99
+UNION ALL
+SELECT 'invalid_team_match_scores', COUNT(*)
+FROM team_matches
+WHERE team1_score IS NULL OR team2_score IS NULL
+   OR team1_score NOT BETWEEN 0 AND 99
+   OR team2_score NOT BETWEEN 0 AND 99
+UNION ALL
+SELECT 'nullable_notifications', COUNT(*)
+FROM notification
+WHERE is_read IS NULL OR created_at IS NULL;
 
 SELECT CONSTRAINT_NAME, TABLE_NAME, REFERENCED_TABLE_NAME,
        UPDATE_RULE, DELETE_RULE

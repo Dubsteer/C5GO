@@ -28,11 +28,40 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         button.setAttribute("aria-expanded", String(isExpanded));
-        button.textContent = `${isExpanded ? "Hide" : "Show"} replies (${button.dataset.replyCount})`;
+        const replyCount = Number(button.dataset.replyCount);
+        const replyLabel = replyCount === 1 ? "reply" : "replies";
+        button.textContent = `${isExpanded ? "Hide" : "View"} ${replyCount} ${replyLabel}`;
         replies.hidden = !isExpanded;
     };
 
+    const setReplyComposerExpanded = (commentId, isExpanded, focusInput = false) => {
+        const form = document.getElementById(`reply-form-${commentId}`);
+        if (!form) {
+            return;
+        }
+
+        section.querySelectorAll(`[data-reply-composer-toggle][data-comment-id="${commentId}"]`)
+            .forEach((control) => {
+                if (control.hasAttribute("aria-expanded")) {
+                    control.setAttribute("aria-expanded", String(isExpanded));
+                }
+            });
+
+        form.hidden = !isExpanded;
+        if (isExpanded && focusInput) {
+            form.querySelector("textarea")?.focus({ preventScroll: true });
+        }
+    };
+
     section.addEventListener("click", (event) => {
+        const composerToggle = event.target.closest("[data-reply-composer-toggle]");
+        if (composerToggle && section.contains(composerToggle)) {
+            const commentId = composerToggle.dataset.commentId;
+            const form = document.getElementById(`reply-form-${commentId}`);
+            setReplyComposerExpanded(commentId, form?.hidden ?? true, true);
+            return;
+        }
+
         const button = event.target.closest("[data-reply-toggle]");
         if (!button || !section.contains(button)) {
             return;
@@ -58,9 +87,14 @@ document.addEventListener("DOMContentLoaded", () => {
             Array.from(section.querySelectorAll("[data-reply-toggle][aria-expanded=\"true\"]"))
                 .map((button) => button.dataset.commentId)
         );
+        const expandedComposers = new Set(
+            Array.from(section.querySelectorAll(".reply-form:not([hidden])"))
+                .map((replyForm) => replyForm.dataset.commentId)
+        );
 
         if (form.dataset.expandComment) {
             expandedComments.add(form.dataset.expandComment);
+            expandedComposers.add(form.dataset.expandComment);
         }
 
         const focusKey = form.dataset.focusAfter;
@@ -106,6 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             expandedComments.forEach((commentId) => setRepliesExpanded(commentId, true));
+            expandedComposers.forEach((commentId) => setReplyComposerExpanded(commentId, true));
 
             const commentCount = section.querySelectorAll(".comment-card").length;
             const countElement = section.querySelector(".comment-count");

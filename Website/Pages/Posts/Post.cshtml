@@ -2,41 +2,58 @@
 @model Website.Pages.Posts.PostModel
 @{
     ViewData["Title"] = Model.Post.Title;
+    var postAuthor = string.IsNullOrWhiteSpace(Model.Post.User.Username)
+        ? "C5GO team"
+        : Model.Post.User.Username;
 }
 
 <article class="post-wrapper">
+    <a asp-page="/Index" class="post-back-link"><span aria-hidden="true">&larr;</span> Back to News</a>
+
+    <header class="thread-header">
+        <div class="post-meta">
+            <span class="post-category">News</span>
+            <time datetime="@Model.Post.Posted_on.ToString("O")">
+                @Model.Post.Posted_on.ToString("dd MMM yyyy")
+            </time>
+            <span aria-hidden="true">&bull;</span>
+            <a asp-page="/UserProfile" asp-route-id="@Model.Post.User.Id">@postAuthor</a>
+        </div>
+        <h1 class="thread-title">@Model.Post.Title</h1>
+    </header>
+
     @if (!string.IsNullOrEmpty(Model.Post.ImagePath))
     {
         <img src="@Model.Post.ImagePath" class="post-image" alt="" />
     }
 
-    <header class="thread-header">
-        <h1 class="thread-title">@Model.Post.Title</h1>
-        <div class="thread-content" id="postContent">
-            @foreach (var block in Model.ContentBlocks)
+    <div class="thread-content" id="postContent">
+        @foreach (var block in Model.ContentBlocks)
+        {
+            if (block.IsVideo)
             {
-                if (block.IsVideo)
-                {
-                    <div class="video-embed">
-                        <iframe src="https://www.youtube-nocookie.com/embed/@block.VideoId"
-                                title="Video included in @Model.Post.Title"
-                                loading="lazy"
-                                referrerpolicy="strict-origin-when-cross-origin"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                allowfullscreen></iframe>
-                    </div>
-                }
-                else if (!string.IsNullOrWhiteSpace(block.Text))
-                {
-                    <div class="post-content-text">@block.Text</div>
-                }
+                <div class="video-embed">
+                    <iframe src="https://www.youtube-nocookie.com/embed/@block.VideoId"
+                            title="Video included in @Model.Post.Title"
+                            loading="lazy"
+                            referrerpolicy="strict-origin-when-cross-origin"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowfullscreen></iframe>
+                </div>
             }
-        </div>
-    </header>
+            else if (!string.IsNullOrWhiteSpace(block.Text))
+            {
+                <div class="post-content-text">@block.Text</div>
+            }
+        }
+    </div>
 
-    <section aria-labelledby="commentsTitle" data-comment-section>
+    <section class="comment-section" aria-labelledby="commentsTitle" data-comment-section>
         <div class="comment-section-header">
-            <h2 id="commentsTitle" class="section-heading">Comments</h2>
+            <div>
+                <p class="comment-section-eyebrow">Discussion</p>
+                <h2 id="commentsTitle" class="section-heading">Comments</h2>
+            </div>
             <span class="comment-count">@Model.Comments.Count</span>
         </div>
 
@@ -51,6 +68,15 @@
                   data-async-comment-form
                   data-focus-after="comment-input"
                   data-success-message="Comment posted.">
+                <div class="comment-compose-heading">
+                    <span class="comment-avatar" aria-hidden="true">
+                        @(string.IsNullOrWhiteSpace(Model.CurrentUser?.Username) ? "?" : Model.CurrentUser.Username[..1].ToUpperInvariant())
+                    </span>
+                    <div>
+                        <strong>Join the conversation</strong>
+                        <span>Share your thoughts with the community.</span>
+                    </div>
+                </div>
                 <label asp-for="NewComment.CommentText" class="visually-hidden">Write a comment</label>
                 <textarea asp-for="NewComment.CommentText"
                           class="form-control"

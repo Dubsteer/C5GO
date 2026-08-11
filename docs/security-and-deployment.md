@@ -40,6 +40,6 @@ Before the defense:
 
 ## Database review
 
-Run `docs/database-security-audit.sql` in MySQL Workbench. It is read-only and reports storage engines, indexes, duplicate identity values, invalid old Steam IDs, orphaned records and foreign-key rules.
+Run `docs/database-security-audit.sql` in MySQL Workbench. It is read-only and reports storage engines, indexes, duplicate identity values, invalid old Steam IDs, duplicate memberships, orphaned records, invalid status or score values and foreign-key rules.
 
-Do not add unique indexes or foreign keys until duplicate and orphan reports are empty and a fresh backup exists. Schema changes will be prepared as a separate reviewed migration after the audit output is checked.
+The reviewed migration order and current local audit summary are in `docs/database-hardening.md`. Phase 1 can be applied only after a verified backup and a clean phase 1 audit. Phase 2 must wait until duplicate identity values and invalid legacy SteamIDs have been reviewed manually.

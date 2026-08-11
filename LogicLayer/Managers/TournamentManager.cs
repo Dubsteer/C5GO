@@ -29,8 +29,7 @@ namespace LogicLayer.Managers
 
         public void AddTournament(Tournament tournament)
         {
-            if (tournament == null)
-                throw new ArgumentNullException(nameof(tournament));
+            ArgumentNullException.ThrowIfNull(tournament);
 
             if (!Enum.IsDefined(tournament.Status))
                 throw new InvalidOperationException("Select a valid tournament status.");
@@ -208,8 +207,7 @@ namespace LogicLayer.Managers
 
         private static void ValidateTournament(Tournament tournament)
         {
-            if (tournament == null)
-                throw new ArgumentNullException(nameof(tournament));
+            ArgumentNullException.ThrowIfNull(tournament);
 
             if (string.IsNullOrWhiteSpace(tournament.Name) || tournament.Name.Trim().Length > 50)
                 throw new InvalidOperationException("Tournament name is required and must not exceed 50 characters.");

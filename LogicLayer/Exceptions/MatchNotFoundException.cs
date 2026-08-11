@@ -5,8 +5,8 @@ namespace LogicLayer.Exceptions
     {
         public MatchNotFoundException() { }
 
-        public MatchNotFoundException(string message) : base (message) { }
+        public MatchNotFoundException(string message) : base(message) { }
 
-        public MatchNotFoundException (string message, Exception innerException) : base(message, innerException) { }
+        public MatchNotFoundException(string message, Exception innerException) : base(message, innerException) { }
     }
 }

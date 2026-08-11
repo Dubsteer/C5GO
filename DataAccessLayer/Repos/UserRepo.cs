@@ -1,4 +1,4 @@
-﻿using LogicLayer;
+using LogicLayer;
 using LogicLayer.IRepos;
 using LogicLayer.Models;
 using MySql.Data.MySqlClient;
@@ -19,26 +19,26 @@ namespace DataLayer.Repos
 
         private void EnsureConnection()
         {
-            if (conn.GetInnerConn().State != ConnectionState.Open)
+            if (conn.Connection.State != ConnectionState.Open)
                 conn.Open();
         }
 
-        private string? SafeString(MySqlDataReader reader, string column)
+        private static string? SafeString(MySqlDataReader reader, string column)
         {
             return reader.IsDBNull(column) ? null : reader.GetString(column);
         }
 
-        private int? SafeIntNullable(MySqlDataReader reader, string column)
+        private static int? SafeIntNullable(MySqlDataReader reader, string column)
         {
             return reader.IsDBNull(column) ? null : reader.GetInt32(column);
         }
 
-        private DateTime? SafeDateTime(MySqlDataReader reader, string column)
+        private static DateTime? SafeDateTime(MySqlDataReader reader, string column)
         {
             return reader.IsDBNull(column) ? null : reader.GetDateTime(column);
         }
 
-        private bool SafeBool(MySqlDataReader reader, string column)
+        private static bool SafeBool(MySqlDataReader reader, string column)
         {
             return !reader.IsDBNull(column) && reader.GetBoolean(column);
         }
@@ -54,7 +54,7 @@ namespace DataLayer.Repos
                 VALUES
                 (@FIRST_NAME, @LAST_NAME, @AGE, @USERNAME, @EMAIL, @PASSWORD, @IS_MODERATOR, @STEAM_ID,
                  @EMAIL_CONFIRMED, @EMAIL_TOKEN, @TOKEN_CREATED_AT)
-            ", conn.GetInnerConn());
+            ", conn.Connection);
 
             cmd.Parameters.AddWithValue("@FIRST_NAME", user.Firstname ?? "");
             cmd.Parameters.AddWithValue("@LAST_NAME", user.Lastname ?? "");
@@ -83,7 +83,7 @@ namespace DataLayer.Repos
                 SELECT id, first_name, last_name, birthday, age, username, email, password,
                        is_moderator, steam_id, email_confirmed, email_token, token_created_at
                 FROM user
-            ", conn.GetInnerConn());
+            ", conn.Connection);
 
             var users = new List<User>();
 
@@ -105,7 +105,7 @@ namespace DataLayer.Repos
                        is_moderator, steam_id, email_confirmed, email_token, token_created_at
                 FROM user
                 WHERE id = @ID
-            ", conn.GetInnerConn());
+            ", conn.Connection);
 
             cmd.Parameters.AddWithValue("@ID", id);
 
@@ -124,7 +124,7 @@ namespace DataLayer.Repos
                        is_moderator, steam_id, email_confirmed, email_token, token_created_at
                 FROM user
                 WHERE email_token = @TOKEN
-            ", conn.GetInnerConn());
+            ", conn.Connection);
 
             cmd.Parameters.AddWithValue("@TOKEN", token);
 
@@ -144,7 +144,7 @@ namespace DataLayer.Repos
                 FROM user
                 WHERE LOWER(email) = LOWER(@EMAIL)
                 LIMIT 1
-            ", conn.GetInnerConn());
+            ", conn.Connection);
 
             cmd.Parameters.AddWithValue("@EMAIL", email.Trim());
 
@@ -167,7 +167,7 @@ namespace DataLayer.Repos
                     is_moderator = @IS_MODERATOR,
                     steam_id = @STEAM_ID
                 WHERE id = @ID
-            ", conn.GetInnerConn());
+            ", conn.Connection);
 
             cmd.Parameters.AddWithValue("@ID", user.Id);
             cmd.Parameters.AddWithValue("@FIRST_NAME", user.Firstname ?? "");
@@ -191,7 +191,7 @@ namespace DataLayer.Repos
                 UPDATE user
                 SET password = @PASSWORD
                 WHERE id = @ID
-            ", conn.GetInnerConn());
+            ", conn.Connection);
 
             cmd.Parameters.AddWithValue("@ID", userId);
             cmd.Parameters.AddWithValue("@PASSWORD", passwordHash);
@@ -208,7 +208,7 @@ namespace DataLayer.Repos
                     email_token = NULL,
                     token_created_at = NULL
                 WHERE id = @ID
-            ", conn.GetInnerConn());
+            ", conn.Connection);
 
             cmd.Parameters.AddWithValue("@ID", userId);
             cmd.ExecuteNonQuery();
@@ -218,7 +218,7 @@ namespace DataLayer.Repos
         {
             EnsureConnection();
 
-            var cmd = new MySqlCommand("DELETE FROM user WHERE id=@ID", conn.GetInnerConn());
+            var cmd = new MySqlCommand("DELETE FROM user WHERE id=@ID", conn.Connection);
             cmd.Parameters.AddWithValue("@ID", user.Id);
             cmd.ExecuteNonQuery();
         }
@@ -229,7 +229,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 "SELECT EXISTS(SELECT 1 FROM user WHERE username=@USERNAME)",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@USERNAME", username);
             return Convert.ToInt32(cmd.ExecuteScalar()) == 1;
@@ -241,7 +241,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 "SELECT EXISTS(SELECT 1 FROM user WHERE email=@EMAIL)",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@EMAIL", email);
             return Convert.ToInt32(cmd.ExecuteScalar()) == 1;
@@ -256,7 +256,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 "SELECT EXISTS(SELECT 1 FROM user WHERE steam_id=@STEAM_ID)",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@STEAM_ID", steamId);
             return Convert.ToInt32(cmd.ExecuteScalar()) == 1;
@@ -270,7 +270,7 @@ namespace DataLayer.Repos
                 SELECT EXISTS(
                     SELECT 1 FROM user
                     WHERE username=@USERNAME AND id != @ID
-                )", conn.GetInnerConn());
+                )", conn.Connection);
 
             cmd.Parameters.AddWithValue("@USERNAME", username);
             cmd.Parameters.AddWithValue("@ID", selfId);
@@ -290,7 +290,7 @@ namespace DataLayer.Repos
                    OR email LIKE CONCAT('%', @TERM, '%')
                    OR first_name LIKE CONCAT('%', @TERM, '%')
                    OR last_name LIKE CONCAT('%', @TERM, '%')
-            ", conn.GetInnerConn());
+            ", conn.Connection);
 
             cmd.Parameters.AddWithValue("@TERM", term);
 
@@ -304,7 +304,7 @@ namespace DataLayer.Repos
             return users;
         }
 
-        private User MapUser(MySqlDataReader reader)
+        private static User MapUser(MySqlDataReader reader)
         {
             var user = new User(
                 reader.GetInt32("id"),
@@ -336,7 +336,7 @@ namespace DataLayer.Repos
         FROM user
         WHERE username = @USERNAME
         LIMIT 1
-    ", conn.GetInnerConn());
+    ", conn.Connection);
 
             cmd.Parameters.AddWithValue("@USERNAME", username);
 

@@ -1,4 +1,4 @@
-﻿using LogicLayer;
+using LogicLayer;
 using LogicLayer.IRepos;
 using LogicLayer.Models;
 using MySql.Data.MySqlClient;
@@ -19,7 +19,7 @@ namespace DataLayer.Repos
 
         private void EnsureOpen()
         {
-            if (conn.GetInnerConn().State != ConnectionState.Open)
+            if (conn.Connection.State != ConnectionState.Open)
                 conn.Open();
         }
 
@@ -31,7 +31,7 @@ namespace DataLayer.Repos
             var cmd = new MySqlCommand(
                 @"SELECT id, first_name, last_name, username, email, is_moderator, steam_id 
                   FROM user WHERE id=@id",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", id);
 
@@ -66,7 +66,7 @@ namespace DataLayer.Repos
                   FROM team t
                   JOIN user u ON t.captain_id = u.id
                   WHERE t.id=@id",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", id);
 
@@ -99,7 +99,7 @@ namespace DataLayer.Repos
                   JOIN team t ON tp.team_id = t.id
                   JOIN user u ON t.captain_id = u.id
                   WHERE tp.user_id=@uid AND tp.status='Approved'",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@uid", userId);
 
@@ -132,7 +132,7 @@ namespace DataLayer.Repos
                       u.username
                   FROM team t
                   JOIN user u ON t.captain_id = u.id",
-                conn.GetInnerConn());
+                conn.Connection);
 
             using var r = cmd.ExecuteReader();
 
@@ -165,7 +165,7 @@ namespace DataLayer.Repos
                   FROM team_player tp
                   JOIN user u ON tp.user_id = u.id
                   WHERE tp.team_id=@id AND tp.status='Approved'",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", teamId);
 
@@ -200,7 +200,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 @"INSERT INTO team (name, captain_id) VALUES (@n, @c)",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@n", name);
             cmd.Parameters.AddWithValue("@c", captainId);
@@ -218,7 +218,7 @@ namespace DataLayer.Repos
             var cmd = new MySqlCommand(
                 @"INSERT INTO team_player (team_id, user_id, role, status)
                   VALUES (@t, @u, @r, @s)",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@t", teamId);
             cmd.Parameters.AddWithValue("@u", userId);
@@ -236,7 +236,7 @@ namespace DataLayer.Repos
             var cmd = new MySqlCommand(
                 @"INSERT INTO team_join_request (team_id, user_id)
                   VALUES (@t, @u)",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@t", teamId);
             cmd.Parameters.AddWithValue("@u", userId);
@@ -249,7 +249,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 @"DELETE FROM team_join_request WHERE id=@id",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", requestId);
             cmd.ExecuteNonQuery();
@@ -266,7 +266,7 @@ namespace DataLayer.Repos
                   FROM team_join_request r
                   JOIN user u ON r.user_id=u.id
                   WHERE r.team_id=@id",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", teamId);
 
@@ -295,7 +295,7 @@ namespace DataLayer.Repos
             var cmd = new MySqlCommand(
                 @"SELECT id, team_id, user_id, requested_at
                   FROM team_join_request WHERE user_id=@uid",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@uid", userId);
 
@@ -321,7 +321,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 @"DELETE FROM team WHERE id=@id",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", id);
             cmd.ExecuteNonQuery();
@@ -334,7 +334,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 @"DELETE FROM team_player WHERE team_id=@t AND user_id=@u",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@t", teamId);
             cmd.Parameters.AddWithValue("@u", userId);
@@ -347,7 +347,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 @"UPDATE team_player SET status=@s WHERE team_id=@t AND user_id=@u",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@s", newStatus);
             cmd.Parameters.AddWithValue("@t", teamId);

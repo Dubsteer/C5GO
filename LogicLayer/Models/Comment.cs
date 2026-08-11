@@ -8,7 +8,7 @@ namespace LogicLayer.Models
         public string Content { get; set; } = string.Empty;
 
         public int Id { get; set; }
-       
+
         public DateTime Posted_on { get; set; }
         public int PostId { get; set; }
 

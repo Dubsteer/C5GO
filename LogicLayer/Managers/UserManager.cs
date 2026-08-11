@@ -235,16 +235,5 @@ namespace LogicLayer.Managers
             return userRepo.SteamIdExists(steamId);
         }
 
-        public bool IsAdmin(string username)
-        {
-            if (string.IsNullOrWhiteSpace(username))
-                return false;
-
-            var user = userRepo.GetAllUsers()
-                .FirstOrDefault(u => u.Username == username);
-
-            return user != null && user.IsAdmin;
-        }
-
     }
 }

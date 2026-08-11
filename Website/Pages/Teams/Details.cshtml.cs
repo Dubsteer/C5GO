@@ -90,7 +90,7 @@ namespace Website.Pages.Teams
             return RedirectToPage("/Teams/Details", new { id = teamId });
         }
 
-        public IActionResult OnPostLeave(int teamId)
+        public IActionResult OnPostLeave()
         {
             if (LoadUser() is not int currentUserId)
                 return Challenge();

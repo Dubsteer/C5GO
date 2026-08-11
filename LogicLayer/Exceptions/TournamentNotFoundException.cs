@@ -1,7 +1,7 @@
 ﻿
 namespace LogicLayer.Exceptions
 {
-    public class TournamentNotFoundException:Exception
+    public class TournamentNotFoundException : Exception
     {
         public TournamentNotFoundException() { }
 

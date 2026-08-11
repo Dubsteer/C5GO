@@ -1,4 +1,4 @@
-﻿using LogicLayer;
+using LogicLayer;
 using LogicLayer.IRepos;
 using LogicLayer.Models;
 using MySql.Data.MySqlClient;
@@ -18,7 +18,7 @@ namespace DataLayer.Repos
 
         private void EnsureOpen()
         {
-            if (conn.GetInnerConn().State != ConnectionState.Open)
+            if (conn.Connection.State != ConnectionState.Open)
                 conn.Open();
         }
 
@@ -29,7 +29,7 @@ namespace DataLayer.Repos
             var cmd = new MySqlCommand(
                 @"INSERT INTO notification (user_id, message, link)
                   VALUES (@u, @m, @l)",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@u", userId);
             cmd.Parameters.AddWithValue("@m", message);
@@ -49,7 +49,7 @@ namespace DataLayer.Repos
                   FROM notification
                   WHERE user_id=@u
                   ORDER BY created_at DESC",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@u", userId);
 
@@ -77,7 +77,7 @@ namespace DataLayer.Repos
             var cmd = new MySqlCommand(
                 @"SELECT COUNT(*) FROM notification
                   WHERE user_id=@u AND is_read=0",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@u", userId);
 
@@ -92,7 +92,7 @@ namespace DataLayer.Repos
                 @"SELECT id, user_id, message, link, is_read, created_at
                   FROM notification
                   WHERE id=@id AND user_id=@userId",
-                conn.GetInnerConn());
+                conn.Connection);
 
             selectCommand.Parameters.AddWithValue("@id", notificationId);
             selectCommand.Parameters.AddWithValue("@userId", userId);
@@ -118,7 +118,7 @@ namespace DataLayer.Repos
                 @"UPDATE notification
                   SET is_read=1
                   WHERE id=@id AND user_id=@userId",
-                conn.GetInnerConn());
+                conn.Connection);
 
             updateCommand.Parameters.AddWithValue("@id", notificationId);
             updateCommand.Parameters.AddWithValue("@userId", userId);

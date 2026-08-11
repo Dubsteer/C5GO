@@ -1,6 +1,5 @@
 ﻿using LogicLayer.IRepos;
 using LogicLayer.Models;
-using System.Collections.Generic;
 
 namespace LogicLayer.Managers
 {
@@ -30,17 +29,12 @@ namespace LogicLayer.Managers
 
         public Post? GetPostById(int id)
         {
-            return repo.GetAllPosts().Find(p => p.Id == id);
+            return repo.GetPostById(id);
         }
 
         public List<Post> GetAllPosts()
         {
             return repo.GetAllPosts();
-        }
-
-        public bool CheckIfPostExists(string content, int selfId)
-        {
-            return repo.CheckIfPostNameExists(content, selfId);
         }
     }
 }

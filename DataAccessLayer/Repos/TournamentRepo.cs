@@ -1,4 +1,4 @@
-﻿using LogicLayer;
+using LogicLayer;
 using LogicLayer.Enums;
 using LogicLayer.IRepos;
 using LogicLayer.Models;
@@ -19,7 +19,7 @@ namespace DataLayer.Repos
 
         private void EnsureConnection()
         {
-            if (conn.GetInnerConn().State != System.Data.ConnectionState.Open)
+            if (conn.Connection.State != System.Data.ConnectionState.Open)
                 conn.Open();
         }
 
@@ -32,7 +32,7 @@ namespace DataLayer.Repos
             var cmd = new MySqlCommand(
                 @"SELECT id, name, description, status_int, is_team, team_size_required 
                   FROM tournament",
-                conn.GetInnerConn());
+                conn.Connection);
 
             using var r = cmd.ExecuteReader();
 
@@ -70,7 +70,7 @@ namespace DataLayer.Repos
             var cmd = new MySqlCommand(
                 @"SELECT id, name, description, status_int, is_team, team_size_required
                   FROM tournament WHERE id=@id",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", id);
 
@@ -104,7 +104,7 @@ namespace DataLayer.Repos
                 @"INSERT INTO tournament 
                   (name, description, status_int, is_team, team_size_required)
                   VALUES (@n, @d, @s, @team, @size)",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@n", t.Name);
             cmd.Parameters.AddWithValue("@d", t.Description);
@@ -123,7 +123,7 @@ namespace DataLayer.Repos
                 @"UPDATE tournament 
                   SET name=@n, description=@d, status_int=@s, is_team=@team, team_size_required=@size
                   WHERE id=@id",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", t.Id);
             cmd.Parameters.AddWithValue("@n", t.Name);
@@ -139,14 +139,14 @@ namespace DataLayer.Repos
         {
             EnsureConnection();
 
-            using var transaction = conn.GetInnerConn().BeginTransaction();
+            using var transaction = conn.Connection.BeginTransaction();
             try
             {
                 foreach (var table in new[] { "matches", "team_matches", "applications", "team_applications" })
                 {
                     using var childCommand = new MySqlCommand(
                         $"DELETE FROM {table} WHERE tournamentId=@id",
-                        conn.GetInnerConn(),
+                        conn.Connection,
                         transaction);
                     childCommand.Parameters.AddWithValue("@id", t.Id);
                     childCommand.ExecuteNonQuery();
@@ -154,7 +154,7 @@ namespace DataLayer.Repos
 
                 using var tournamentCommand = new MySqlCommand(
                     "DELETE FROM tournament WHERE id=@id",
-                    conn.GetInnerConn(),
+                    conn.Connection,
                     transaction);
                 tournamentCommand.Parameters.AddWithValue("@id", t.Id);
                 tournamentCommand.ExecuteNonQuery();
@@ -173,7 +173,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 "SELECT COUNT(*) FROM applications WHERE tournamentId=@id",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", tournamentId);
             return Convert.ToInt32(cmd.ExecuteScalar());
@@ -185,7 +185,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 "SELECT COUNT(*) FROM team_applications WHERE tournamentId=@id",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", tournamentId);
             return Convert.ToInt32(cmd.ExecuteScalar());
@@ -199,7 +199,7 @@ namespace DataLayer.Repos
                 @"SELECT 
                       (SELECT COUNT(*) FROM matches WHERE tournamentId=@id) +
                       (SELECT COUNT(*) FROM team_matches WHERE tournamentId=@id)",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", tournamentId);
             return Convert.ToInt32(cmd.ExecuteScalar());
@@ -211,7 +211,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 "INSERT INTO applications (tournamentId, playerId) VALUES (@t, @p)",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@t", t.Id);
             cmd.Parameters.AddWithValue("@p", p.Id);
@@ -225,7 +225,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 "DELETE FROM applications WHERE tournamentId=@t AND playerId=@p",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@t", t.Id);
             cmd.Parameters.AddWithValue("@p", p.Id);
@@ -244,7 +244,7 @@ namespace DataLayer.Repos
                   FROM user
                   JOIN applications ON user.id = applications.playerId
                   WHERE applications.tournamentId=@id",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", id);
 
@@ -274,7 +274,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 "INSERT INTO team_applications (teamId, tournamentId) VALUES (@t, @tt)",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@t", teamId);
             cmd.Parameters.AddWithValue("@tt", tournamentId);
@@ -290,7 +290,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 "SELECT teamId FROM team_applications WHERE tournamentId=@id",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", tournamentId);
 
@@ -308,7 +308,7 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(
                 "DELETE FROM team_applications WHERE teamId=@t AND tournamentId=@tt",
-                conn.GetInnerConn());
+                conn.Connection);
 
             cmd.Parameters.AddWithValue("@t", teamId);
             cmd.Parameters.AddWithValue("@tt", tournamentId);

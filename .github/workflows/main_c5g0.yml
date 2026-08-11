@@ -28,8 +28,11 @@ jobs:
       - name: Restore
         run: dotnet restore Individual_project_Vladimir_Stijepovic.sln
 
+      - name: Verify formatting and analyzers
+        run: dotnet format Individual_project_Vladimir_Stijepovic.sln --verify-no-changes --no-restore --severity warn
+
       - name: Build
-        run: dotnet build Individual_project_Vladimir_Stijepovic.sln --configuration Release --no-restore
+        run: dotnet build Individual_project_Vladimir_Stijepovic.sln --configuration Release --no-restore -warnaserror
 
       - name: Test
         run: dotnet test Unit_Tests/Unit_Tests.csproj --configuration Release --no-build --no-restore

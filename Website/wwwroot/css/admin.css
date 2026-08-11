@@ -170,6 +170,25 @@ a.admin-action-card:hover {
     text-transform: uppercase;
 }
 
+.admin-table > :not(caption) > * > * {
+    background-color: transparent;
+    color: #dbe5ee;
+}
+
+.admin-table tbody strong {
+    color: #ffffff;
+}
+
+.admin-table tbody td:nth-child(2),
+.admin-table tbody td:nth-child(3) {
+    color: #bdc8d3;
+}
+
+.admin-table tbody tr:hover > * {
+    background-color: #1b2530;
+    color: #ffffff;
+}
+
 .admin-secondary-text {
     display: block;
     margin-top: 0.2rem;

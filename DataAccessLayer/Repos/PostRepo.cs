@@ -50,15 +50,28 @@ namespace DataLayer.Repos
             EnsureOpen();
 
             var posts = new List<Post>();
-            var cmd = new MySqlCommand("SELECT * FROM post", conn.Connection);
+            var cmd = new MySqlCommand(
+                @"SELECT p.id, p.authorid, p.title, p.content, p.posted_on, p.image_path,
+                         u.username AS author_username
+                  FROM post p
+                  LEFT JOIN user u ON u.id = p.authorid
+                  ORDER BY p.posted_on DESC, p.id DESC",
+                conn.Connection);
 
             using (var reader = cmd.ExecuteReader())
             {
                 while (reader.Read())
                 {
+                    var author = new User(reader.GetInt32("authorid"))
+                    {
+                        Username = reader.IsDBNull("author_username")
+                            ? "Unknown user"
+                            : reader.GetString("author_username")
+                    };
+
                     var post = new Post(
                         reader.GetInt32("id"),
-                        new User(reader.GetInt32("authorid")),
+                        author,
                         reader.GetString("title"),
                         reader.GetString("content"),
                         reader.GetDateTime("posted_on")
@@ -81,7 +94,11 @@ namespace DataLayer.Repos
             EnsureOpen();
 
             var cmd = new MySqlCommand(
-                "SELECT * FROM post WHERE id = @id",
+                @"SELECT p.id, p.authorid, p.title, p.content, p.posted_on, p.image_path,
+                         u.username AS author_username
+                  FROM post p
+                  LEFT JOIN user u ON u.id = p.authorid
+                  WHERE p.id = @id",
                 conn.Connection);
 
             cmd.Parameters.AddWithValue("@id", id);
@@ -91,9 +108,16 @@ namespace DataLayer.Repos
                 if (!reader.Read())
                     return null;
 
+                var author = new User(reader.GetInt32("authorid"))
+                {
+                    Username = reader.IsDBNull("author_username")
+                        ? "Unknown user"
+                        : reader.GetString("author_username")
+                };
+
                 var post = new Post(
                     reader.GetInt32("id"),
-                    new User(reader.GetInt32("authorid")),
+                    author,
                     reader.GetString("title"),
                     reader.GetString("content"),
                     reader.GetDateTime("posted_on")

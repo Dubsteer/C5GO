@@ -43,7 +43,10 @@ namespace Website.Pages
 
         public string GetPostPreview(string content)
         {
-            return PostContentParser.GetPreviewText(content);
+            var preview = PostContentParser.GetPreviewText(content);
+            return string.IsNullOrWhiteSpace(preview)
+                ? "Open this announcement for more details."
+                : preview;
         }
     }
 }

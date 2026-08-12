@@ -1,32 +1,32 @@
 @page
 @model Website.Pages.Admin.Posts.ManageModel
 @{
-    ViewData["Title"] = "Post management";
+    ViewData["Title"] = "News management";
 }
 
 <section class="admin-shell">
     <nav class="admin-breadcrumb" aria-label="Breadcrumb">
-        <a asp-page="/Admin/Index">Administration</a><span>/</span><span>Posts</span>
+        <a asp-page="/Admin/Index">Administration</a><span>/</span><span>News</span>
     </nav>
 
     <header class="admin-page-header admin-page-header-row">
         <div>
             <p class="admin-eyebrow">Website content</p>
-            <h1>Post management</h1>
-            <p>Create and maintain announcements shown on the home page.</p>
+            <h1>News management</h1>
+            <p>Create and maintain announcements shown on the public news page.</p>
         </div>
-        <a asp-page="/Admin/Posts/Create" class="btn btn-success">Create post</a>
+        <a asp-page="/Admin/Posts/Create" class="btn btn-success">Create announcement</a>
     </header>
 
     @if (!Model.Posts.Any())
     {
-        <div class="admin-empty-state"><h2>No posts yet</h2><p>Create the first announcement for the website.</p></div>
+        <div class="admin-empty-state"><h2>No news yet</h2><p>Create the first announcement for the website.</p></div>
     }
     else
     {
         <div class="table-responsive admin-table-wrap">
             <table class="table admin-table align-middle">
-                <thead><tr><th>Post</th><th>Author</th><th>Published</th><th>Image</th><th class="text-end">Actions</th></tr></thead>
+                <thead><tr><th>News item</th><th>Author</th><th>Published</th><th>Image</th><th class="text-end">Actions</th></tr></thead>
                 <tbody>
                     @foreach (var post in Model.Posts)
                     {

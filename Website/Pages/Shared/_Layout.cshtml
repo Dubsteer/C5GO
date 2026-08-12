@@ -52,7 +52,7 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link @(currentPage == "/Index" || currentPage.StartsWith("/Posts", StringComparison.OrdinalIgnoreCase) ? "nav-active" : string.Empty)"
-                           asp-page="/Index">Posts</a>
+                           asp-page="/Index">News</a>
                     </li>
                     @if (User.IsInRole("Admin"))
                     {

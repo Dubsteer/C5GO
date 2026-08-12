@@ -1,51 +1,108 @@
 @page
 @model IndexModel
 @{
-    ViewData["Title"] = "Posts";
-    var orderedPosts = Model.Posts.OrderByDescending(post => post.Id).ToList();
+    ViewData["Title"] = "News";
+    var orderedPosts = Model.Posts
+        .OrderByDescending(post => post.Posted_on)
+        .ThenByDescending(post => post.Id)
+        .ToList();
 }
 
-<section class="posts-page">
-    <header class="page-header page-header-centered">
-        <h1 class="page-title">Announcements</h1>
-        <p class="page-subtitle">News, tournament updates and community highlights.</p>
+<section class="news-page">
+    <header class="news-hero">
+        <div>
+            <p class="news-eyebrow">C5GO newsroom</p>
+            <h1>News &amp; Announcements</h1>
+        </div>
+        <p>Follow tournament updates, platform news and highlights from the Counter-Strike community.</p>
     </header>
-
-    <h2 class="section-heading">Latest posts</h2>
 
     @if (orderedPosts.Count == 0)
     {
         <div class="page-empty-state">
-            <strong>No posts yet</strong>
+            <strong>No news yet</strong>
             <span>New announcements will appear here.</span>
         </div>
     }
     else
     {
-        <div class="post-grid">
-            @for (var index = 0; index < orderedPosts.Count; index++)
-            {
-                var post = orderedPosts[index];
-                var isFeatured = index == 0;
+        var featuredPost = orderedPosts[0];
+        var featuredTitle = string.IsNullOrWhiteSpace(featuredPost.Title)
+            ? "C5GO update"
+            : featuredPost.Title;
 
-                <article class="post-grid-item @(isFeatured ? "post-grid-item-featured" : string.Empty)">
-                    <a asp-page="/Posts/Post" asp-route-id="@post.Id" class="post-link">
-                        <div class="post-card @(isFeatured ? "featured" : string.Empty)">
-                            @if (isFeatured)
-                            {
-                                <span class="featured-badge">Featured</span>
-                            }
-                            <h2 class="post-title">
-                                @Model.TruncateString(post.Title ?? post.Content, isFeatured ? 80 : 45)
-                            </h2>
-                            <p class="post-snippet">
-                                @Model.TruncateString(Model.GetPostPreview(post.Content), isFeatured ? 220 : 120)
-                            </p>
-                            <span class="read-more">Read post <span aria-hidden="true">&rarr;</span></span>
+        <article class="news-feature">
+            <a asp-page="/Posts/Post"
+               asp-route-id="@featuredPost.Id"
+               class="news-feature-card"
+               aria-label="Open news: @featuredTitle">
+                <div class="news-feature-media">
+                    @if (!string.IsNullOrWhiteSpace(featuredPost.ImagePath))
+                    {
+                        <img src="@featuredPost.ImagePath" alt="" />
+                    }
+                    else
+                    {
+                        <div class="news-feature-placeholder" aria-hidden="true">
+                            <span>C5GO</span>
+                            <strong>NEWS</strong>
                         </div>
-                    </a>
-                </article>
-            }
-        </div>
+                    }
+                </div>
+
+                <div class="news-feature-content">
+                    <div class="news-meta">
+                        <span class="news-label">Featured</span>
+                        <time datetime="@featuredPost.Posted_on.ToString("O")">
+                            @featuredPost.Posted_on.ToString("dd MMM yyyy")
+                        </time>
+                    </div>
+                    <h2>@Model.TruncateString(featuredTitle, 100)</h2>
+                    <p>@Model.TruncateString(Model.GetPostPreview(featuredPost.Content), 260)</p>
+                    <span class="news-card-arrow" aria-hidden="true">&rarr;</span>
+                </div>
+            </a>
+        </article>
+
+        @if (orderedPosts.Count > 1)
+        {
+            <div class="news-section-heading">
+                <div>
+                    <p class="news-eyebrow">News feed</p>
+                    <h2>Latest news</h2>
+                </div>
+                <span class="news-count">@((orderedPosts.Count - 1).ToString()) updates</span>
+            </div>
+
+            <div class="news-grid">
+                @foreach (var post in orderedPosts.Skip(1))
+                {
+                    var title = string.IsNullOrWhiteSpace(post.Title) ? "C5GO update" : post.Title;
+
+                    <article>
+                        <a asp-page="/Posts/Post"
+                           asp-route-id="@post.Id"
+                           class="news-card"
+                           aria-label="Open news: @title">
+                            @if (!string.IsNullOrWhiteSpace(post.ImagePath))
+                            {
+                                <div class="news-card-media">
+                                    <img src="@post.ImagePath" alt="" loading="lazy" />
+                                </div>
+                            }
+
+                            <div class="news-card-content">
+                                <time datetime="@post.Posted_on.ToString("O")">
+                                    @post.Posted_on.ToString("dd MMM yyyy")
+                                </time>
+                                <h3>@Model.TruncateString(title, 70)</h3>
+                                <p>@Model.TruncateString(Model.GetPostPreview(post.Content), 145)</p>
+                                <span class="news-card-arrow" aria-hidden="true">&rarr;</span>
+                            </div>
+                        </a>
+                    </article>
+                }
+            </div>
+        }
     }
 </section>

@@ -9,9 +9,13 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.FileProviders;
 using System.Threading.RateLimiting;
+using Website.Configuration;
 using Website.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<FeatureOptions>(
+    builder.Configuration.GetSection(FeatureOptions.SectionName));
 
 if (builder.Environment.IsDevelopment())
 {

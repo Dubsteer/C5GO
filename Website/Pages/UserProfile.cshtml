@@ -1,5 +1,6 @@
 @page "{id:int}"
 @model Website.Pages.UserProfileModel
+@using LogicLayer.Enums
 @{
     ViewData["Title"] = "User profile";
     Layout = "_ProfileLayout";
@@ -7,8 +8,8 @@
 
 <div class="profile-actions">
     <div><span class="profile-label">Username</span><div class="profile-username">@Model.ViewedUser.Username</div></div>
-    <span class="tag @(Model.ViewedUser.IsAdmin ? "tag-status-running" : "tag-solo")">
-        @(Model.ViewedUser.IsAdmin ? "Administrator" : Model.ViewedPlayer != null ? "Player" : "Member")
+    <span class="tag @(Model.HighestRole >= PlatformRole.Admin ? "tag-status-running" : "tag-solo")">
+        @(Model.HighestRole > PlatformRole.Member ? Model.HighestRole : Model.ViewedPlayer != null ? "Player" : "Member")
     </span>
 </div>
 

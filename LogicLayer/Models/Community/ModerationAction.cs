@@ -8,7 +8,7 @@ public class ModerationAction
     public int? ModeratorId { get; set; }
     public ModerationActionType ActionType { get; set; }
     public ModerationTargetType TargetType { get; set; }
-    public int TargetId { get; set; }
+    public long TargetId { get; set; }
     public string? Reason { get; set; }
     public DateTime CreatedAt { get; set; }
 }

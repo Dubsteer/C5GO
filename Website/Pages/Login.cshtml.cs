@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.RateLimiting;
+using Website.Services;
 
 namespace Website.Pages
 {
@@ -14,10 +15,14 @@ namespace Website.Pages
     public class LoginModel : PageModel
     {
         private readonly UserManager userManager;
+        private readonly UserRoleClaimsService roleClaimsService;
 
-        public LoginModel(UserManager userManager)
+        public LoginModel(
+            UserManager userManager,
+            UserRoleClaimsService roleClaimsService)
         {
             this.userManager = userManager;
+            this.roleClaimsService = roleClaimsService;
         }
 
         [BindProperty]
@@ -56,8 +61,7 @@ namespace Website.Pages
                 new("id", user.Id.Value.ToString())
             };
 
-            if (user.IsAdmin)
-                claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+            claims.AddRange(roleClaimsService.CreateRoleClaims(user));
 
             var identity = new ClaimsIdentity(
                 claims,

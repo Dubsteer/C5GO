@@ -1,0 +1,63 @@
+@page
+@model Website.Pages.Community.CreateModel
+@{
+    ViewData["Title"] = "Start a discussion";
+}
+
+<section class="community-shell community-form-shell">
+    <nav class="community-breadcrumb" aria-label="Breadcrumb">
+        <a asp-page="./Index">Community</a><span>/</span><span>New discussion</span>
+    </nav>
+    <header class="community-page-header">
+        <p class="community-eyebrow">New conversation</p>
+        <h1>Start a discussion</h1>
+        <p>Add useful context. A photo or YouTube video is optional.</p>
+    </header>
+
+    <form method="post" enctype="multipart/form-data" class="community-form-card">
+        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+        <div class="mb-3">
+            <label asp-for="Form.CategoryId" class="form-label">Category</label>
+            <select asp-for="Form.CategoryId" class="form-select">
+                <option value="0">Choose a category</option>
+                @foreach (var category in Model.Categories)
+                {
+                    <option value="@category.Id">@category.Name</option>
+                }
+            </select>
+            <span asp-validation-for="Form.CategoryId" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Form.Title" class="form-label"></label>
+            <input asp-for="Form.Title" class="form-control" maxlength="160" />
+            <span asp-validation-for="Form.Title" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Form.Content" class="form-label">Text (optional if media is included)</label>
+            <textarea asp-for="Form.Content" class="form-control" rows="9" maxlength="10000"></textarea>
+            <span asp-validation-for="Form.Content" class="text-danger"></span>
+        </div>
+        <div class="community-form-grid">
+            <div>
+                <label asp-for="Image" class="form-label">Image (optional)</label>
+                <input asp-for="Image" class="form-control" type="file" accept="image/jpeg,image/png,image/webp" />
+                <span class="form-text">JPEG, PNG or WebP, up to 5 MB.</span>
+                <span asp-validation-for="Image" class="text-danger"></span>
+            </div>
+            <div>
+                <label asp-for="Form.YouTubeUrl" class="form-label"></label>
+                <input asp-for="Form.YouTubeUrl" class="form-control" placeholder="https://youtube.com/watch?v=..." />
+                <span class="form-text">Use one image, one video, or text only.</span>
+                <span asp-validation-for="Form.YouTubeUrl" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="form-check community-spoiler-check">
+            <input asp-for="Form.IsSpoiler" class="form-check-input" />
+            <label asp-for="Form.IsSpoiler" class="form-check-label"></label>
+        </div>
+        <div class="community-form-actions">
+            <button type="submit" class="btn btn-primary">Publish discussion</button>
+            <a asp-page="./Index" class="btn btn-outline-light">Cancel</a>
+        </div>
+    </form>
+</section>

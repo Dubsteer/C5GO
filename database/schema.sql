@@ -238,7 +238,7 @@ WHERE is_moderator = 1;
 
 CREATE TABLE IF NOT EXISTS role_assignment_audit (
     id BIGINT NOT NULL AUTO_INCREMENT,
-    user_id INT NOT NULL,
+    user_id INT NULL,
     role_id TINYINT UNSIGNED NOT NULL,
     action_type TINYINT UNSIGNED NOT NULL,
     performed_by INT NULL,
@@ -246,7 +246,7 @@ CREATE TABLE IF NOT EXISTS role_assignment_audit (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_role_assignment_audit PRIMARY KEY (id),
     CONSTRAINT fk_role_audit_user FOREIGN KEY (user_id)
-        REFERENCES `user` (id) ON DELETE CASCADE,
+        REFERENCES `user` (id) ON DELETE SET NULL,
     CONSTRAINT fk_role_audit_role FOREIGN KEY (role_id)
         REFERENCES platform_role (id),
     CONSTRAINT fk_role_audit_performed_by FOREIGN KEY (performed_by)
@@ -255,6 +255,20 @@ CREATE TABLE IF NOT EXISTS role_assignment_audit (
     INDEX idx_role_audit_user_created (user_id, created_at),
     INDEX idx_role_audit_actor_created (performed_by, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+INSERT INTO role_assignment_audit
+    (user_id, role_id, action_type, performed_by, reason, created_at)
+SELECT user_role.user_id, 3, 0, NULL,
+       'Migrated from legacy administrator flag', user_role.assigned_at
+FROM user_role
+WHERE user_role.role_id = 3
+  AND NOT EXISTS (
+      SELECT 1
+      FROM role_assignment_audit audit
+      WHERE audit.user_id = user_role.user_id
+        AND audit.role_id = 3
+        AND audit.action_type = 0
+  );
 
 CREATE TABLE IF NOT EXISTS community_category (
     id INT NOT NULL AUTO_INCREMENT,
@@ -407,7 +421,7 @@ CREATE TABLE IF NOT EXISTS moderation_action (
     moderator_id INT NULL,
     action_type TINYINT UNSIGNED NOT NULL,
     target_type TINYINT UNSIGNED NOT NULL,
-    target_id INT NOT NULL,
+    target_id BIGINT NOT NULL,
     reason VARCHAR(500) NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_moderation_action PRIMARY KEY (id),

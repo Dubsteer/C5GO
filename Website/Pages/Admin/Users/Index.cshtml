@@ -1,5 +1,6 @@
 @page
 @model Website.Pages.Admin.Users.IndexModel
+@using LogicLayer.Enums
 @{
     ViewData["Title"] = "User management";
 }
@@ -60,6 +61,10 @@
                         <th>Email</th>
                         <th>Account</th>
                         <th>Player</th>
+                        @if (Model.CommunityRolesEnabled)
+                        {
+                            <th>Community</th>
+                        }
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
@@ -68,6 +73,9 @@
                     {
                         var isCurrentAccount = user.Id == Model.CurrentAdminId;
                         var isPlayer = Model.IsPlayer(user);
+                        var roles = Model.GetRoles(user);
+                        var highestRole = roles.Max();
+                        var contributionStats = Model.GetContributionStats(user);
 
                         <tr>
                             <td>
@@ -86,13 +94,9 @@
                                 }
                             </td>
                             <td>
-                                @if (user.IsAdmin)
+                                @foreach (var role in roles.OrderDescending())
                                 {
-                                    <span class="admin-badge admin-badge-admin">Admin</span>
-                                }
-                                else
-                                {
-                                    <span class="admin-badge">Member</span>
+                                    <span class="admin-badge @(role >= PlatformRole.Admin ? "admin-badge-admin" : role == PlatformRole.Moderator ? "admin-badge-success" : string.Empty)">@role</span>
                                 }
                                 @if (isCurrentAccount)
                                 {
@@ -104,8 +108,74 @@
                                     @(isPlayer ? "Active" : "No profile")
                                 </span>
                             </td>
+                            @if (Model.CommunityRolesEnabled)
+                            {
+                                <td>
+                                    <div class="admin-community-stats">
+                                        <span title="Published discussions">@contributionStats.DiscussionCount discussions</span>
+                                        <span title="Published comments and replies">@contributionStats.CommentCount comments</span>
+                                        <span title="Votes received">Score @contributionStats.VoteScore</span>
+                                        @if (contributionStats.PendingReportCount > 0)
+                                        {
+                                            <span class="admin-badge admin-badge-warning">
+                                                @contributionStats.PendingReportCount open reports
+                                            </span>
+                                        }
+                                        @if (Model.IsModeratorCandidate(user))
+                                        {
+                                            <span class="admin-badge admin-badge-success" title="Verified account with at least three contributions, a non-negative score and no open reports">
+                                                Moderator candidate
+                                            </span>
+                                        }
+                                    </div>
+                                </td>
+                            }
                             <td>
                                 <div class="admin-row-actions">
+                                    @if (Model.CommunityRolesEnabled && !isCurrentAccount)
+                                    {
+                                        @if (Model.CurrentRole == PlatformRole.Owner && highestRole < PlatformRole.Admin)
+                                        {
+                                            <form method="post" asp-page-handler="AssignRole" class="admin-role-form">
+                                                <input type="hidden" name="id" value="@user.Id" />
+                                                <input type="hidden" name="role" value="@PlatformRole.Admin" />
+                                                <input type="hidden" name="SearchTerm" value="@Model.SearchTerm" />
+                                                <input name="reason" class="form-control form-control-sm" maxlength="255" placeholder="Reason" />
+                                                <button type="submit" class="btn btn-sm btn-outline-info">Make admin</button>
+                                            </form>
+                                        }
+                                        @if (Model.CurrentRole >= PlatformRole.Admin && highestRole == PlatformRole.Member)
+                                        {
+                                            <form method="post" asp-page-handler="AssignRole" class="admin-role-form">
+                                                <input type="hidden" name="id" value="@user.Id" />
+                                                <input type="hidden" name="role" value="@PlatformRole.Moderator" />
+                                                <input type="hidden" name="SearchTerm" value="@Model.SearchTerm" />
+                                                <input name="reason" class="form-control form-control-sm" maxlength="255" placeholder="Reason" />
+                                                <button type="submit" class="btn btn-sm btn-outline-success">Make moderator</button>
+                                            </form>
+                                        }
+                                        @if (roles.Contains(PlatformRole.Admin) && Model.CurrentRole == PlatformRole.Owner)
+                                        {
+                                            <form method="post" asp-page-handler="RevokeRole" class="admin-role-form" data-confirm="Revoke this administrator role?">
+                                                <input type="hidden" name="id" value="@user.Id" />
+                                                <input type="hidden" name="role" value="@PlatformRole.Admin" />
+                                                <input type="hidden" name="SearchTerm" value="@Model.SearchTerm" />
+                                                <input name="reason" class="form-control form-control-sm" maxlength="255" placeholder="Reason" />
+                                                <button type="submit" class="btn btn-sm btn-outline-warning">Revoke admin</button>
+                                            </form>
+                                        }
+                                        @if (roles.Contains(PlatformRole.Moderator) && Model.CurrentRole > PlatformRole.Moderator)
+                                        {
+                                            <form method="post" asp-page-handler="RevokeRole" class="admin-role-form" data-confirm="Revoke this moderator role?">
+                                                <input type="hidden" name="id" value="@user.Id" />
+                                                <input type="hidden" name="role" value="@PlatformRole.Moderator" />
+                                                <input type="hidden" name="SearchTerm" value="@Model.SearchTerm" />
+                                                <input name="reason" class="form-control form-control-sm" maxlength="255" placeholder="Reason" />
+                                                <button type="submit" class="btn btn-sm btn-outline-warning">Revoke moderator</button>
+                                            </form>
+                                        }
+                                    }
+
                                     @if (isPlayer)
                                     {
                                         <form method="post"
@@ -119,7 +189,7 @@
                                         </form>
                                     }
 
-                                    @if (!user.IsAdmin && !isCurrentAccount && !isPlayer)
+                                    @if (highestRole == PlatformRole.Member && !isCurrentAccount && !isPlayer)
                                     {
                                         <form method="post"
                                               asp-page-handler="Delete"
@@ -134,7 +204,7 @@
                                     else
                                     {
                                         <span class="admin-protected-label">
-                                            @(isPlayer && !user.IsAdmin ? "Remove player first" : "Protected")
+                                            @(isPlayer && highestRole == PlatformRole.Member ? "Remove player first" : "Protected")
                                         </span>
                                     }
                                 </div>

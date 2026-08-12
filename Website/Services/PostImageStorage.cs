@@ -2,18 +2,22 @@ using Microsoft.AspNetCore.Http;
 
 namespace Website.Services
 {
-    public sealed class PostImageStorage
+    public abstract class ImageStorageBase
     {
         public const long MaximumFileSize = 5 * 1024 * 1024;
 
         private readonly string uploadDirectory;
+        private readonly string publicPath;
 
-        public PostImageStorage(IWebHostEnvironment environment)
+        protected ImageStorageBase(
+            IWebHostEnvironment environment,
+            string folderName)
         {
             uploadDirectory = Path.Combine(
                 environment.WebRootPath,
                 "Images",
-                "posts");
+                folderName);
+            publicPath = $"/images/{folderName}";
         }
 
         public async Task<string> SaveAsync(
@@ -54,7 +58,24 @@ namespace Website.Services
                 useAsync: true);
 
             await image.CopyToAsync(target, cancellationToken);
-            return $"/images/posts/{fileName}";
+            return $"{publicPath}/{fileName}";
+        }
+
+        public void Delete(string? path)
+        {
+            if (string.IsNullOrWhiteSpace(path) ||
+                !path.StartsWith($"{publicPath}/", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            var fileName = Path.GetFileName(path);
+            if (string.IsNullOrWhiteSpace(fileName))
+                return;
+
+            var filePath = Path.Combine(uploadDirectory, fileName);
+            if (File.Exists(filePath))
+                File.Delete(filePath);
         }
 
         private static string? DetectExtension(ReadOnlySpan<byte> signature)
@@ -80,6 +101,22 @@ namespace Website.Services
             }
 
             return null;
+        }
+    }
+
+    public sealed class PostImageStorage : ImageStorageBase
+    {
+        public PostImageStorage(IWebHostEnvironment environment)
+            : base(environment, "posts")
+        {
+        }
+    }
+
+    public sealed class CommunityImageStorage : ImageStorageBase
+    {
+        public CommunityImageStorage(IWebHostEnvironment environment)
+            : base(environment, "community")
+        {
         }
     }
 

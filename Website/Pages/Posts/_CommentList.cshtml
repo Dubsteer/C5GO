@@ -59,7 +59,7 @@
                                 </button>
                             }
 
-                            @if (Model.CurrentUser != null && (Model.CurrentUser.IsAdmin || Model.CurrentUser.Id == comment.User.Id))
+                            @if (Model.CurrentUser != null && (User.IsInRole("Owner") || User.IsInRole("Admin") || Model.CurrentUser.Id == comment.User.Id))
                             {
                                 <form method="post"
                                       asp-page="/Posts/Post"
@@ -99,7 +99,7 @@
                                                 <p class="comment-content">@reply.Content</p>
                                             </div>
 
-                                            @if (Model.CurrentUser != null && (Model.CurrentUser.IsAdmin || Model.CurrentUser.Id == reply.User.Id))
+                                            @if (Model.CurrentUser != null && (User.IsInRole("Owner") || User.IsInRole("Admin") || Model.CurrentUser.Id == reply.User.Id))
                                             {
                                                 <form method="post"
                                                       asp-page="/Posts/Post"

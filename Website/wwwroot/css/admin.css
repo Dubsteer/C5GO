@@ -595,3 +595,25 @@ a.admin-action-card:hover {
         margin-left: 0;
     }
 }
+.admin-role-form {
+    min-width: 170px;
+    display: grid;
+    gap: 0.4rem;
+}
+
+.admin-role-form .form-control {
+    min-width: 150px;
+}
+
+.admin-community-stats {
+    display: grid;
+    gap: 0.25rem;
+    min-width: 145px;
+    color: #aeb9c6;
+    font-size: 0.78rem;
+}
+
+.admin-community-stats .admin-badge {
+    width: fit-content;
+    margin-top: 0.15rem;
+}

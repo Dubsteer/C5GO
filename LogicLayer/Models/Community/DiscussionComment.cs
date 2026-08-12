@@ -13,6 +13,7 @@ public class DiscussionComment
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public int Score { get; set; }
+    public sbyte CurrentUserVote { get; set; }
     public User? Author { get; set; }
     public IReadOnlyList<DiscussionComment> Replies { get; set; } = [];
 }

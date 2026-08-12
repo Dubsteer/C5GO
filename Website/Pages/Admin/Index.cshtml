@@ -1,4 +1,7 @@
 @page
+@using Microsoft.Extensions.Options
+@using Website.Configuration
+@inject IOptions<FeatureOptions> FeatureOptions
 @model Website.Pages.Admin.IndexModel
 @{
     ViewData["Title"] = "Administration";
@@ -53,5 +56,15 @@
             <p>Create tournaments, manage participants, generate brackets and enter results.</p>
             <strong>Open tournaments</strong>
         </a>
+
+        @if (FeatureOptions.Value.CommunityEnabled)
+        {
+            <a asp-page="/Moderation/Reports" class="admin-action-card">
+                <span class="admin-action-number">04</span>
+                <h2>Community moderation</h2>
+                <p>Review reports and moderate discussions and comments.</p>
+                <strong>Open reports</strong>
+            </a>
+        }
     </div>
 </section>

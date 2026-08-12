@@ -19,6 +19,7 @@ public class Discussion
     public DateTime? UpdatedAt { get; set; }
     public int Score { get; set; }
     public int CommentCount { get; set; }
+    public sbyte CurrentUserVote { get; set; }
     public User? Author { get; set; }
     public CommunityCategory? Category { get; set; }
 }

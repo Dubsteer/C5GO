@@ -1,3 +1,6 @@
+@using Microsoft.Extensions.Options
+@using Website.Configuration
+@inject IOptions<FeatureOptions> FeatureOptions
 @{
     var currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? string.Empty;
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
@@ -54,11 +57,25 @@
                         <a class="nav-link @(currentPage == "/Index" || currentPage.StartsWith("/Posts", StringComparison.OrdinalIgnoreCase) ? "nav-active" : string.Empty)"
                            asp-page="/Index">News</a>
                     </li>
-                    @if (User.IsInRole("Admin"))
+                    @if (FeatureOptions.Value.CommunityEnabled)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link @(currentPage.StartsWith("/Community", StringComparison.OrdinalIgnoreCase) ? "nav-active" : string.Empty)"
+                               asp-page="/Community/Index">Community</a>
+                        </li>
+                    }
+                    @if (User.IsInRole("Owner") || User.IsInRole("Admin"))
                     {
                         <li class="nav-item">
                             <a class="nav-link admin-nav-link @(currentPage.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase) ? "nav-active" : string.Empty)"
                                asp-page="/Admin/Index">Admin</a>
+                        </li>
+                    }
+                    else if (FeatureOptions.Value.CommunityEnabled && User.IsInRole("Moderator"))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link admin-nav-link @(currentPage.StartsWith("/Moderation", StringComparison.OrdinalIgnoreCase) ? "nav-active" : string.Empty)"
+                               asp-page="/Moderation/Reports">Moderation</a>
                         </li>
                     }
                 </ul>
@@ -132,6 +149,10 @@
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    @if (FeatureOptions.Value.CommunityEnabled)
+    {
+        <script src="~/js/community.js" asp-append-version="true"></script>
+    }
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -1,0 +1,142 @@
+@page
+@model Website.Pages.Community.IndexModel
+@using LogicLayer.Enums
+@{
+    ViewData["Title"] = "Community";
+}
+
+<section class="community-shell">
+    <header class="community-hero">
+        <div>
+            <p class="community-eyebrow">C5G0 Community</p>
+            <h1>Discuss Counter-Strike</h1>
+            <p>Share opinions, match reactions, questions and community highlights.</p>
+        </div>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a asp-page="./Create" class="btn btn-primary">Start a discussion</a>
+        }
+        else
+        {
+            <a asp-page="/Login" class="btn btn-outline-light">Log in to post</a>
+        }
+    </header>
+
+    <nav class="community-categories" aria-label="Discussion categories">
+        <a asp-page="./Index"
+           asp-route-sort="@Model.Sort"
+           class="community-category @(Model.CategoryId == null ? "is-active" : string.Empty)">All</a>
+        @foreach (var category in Model.Categories)
+        {
+            <a asp-page="./Index"
+               asp-route-categoryId="@category.Id"
+               asp-route-sort="@Model.Sort"
+               class="community-category @(Model.CategoryId == category.Id ? "is-active" : string.Empty)">
+                @category.Name
+            </a>
+        }
+    </nav>
+
+    <div class="community-toolbar">
+        <p><strong>@Model.Discussions.TotalCount</strong> discussions</p>
+        <form method="get" class="community-sort-form">
+            @if (Model.CategoryId.HasValue)
+            {
+                <input type="hidden" name="categoryId" value="@Model.CategoryId" />
+            }
+            <label for="community-sort">Sort by</label>
+            <select id="community-sort" name="sort" class="form-select" onchange="this.form.submit()">
+                <option value="@CommunitySort.Active" selected="@(Model.Sort == CommunitySort.Active)">Active</option>
+                <option value="@CommunitySort.Newest" selected="@(Model.Sort == CommunitySort.Newest)">Newest</option>
+                <option value="@CommunitySort.Top" selected="@(Model.Sort == CommunitySort.Top)">Top voted</option>
+            </select>
+        </form>
+    </div>
+
+    @if (Model.Discussions.Items.Count == 0)
+    {
+        <div class="community-empty">
+            <h2>No discussions yet</h2>
+            <p>Be the first person to start a useful conversation in this category.</p>
+        </div>
+    }
+    else
+    {
+        <div class="community-feed">
+            @foreach (var discussion in Model.Discussions.Items)
+            {
+                var preview = discussion.Content ?? string.Empty;
+                if (preview.Length > 240)
+                    preview = $"{preview[..240]}…";
+
+                <article class="discussion-card @(discussion.IsPinned ? "is-pinned" : string.Empty)">
+                    <div class="discussion-score" aria-label="Score @discussion.Score">
+                        <span aria-hidden="true">▲</span>
+                        <strong>@discussion.Score</strong>
+                    </div>
+                    <div class="discussion-card-body">
+                        <div class="discussion-meta">
+                            <span class="discussion-category-label">@discussion.Category?.Name</span>
+                            @if (discussion.IsPinned)
+                            {
+                                <span class="discussion-pin">Pinned</span>
+                            }
+                            <span>Posted by @discussion.Author?.Username</span>
+                            <time datetime="@discussion.CreatedAt.ToString("O")">@discussion.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</time>
+                        </div>
+                        <h2>
+                            <a asp-page="./Details" asp-route-id="@discussion.Id">@discussion.Title</a>
+                        </h2>
+                        @if (!string.IsNullOrWhiteSpace(preview))
+                        {
+                            <p class="discussion-preview">@preview</p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(discussion.ImagePath))
+                        {
+                            <a asp-page="./Details" asp-route-id="@discussion.Id" class="discussion-media-preview @(discussion.IsSpoiler ? "is-spoiler" : string.Empty)">
+                                <img src="@discussion.ImagePath" alt="" loading="lazy" />
+                                @if (discussion.IsSpoiler)
+                                {
+                                    <span>Spoiler · open discussion to reveal</span>
+                                }
+                            </a>
+                        }
+                        else if (!string.IsNullOrWhiteSpace(discussion.YouTubeVideoId))
+                        {
+                            <a asp-page="./Details" asp-route-id="@discussion.Id" class="discussion-media-preview video-preview @(discussion.IsSpoiler ? "is-spoiler" : string.Empty)">
+                                <img src="https://i.ytimg.com/vi/@discussion.YouTubeVideoId/hqdefault.jpg" alt="" loading="lazy" />
+                                <span>@(discussion.IsSpoiler ? "Spoiler · open discussion to reveal" : "Watch video")</span>
+                            </a>
+                        }
+                        <div class="discussion-card-footer">
+                            <a asp-page="./Details" asp-route-id="@discussion.Id">
+                                @discussion.CommentCount @(discussion.CommentCount == 1 ? "comment" : "comments")
+                            </a>
+                            @if (discussion.IsLocked)
+                            {
+                                <span>Locked</span>
+                            }
+                        </div>
+                    </div>
+                </article>
+            }
+        </div>
+
+        @if (Model.Discussions.TotalPages > 1)
+        {
+            <nav class="community-pagination" aria-label="Discussion pages">
+                <a asp-page="./Index"
+                   asp-route-categoryId="@Model.CategoryId"
+                   asp-route-sort="@Model.Sort"
+                   asp-route-pageNumber="@(Model.PageNumber - 1)"
+                   class="btn btn-outline-light @(Model.PageNumber <= 1 ? "disabled" : string.Empty)">Previous</a>
+                <span>Page @Model.PageNumber of @Model.Discussions.TotalPages</span>
+                <a asp-page="./Index"
+                   asp-route-categoryId="@Model.CategoryId"
+                   asp-route-sort="@Model.Sort"
+                   asp-route-pageNumber="@(Model.PageNumber + 1)"
+                   class="btn btn-outline-light @(Model.PageNumber >= Model.Discussions.TotalPages ? "disabled" : string.Empty)">Next</a>
+            </nav>
+        }
+    }
+</section>

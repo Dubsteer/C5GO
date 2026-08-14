@@ -246,6 +246,77 @@ namespace Unit_Tests
         }
 
         [TestMethod]
+        public async Task NewsPageShowsLatestDiscussionsWithoutSpoilerContent()
+        {
+            var communityRepo = new MockCommunityRepo();
+            for (var index = 1; index <= 12; index++)
+            {
+                communityRepo.Discussions.Add(new Discussion
+                {
+                    Id = index,
+                    AuthorId = 1,
+                    CategoryId = 1,
+                    Title = $"Discussion {index:D2}",
+                    Content = index == 12 ? "Hidden spoiler body" : "Discussion body",
+                    IsSpoiler = index == 12,
+                    Status = CommunityContentStatus.Published,
+                    CreatedAt = DateTime.UtcNow.AddMinutes(index),
+                    Score = index,
+                    CommentCount = index,
+                    Author = new LogicLayer.Models.User(1) { Username = "member" },
+                    Category = communityRepo.Categories[0]
+                });
+            }
+
+            var postRepo = new MockPostRepo();
+            postRepo.CreatePost(new Post(
+                1,
+                new LogicLayer.Models.User(1) { Username = "admin" },
+                "Featured news",
+                "Featured content",
+                DateTime.UtcNow));
+            postRepo.CreatePost(new Post(
+                2,
+                new LogicLayer.Models.User(1) { Username = "admin" },
+                "Latest update",
+                "Latest content",
+                DateTime.UtcNow.AddMinutes(-1)));
+
+            using var newsFactory = factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureAppConfiguration((_, configuration) =>
+                    configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                    {
+                        ["Features:CommunityEnabled"] = "true"
+                    }));
+                builder.ConfigureServices(services =>
+                {
+                    services.RemoveAll<ICommunityRepo>();
+                    services.AddSingleton<ICommunityRepo>(communityRepo);
+                    services.RemoveAll<IPostRepo>();
+                    services.AddSingleton<IPostRepo>(postRepo);
+                });
+            });
+            using var client = newsFactory.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                AllowAutoRedirect = false,
+                BaseAddress = new Uri("https://c5g0.com")
+            });
+
+            using var response = await client.GetAsync("/");
+            var html = await response.Content.ReadAsStringAsync();
+
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            StringAssert.Contains(html, "Latest discussions");
+            StringAssert.Contains(html, "Discussion 12");
+            StringAssert.Contains(html, "Spoiler");
+            Assert.IsFalse(html.Contains("Discussion 01", StringComparison.Ordinal));
+            Assert.IsFalse(html.Contains("Discussion 02", StringComparison.Ordinal));
+            Assert.IsFalse(html.Contains("Hidden spoiler body", StringComparison.Ordinal));
+            Assert.AreEqual(10, CountOccurrences(html, "class=\"news-community-item\""));
+        }
+
+        [TestMethod]
         public async Task UnknownPageRedirectsToCustomNotFoundPage()
         {
             using var client = CreateClient();
@@ -262,6 +333,22 @@ namespace Unit_Tests
                 AllowAutoRedirect = false,
                 BaseAddress = new Uri("https://c5g0.com")
             });
+        }
+
+        private static int CountOccurrences(string value, string searchValue)
+        {
+            var count = 0;
+            var startIndex = 0;
+            while ((startIndex = value.IndexOf(
+                       searchValue,
+                       startIndex,
+                       StringComparison.Ordinal)) >= 0)
+            {
+                count++;
+                startIndex += searchValue.Length;
+            }
+
+            return count;
         }
 
         private static List<Match> CreatePlayerHistoryMatches()

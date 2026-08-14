@@ -66,41 +66,99 @@
 
         @if (orderedPosts.Count > 1)
         {
-            <div class="news-section-heading">
-                <div>
-                    <p class="news-eyebrow">News feed</p>
-                    <h2>Latest news</h2>
-                </div>
-                <span class="news-count">@((orderedPosts.Count - 1).ToString()) updates</span>
-            </div>
+            <div class="news-content-layout @(Model.ShowCommunitySidebar ? "has-community-sidebar" : string.Empty)">
+                <section class="news-feed-column" aria-labelledby="latestNewsTitle">
+                    <div class="news-section-heading">
+                        <div>
+                            <p class="news-eyebrow">News feed</p>
+                            <h2 id="latestNewsTitle">Latest news</h2>
+                        </div>
+                        <span class="news-count">@((orderedPosts.Count - 1).ToString()) updates</span>
+                    </div>
 
-            <div class="news-grid">
-                @foreach (var post in orderedPosts.Skip(1))
+                    <div class="news-grid">
+                        @foreach (var post in orderedPosts.Skip(1))
+                        {
+                            var title = string.IsNullOrWhiteSpace(post.Title) ? "C5GO update" : post.Title;
+
+                            <article>
+                                <a asp-page="/Posts/Post"
+                                   asp-route-id="@post.Id"
+                                   class="news-card"
+                                   aria-label="Open news: @title">
+                                    @if (!string.IsNullOrWhiteSpace(post.ImagePath))
+                                    {
+                                        <div class="news-card-media">
+                                            <img src="@post.ImagePath" alt="" loading="lazy" />
+                                        </div>
+                                    }
+
+                                    <div class="news-card-content">
+                                        <time datetime="@post.Posted_on.ToString("O")">
+                                            @post.Posted_on.ToString("dd MMM yyyy")
+                                        </time>
+                                        <h3>@Model.TruncateString(title, 70)</h3>
+                                        <p>@Model.TruncateString(Model.GetPostPreview(post.Content), 145)</p>
+                                        <span class="news-card-arrow" aria-hidden="true">&rarr;</span>
+                                    </div>
+                                </a>
+                            </article>
+                        }
+                    </div>
+                </section>
+
+                @if (Model.ShowCommunitySidebar)
                 {
-                    var title = string.IsNullOrWhiteSpace(post.Title) ? "C5GO update" : post.Title;
-
-                    <article>
-                        <a asp-page="/Posts/Post"
-                           asp-route-id="@post.Id"
-                           class="news-card"
-                           aria-label="Open news: @title">
-                            @if (!string.IsNullOrWhiteSpace(post.ImagePath))
-                            {
-                                <div class="news-card-media">
-                                    <img src="@post.ImagePath" alt="" loading="lazy" />
-                                </div>
-                            }
-
-                            <div class="news-card-content">
-                                <time datetime="@post.Posted_on.ToString("O")">
-                                    @post.Posted_on.ToString("dd MMM yyyy")
-                                </time>
-                                <h3>@Model.TruncateString(title, 70)</h3>
-                                <p>@Model.TruncateString(Model.GetPostPreview(post.Content), 145)</p>
-                                <span class="news-card-arrow" aria-hidden="true">&rarr;</span>
+                    <aside class="news-community-sidebar" aria-labelledby="latestDiscussionsTitle">
+                        <header class="news-community-header">
+                            <div>
+                                <p class="news-eyebrow">Community</p>
+                                <h2 id="latestDiscussionsTitle">Latest discussions</h2>
                             </div>
-                        </a>
-                    </article>
+                            <a asp-page="/Community/Index" asp-route-sort="Newest">View all</a>
+                        </header>
+
+                        @if (Model.CommunityFeedUnavailable)
+                        {
+                            <div class="news-community-empty">
+                                <strong>Discussions are temporarily unavailable</strong>
+                                <span>News remains available while Community reconnects.</span>
+                            </div>
+                        }
+                        else if (!Model.LatestDiscussions.Any())
+                        {
+                            <div class="news-community-empty">
+                                <strong>No discussions yet</strong>
+                                <a asp-page="/Community/Index">Start the first conversation</a>
+                            </div>
+                        }
+                        else
+                        {
+                            <ol class="news-community-list">
+                                @foreach (var discussion in Model.LatestDiscussions)
+                                {
+                                    var authorName = discussion.Author?.Username ?? "Member";
+                                    <li>
+                                        <a asp-page="/Community/Details" asp-route-id="@discussion.Id" class="news-community-item">
+                                            <span class="news-community-category">
+                                                @(discussion.Category?.Name ?? "Community")
+                                                @if (discussion.IsSpoiler)
+                                                {
+                                                    <em>Spoiler</em>
+                                                }
+                                            </span>
+                                            <strong>@Model.TruncateString(discussion.Title, 82)</strong>
+                                            <span class="news-community-meta">
+                                                <span>@authorName</span>
+                                                <span>@discussion.Score points</span>
+                                                <span>@discussion.CommentCount comments</span>
+                                            </span>
+                                        </a>
+                                    </li>
+                                }
+                            </ol>
+                        }
+                    </aside>
                 }
             </div>
         }

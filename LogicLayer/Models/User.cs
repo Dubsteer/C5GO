@@ -28,6 +28,7 @@ namespace LogicLayer.Models
         public bool IsAdmin { get; set; }
 
         public string? SteamId { get; set; }
+        public bool ShowSteamProfile { get; set; }
 
         public int CommentAuthorId { get; set; }
 

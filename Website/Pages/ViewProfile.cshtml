@@ -15,7 +15,12 @@
         <span class="profile-label">Username</span>
         <div class="profile-username">@Model.PageUser.Username</div>
     </div>
-    <a asp-page="/EditProfile" class="btn btn-primary">Edit profile</a>
+    <div class="profile-action-buttons">
+        <a asp-page="/UserProfile"
+           asp-route-id="@Model.PageUser.Id"
+           class="btn btn-outline-light">View public profile</a>
+        <a asp-page="/EditProfile" class="btn btn-primary">Edit profile</a>
+    </div>
 </div>
 
 <div class="profile-info-grid">
@@ -61,6 +66,9 @@
                 <span class="profile-label">SteamID64</span>
                 <div class="profile-value">@Model.Player.SteamId</div>
                 <span class="text-success fw-semibold">Player profile active</span>
+                <span class="profile-steam-visibility @(Model.PageUser.ShowSteamProfile ? "is-visible" : "is-private")">
+                    Public profile: @(Model.PageUser.ShowSteamProfile ? "Visible" : "Hidden")
+                </span>
             </div>
             <a href="@Model.SteamProfileUrl"
                class="btn btn-outline-light"

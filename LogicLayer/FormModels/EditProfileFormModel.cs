@@ -33,5 +33,7 @@ namespace LogicLayer.FormModels
 
         [StringLength(100, ErrorMessage = "Steam profile value must not exceed {1} characters")]
         public string? SteamProfile { get; set; }
+
+        public bool ShowSteamProfile { get; set; }
     }
 }

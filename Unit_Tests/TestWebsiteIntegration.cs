@@ -370,6 +370,100 @@ namespace Unit_Tests
         }
 
         [TestMethod]
+        public async Task PublicProfileDoesNotExposeSensitiveAccountData()
+        {
+            const string steamId = "76561198012345678";
+            var user = new LogicLayer.Models.User(
+                1,
+                "PrivateFirst",
+                "PrivateLast",
+                37,
+                "public-player",
+                "private-profile@test.local",
+                "not-a-public-password",
+                false,
+                steamId)
+            {
+                Birthday = new DateTime(1989, 4, 12),
+                EmailConfirmed = true,
+                ShowSteamProfile = false
+            };
+            var communityRepo = CreatePublicProfileCommunityRepo(user);
+            var teamRepo = new MockTeamRepo([user]);
+            teamRepo.SeedTeam(new Team(11, "Privacy Team", user), user);
+
+            using var profileFactory = CreatePublicProfileFactory(
+                user,
+                teamRepo,
+                communityRepo);
+            using var client = profileFactory.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                AllowAutoRedirect = false,
+                BaseAddress = new Uri("https://c5g0.com")
+            });
+
+            using var response = await client.GetAsync("/UserProfile/1");
+            var html = await response.Content.ReadAsStringAsync();
+
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            StringAssert.Contains(html, "public-player");
+            StringAssert.Contains(html, "Privacy Team");
+            StringAssert.Contains(html, "Team captain");
+            StringAssert.Contains(html, "Community score");
+            StringAssert.Contains(html, "Private");
+            Assert.IsFalse(html.Contains("PrivateFirst", StringComparison.Ordinal));
+            Assert.IsFalse(html.Contains("PrivateLast", StringComparison.Ordinal));
+            Assert.IsFalse(html.Contains("private-profile@test.local", StringComparison.Ordinal));
+            Assert.IsFalse(html.Contains("not-a-public-password", StringComparison.Ordinal));
+            Assert.IsFalse(html.Contains("1989", StringComparison.Ordinal));
+            Assert.IsFalse(html.Contains("SteamID64", StringComparison.Ordinal));
+            Assert.IsFalse(html.Contains(steamId, StringComparison.Ordinal));
+        }
+
+        [TestMethod]
+        public async Task PublicSteamLinkUsesPrivacyCheckedRedirect()
+        {
+            const string steamId = "76561198012345678";
+            var user = new LogicLayer.Models.User(
+                1,
+                "PrivateFirst",
+                "PrivateLast",
+                37,
+                "public-player",
+                "private-profile@test.local",
+                "not-a-public-password",
+                false,
+                steamId)
+            {
+                EmailConfirmed = true,
+                ShowSteamProfile = true
+            };
+            var teamRepo = new MockTeamRepo([user]);
+
+            using var profileFactory = CreatePublicProfileFactory(
+                user,
+                teamRepo,
+                new MockCommunityRepo());
+            using var client = profileFactory.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                AllowAutoRedirect = false,
+                BaseAddress = new Uri("https://c5g0.com")
+            });
+
+            using var pageResponse = await client.GetAsync("/UserProfile/1");
+            var html = await pageResponse.Content.ReadAsStringAsync();
+            using var redirectResponse = await client.GetAsync("/UserProfile/1?handler=Steam");
+
+            Assert.AreEqual(HttpStatusCode.OK, pageResponse.StatusCode);
+            StringAssert.Contains(html, "Open Steam profile");
+            Assert.IsFalse(html.Contains(steamId, StringComparison.Ordinal));
+            Assert.AreEqual(HttpStatusCode.Redirect, redirectResponse.StatusCode);
+            Assert.AreEqual(
+                $"https://steamcommunity.com/profiles/{steamId}",
+                redirectResponse.Headers.Location?.OriginalString);
+        }
+
+        [TestMethod]
         public async Task NewsPageShowsLatestDiscussionsWithoutSpoilerContent()
         {
             var communityRepo = new MockCommunityRepo();
@@ -457,6 +551,65 @@ namespace Unit_Tests
                 AllowAutoRedirect = false,
                 BaseAddress = new Uri("https://c5g0.com")
             });
+        }
+
+        private WebApplicationFactory<Program> CreatePublicProfileFactory(
+            LogicLayer.Models.User user,
+            MockTeamRepo teamRepo,
+            MockCommunityRepo communityRepo)
+        {
+            return factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureAppConfiguration((_, configuration) =>
+                    configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                    {
+                        ["Features:CommunityEnabled"] = "true"
+                    }));
+                builder.ConfigureTestServices(services =>
+                {
+                    services.RemoveAll<IUserRepo>();
+                    services.AddSingleton<IUserRepo>(new MockUserRepo([user]));
+                    services.RemoveAll<IPlayerRepo>();
+                    services.AddSingleton<IPlayerRepo>(new MockPlayerRepo([new Player(user)]));
+                    services.RemoveAll<ITeamRepo>();
+                    services.AddSingleton<ITeamRepo>(teamRepo);
+                    services.RemoveAll<ICommunityRepo>();
+                    services.AddSingleton<ICommunityRepo>(communityRepo);
+                    services.RemoveAll<IRoleRepo>();
+                    services.AddSingleton<IRoleRepo>(new MockRoleRepo());
+                });
+            });
+        }
+
+        private static MockCommunityRepo CreatePublicProfileCommunityRepo(
+            LogicLayer.Models.User user)
+        {
+            var communityRepo = new MockCommunityRepo();
+            communityRepo.Discussions.Add(new Discussion
+            {
+                Id = 1,
+                AuthorId = user.Id!.Value,
+                CategoryId = 1,
+                Title = "Public profile discussion",
+                Content = "Public contribution",
+                Score = 7,
+                Status = CommunityContentStatus.Published,
+                CreatedAt = DateTime.UtcNow,
+                Author = user,
+                Category = communityRepo.Categories[0]
+            });
+            communityRepo.Comments.Add(new DiscussionComment
+            {
+                Id = 1,
+                DiscussionId = 1,
+                AuthorId = user.Id.Value,
+                Content = "Public comment",
+                Score = -2,
+                Status = CommunityContentStatus.Published,
+                CreatedAt = DateTime.UtcNow,
+                Author = user
+            });
+            return communityRepo;
         }
 
         private static int CountOccurrences(string value, string searchValue)

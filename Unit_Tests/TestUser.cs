@@ -65,6 +65,19 @@ namespace Unit_Tests
         }
 
         [TestMethod]
+        public void TestUpdateUserPreservesSteamVisibilityPreference()
+        {
+            var user = CreateUser(1, "dubsteer", "dubsteer@test.local");
+            userManager.CreateUser(user);
+            user.SteamId = "76561198012345678";
+            user.ShowSteamProfile = true;
+
+            userManager.UpdateUser(user);
+
+            Assert.IsTrue(users[0].ShowSteamProfile);
+        }
+
+        [TestMethod]
         public void TestUpdateUserRejectsInvalidSteamId()
         {
             var user = CreateUser(1, "dubsteer", "dubsteer@test.local");

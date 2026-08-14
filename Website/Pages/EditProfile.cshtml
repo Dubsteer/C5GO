@@ -65,6 +65,13 @@
                        autocomplete="off" />
                 <span class="form-hint">Connecting a Steam account activates your player profile. Vanity URLs such as <code>/id/username</code> are not supported.</span>
                 <span asp-validation-for="Form.SteamProfile" class="field-error"></span>
+                <label class="profile-privacy-option mt-3">
+                    <input asp-for="Form.ShowSteamProfile" />
+                    <span>
+                        <strong>Show my Steam profile publicly</strong>
+                        <small>Other users will see a link to Steam. Your SteamID64 is never printed on the public profile.</small>
+                    </span>
+                </label>
             </div>
         }
         else

@@ -3,15 +3,21 @@ using DataLayer.Repos;
 using LogicLayer.IRepos;
 using LogicLayer.Managers;
 using LogicLayer.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.FileProviders;
 using System.Threading.RateLimiting;
+using System.Security.Claims;
+using Website.Configuration;
 using Website.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<FeatureOptions>(
+    builder.Configuration.GetSection(FeatureOptions.SectionName));
 
 if (builder.Environment.IsDevelopment())
 {
@@ -40,13 +46,66 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
             ? CookieSecurePolicy.SameAsRequest
             : CookieSecurePolicy.Always;
+        options.Events.OnValidatePrincipal = async context =>
+        {
+            var featureOptions = context.HttpContext.RequestServices
+                .GetRequiredService<Microsoft.Extensions.Options.IOptions<FeatureOptions>>()
+                .Value;
+            if (!featureOptions.CommunityEnabled ||
+                !int.TryParse(context.Principal?.FindFirst("id")?.Value, out var userId))
+            {
+                return;
+            }
+
+            var roleManager = context.HttpContext.RequestServices
+                .GetRequiredService<RoleManager>();
+            HashSet<string> expectedRoles;
+            try
+            {
+                expectedRoles = roleManager.GetRolesForUser(userId)
+                    .Select(role => role.ToString())
+                    .ToHashSet(StringComparer.Ordinal);
+            }
+            catch (InvalidOperationException)
+            {
+                context.RejectPrincipal();
+                await context.HttpContext.SignOutAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme);
+                return;
+            }
+            var currentRoles = context.Principal!
+                .FindAll(ClaimTypes.Role)
+                .Select(claim => claim.Value)
+                .ToHashSet(StringComparer.Ordinal);
+
+            if (expectedRoles.SetEquals(currentRoles))
+                return;
+
+            var identity = (ClaimsIdentity)context.Principal.Identity!;
+            foreach (var claim in identity.FindAll(ClaimTypes.Role).ToArray())
+                identity.RemoveClaim(claim);
+            foreach (var role in expectedRoles)
+                identity.AddClaim(new Claim(ClaimTypes.Role, role));
+
+            context.ReplacePrincipal(new ClaimsPrincipal(identity));
+            context.ShouldRenew = true;
+        };
     });
 
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy =>
         policy.RequireAuthenticatedUser()
-              .RequireRole("Admin"));
+              .RequireRole(
+                  LogicLayer.Enums.PlatformRole.Owner.ToString(),
+                  LogicLayer.Enums.PlatformRole.Admin.ToString()));
+
+    options.AddPolicy("ModeratorOnly", policy =>
+        policy.RequireAuthenticatedUser()
+              .RequireRole(
+                  LogicLayer.Enums.PlatformRole.Owner.ToString(),
+                  LogicLayer.Enums.PlatformRole.Admin.ToString(),
+                  LogicLayer.Enums.PlatformRole.Moderator.ToString()));
 });
 
 builder.Services.AddRazorPages(options =>
@@ -76,6 +135,7 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy("login", context => CreateFixedWindowLimiter(context, 10, TimeSpan.FromMinutes(5)));
     options.AddPolicy("register", context => CreateFixedWindowLimiter(context, 5, TimeSpan.FromHours(1)));
     options.AddPolicy("password-reset", context => CreateFixedWindowLimiter(context, 5, TimeSpan.FromMinutes(15)));
+    options.AddPolicy("community", context => CreateFixedWindowLimiter(context, 120, TimeSpan.FromMinutes(1)));
 });
 
 builder.Services.AddScoped<IConnection>(sp =>
@@ -99,6 +159,8 @@ builder.Services.AddScoped<IPlayerRepo, PlayerRepo>();
 builder.Services.AddScoped<ITeamRepo, TeamRepo>();
 builder.Services.AddScoped<ITeamMatchRepo, TeamMatchRepo>();
 builder.Services.AddScoped<INotificationRepo, NotificationRepo>();
+builder.Services.AddScoped<IRoleRepo, RoleRepo>();
+builder.Services.AddScoped<ICommunityRepo, CommunityRepo>();
 
 builder.Services.AddScoped<UserManager>();
 builder.Services.AddScoped<PostManager>();
@@ -109,9 +171,13 @@ builder.Services.AddScoped<PlayerManager>();
 builder.Services.AddScoped<TeamManager>();
 builder.Services.AddScoped<TeamMatchManager>();
 builder.Services.AddScoped<NotificationManager>();
+builder.Services.AddScoped<RoleManager>();
+builder.Services.AddScoped<CommunityManager>();
 
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<PostImageStorage>();
+builder.Services.AddScoped<CommunityImageStorage>();
+builder.Services.AddScoped<UserRoleClaimsService>();
 
 var pandaScoreApiKey = builder.Configuration["PandaScore:ApiKey"];
 
@@ -171,6 +237,18 @@ app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(postImagesDirectory),
     RequestPath = "/images/posts"
+});
+
+var communityImagesDirectory = Path.Combine(
+    app.Environment.WebRootPath,
+    "Images",
+    "community");
+Directory.CreateDirectory(communityImagesDirectory);
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(communityImagesDirectory),
+    RequestPath = "/images/community"
 });
 app.UseStaticFiles();
 app.UseRouting();

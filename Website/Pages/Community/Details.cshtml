@@ -1,0 +1,191 @@
+@page
+@model Website.Pages.Community.DetailsModel
+@using LogicLayer.Enums
+@{
+    ViewData["Title"] = Model.Discussion.Title;
+    var isAuthor = Model.CurrentUserId == Model.Discussion.AuthorId;
+}
+
+<section class="community-shell" data-community-details>
+    <nav class="community-breadcrumb" aria-label="Breadcrumb">
+        <a asp-page="./Index">Community</a><span>/</span><a asp-page="./Index" asp-route-categoryId="@Model.Discussion.CategoryId">@Model.Discussion.Category?.Name</a><span>/</span><span>Discussion</span>
+    </nav>
+
+    @if (TempData["CommunityError"] is string communityError)
+    {
+        <div class="alert alert-danger" role="alert">@communityError</div>
+    }
+
+    <article class="discussion-detail">
+        <div class="discussion-detail-header">
+            <div>
+                <div class="discussion-meta">
+                    <span class="discussion-category-label">@Model.Discussion.Category?.Name</span>
+                    @if (Model.Discussion.IsPinned)
+                    {
+                        <span class="discussion-pin">Pinned</span>
+                    }
+                    @if (Model.Discussion.IsLocked)
+                    {
+                        <span class="discussion-locked">Locked</span>
+                    }
+                </div>
+                <h1>@Model.Discussion.Title</h1>
+                <p class="discussion-byline">
+                    Posted by <strong>@Model.Discussion.Author?.Username</strong>
+                    <time datetime="@Model.Discussion.CreatedAt.ToString("O")">@Model.Discussion.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</time>
+                    @if (Model.Discussion.UpdatedAt.HasValue)
+                    {
+                        <span>· edited</span>
+                    }
+                </p>
+            </div>
+            @if (isAuthor && Model.Discussion.Status == CommunityContentStatus.Published)
+            {
+                <div class="discussion-owner-actions">
+                    <a asp-page="./Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-light">Edit</a>
+                    <form method="post" asp-page-handler="DeleteDiscussion" data-confirm="Remove this discussion?">
+                        <input asp-for="Id" type="hidden" />
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                    </form>
+                </div>
+            }
+        </div>
+
+        @if (Model.Discussion.Status == CommunityContentStatus.Removed)
+        {
+            <div class="community-removed-content">This discussion was removed.</div>
+        }
+        else
+        {
+            @if (!string.IsNullOrWhiteSpace(Model.Discussion.Content))
+            {
+                <div class="discussion-content">@Model.Discussion.Content</div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.Discussion.ImagePath))
+            {
+                <button type="button" class="discussion-detail-media @(Model.Discussion.IsSpoiler ? "is-spoiler" : string.Empty)" data-spoiler-media>
+                    <img src="@Model.Discussion.ImagePath" alt="Image attached to @Model.Discussion.Title" />
+                    @if (Model.Discussion.IsSpoiler)
+                    {
+                        <span>Click to reveal spoiler</span>
+                    }
+                </button>
+            }
+            else if (!string.IsNullOrWhiteSpace(Model.Discussion.YouTubeVideoId))
+            {
+                <div class="discussion-video @(Model.Discussion.IsSpoiler ? "is-spoiler" : string.Empty)" data-spoiler-media>
+                    @if (Model.Discussion.IsSpoiler)
+                    {
+                        <button type="button" class="spoiler-reveal">Click to reveal spoiler</button>
+                    }
+                    <iframe src="https://www.youtube-nocookie.com/embed/@Model.Discussion.YouTubeVideoId"
+                            title="YouTube video for @Model.Discussion.Title"
+                            loading="lazy"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen></iframe>
+                </div>
+            }
+        }
+
+        <div class="discussion-actions">
+            <form method="post" asp-page-handler="VoteDiscussion" class="vote-control" data-community-vote>
+                <input asp-for="Id" type="hidden" />
+                <button type="submit" name="value" value="1" class="vote-button @(Model.Discussion.CurrentUserVote == 1 ? "is-active" : string.Empty)" aria-label="Upvote discussion">▲</button>
+                <strong data-vote-score>@Model.Discussion.Score</strong>
+                <button type="submit" name="value" value="-1" class="vote-button @(Model.Discussion.CurrentUserVote == -1 ? "is-active" : string.Empty)" aria-label="Downvote discussion">▼</button>
+            </form>
+            <span>@Model.Discussion.CommentCount @(Model.Discussion.CommentCount == 1 ? "comment" : "comments")</span>
+            @if (User.Identity?.IsAuthenticated == true && !isAuthor)
+            {
+                <button type="button" class="community-text-button" data-report-toggle="discussion-report">Report</button>
+            }
+        </div>
+
+        @if (User.Identity?.IsAuthenticated == true && !isAuthor)
+        {
+            <form method="post" asp-page-handler="Report" id="discussion-report" class="community-inline-form" hidden data-community-report>
+                <input asp-for="Id" type="hidden" />
+                <input name="NewReport.DiscussionId" type="hidden" value="@Model.Id" />
+                <select name="NewReport.Reason" class="form-select" required>
+                    <option value="">Choose a reason</option>
+                    @foreach (var reason in Model.ReportReasons)
+                    {
+                        <option value="@reason">@reason</option>
+                    }
+                </select>
+                <input name="NewReport.Details" class="form-control" maxlength="1000" placeholder="Optional details" />
+                <button type="submit" class="btn btn-outline-danger">Submit report</button>
+            </form>
+        }
+
+        @if (Model.CanModerate)
+        {
+            <details class="moderation-panel">
+                <summary>Moderation tools</summary>
+                <div class="moderation-actions">
+                    <form method="post" asp-page-handler="ModerateDiscussion">
+                        <input asp-for="Id" type="hidden" />
+                        <input name="reason" class="form-control" maxlength="500" placeholder="Reason (optional)" />
+                        @if (Model.Discussion.IsLocked)
+                        {
+                            <button type="submit" name="action" value="@ModerationActionType.UnlockDiscussion" class="btn btn-sm btn-outline-light">Unlock</button>
+                        }
+                        else
+                        {
+                            <button type="submit" name="action" value="@ModerationActionType.LockDiscussion" class="btn btn-sm btn-outline-light">Lock</button>
+                        }
+                        @if (Model.Discussion.IsPinned)
+                        {
+                            <button type="submit" name="action" value="@ModerationActionType.UnpinDiscussion" class="btn btn-sm btn-outline-light">Unpin</button>
+                        }
+                        else
+                        {
+                            <button type="submit" name="action" value="@ModerationActionType.PinDiscussion" class="btn btn-sm btn-outline-light">Pin</button>
+                        }
+                        @if (Model.Discussion.Status == CommunityContentStatus.Published)
+                        {
+                            <button type="submit" name="action" value="@ModerationActionType.RemoveDiscussion" class="btn btn-sm btn-outline-danger">Remove</button>
+                        }
+                        else
+                        {
+                            <button type="submit" name="action" value="@ModerationActionType.RestoreDiscussion" class="btn btn-sm btn-outline-success">Restore</button>
+                        }
+                    </form>
+                </div>
+            </details>
+        }
+    </article>
+
+    <section class="community-comments" data-community-comments>
+        <header class="community-comments-header">
+            <div>
+                <p class="community-eyebrow">Conversation</p>
+                <h2>Comments</h2>
+            </div>
+            <p data-community-status hidden role="status"></p>
+        </header>
+
+        @if (User.Identity?.IsAuthenticated == true && !Model.Discussion.IsLocked && Model.Discussion.Status == CommunityContentStatus.Published)
+        {
+            <form method="post" asp-page-handler="Comment" class="community-comment-composer" data-community-comment-form>
+                <input asp-for="Id" type="hidden" />
+                <input name="NewComment.DiscussionId" type="hidden" value="@Model.Id" />
+                <label for="new-community-comment" class="visually-hidden">Add a comment</label>
+                <textarea id="new-community-comment" name="NewComment.Content" class="form-control" rows="4" maxlength="2000" placeholder="Join the discussion" required></textarea>
+                <button type="submit" class="btn btn-primary">Comment</button>
+            </form>
+        }
+        else if (User.Identity?.IsAuthenticated != true)
+        {
+            <div class="community-login-prompt"><a asp-page="/Login">Log in</a> to join the discussion.</div>
+        }
+        else if (Model.Discussion.IsLocked)
+        {
+            <div class="community-login-prompt">This discussion is locked.</div>
+        }
+
+        @await Html.PartialAsync("_Comments", Model.CreateCommentsViewModel())
+    </section>
+</section>

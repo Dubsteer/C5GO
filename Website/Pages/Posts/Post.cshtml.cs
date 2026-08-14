@@ -110,7 +110,9 @@ namespace Website.Pages.Posts
             if (comment == null || comment.PostId != Id)
                 return NotFoundResponse("Comment was not found.");
 
-            if (!CurrentUser.IsAdmin && CurrentUser.Id != comment.User.Id)
+            if (!User.IsInRole("Owner") &&
+                !User.IsInRole("Admin") &&
+                CurrentUser.Id != comment.User.Id)
                 return ForbiddenResponse();
 
             commentManager.DeleteComment(comment);
@@ -133,7 +135,9 @@ namespace Website.Pages.Posts
             if (parentComment == null || parentComment.PostId != Id)
                 return NotFoundResponse("Reply was not found.");
 
-            if (!CurrentUser.IsAdmin && CurrentUser.Id != reply.User.Id)
+            if (!User.IsInRole("Owner") &&
+                !User.IsInRole("Admin") &&
+                CurrentUser.Id != reply.User.Id)
                 return ForbiddenResponse();
 
             commentManager.DeleteReply(reply);

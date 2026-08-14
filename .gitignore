@@ -71,6 +71,10 @@ appsettings.*.json
 .env
 *.env
 
+# Runtime uploads
+Website/wwwroot/Images/posts/*
+Website/wwwroot/Images/community/*
+
 # Test coverage and profiler data
 coverage/
 *.coverage

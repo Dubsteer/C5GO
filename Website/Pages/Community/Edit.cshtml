@@ -1,0 +1,68 @@
+@page
+@model Website.Pages.Community.EditModel
+@{
+    ViewData["Title"] = "Edit discussion";
+}
+
+<section class="community-shell community-form-shell">
+    <nav class="community-breadcrumb" aria-label="Breadcrumb">
+        <a asp-page="./Index">Community</a><span>/</span><a asp-page="./Details" asp-route-id="@Model.Id">Discussion</a><span>/</span><span>Edit</span>
+    </nav>
+    <header class="community-page-header">
+        <p class="community-eyebrow">Your discussion</p>
+        <h1>Edit discussion</h1>
+        <p>Update the conversation while keeping its context clear.</p>
+    </header>
+
+    <form method="post" enctype="multipart/form-data" class="community-form-card">
+        <input asp-for="Id" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+        <div class="mb-3">
+            <label asp-for="Form.CategoryId" class="form-label">Category</label>
+            <select asp-for="Form.CategoryId" class="form-select">
+                @foreach (var category in Model.Categories)
+                {
+                    <option value="@category.Id">@category.Name</option>
+                }
+            </select>
+            <span asp-validation-for="Form.CategoryId" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Form.Title" class="form-label"></label>
+            <input asp-for="Form.Title" class="form-control" maxlength="160" />
+            <span asp-validation-for="Form.Title" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Form.Content" class="form-label">Text</label>
+            <textarea asp-for="Form.Content" class="form-control" rows="9" maxlength="10000"></textarea>
+            <span asp-validation-for="Form.Content" class="text-danger"></span>
+        </div>
+        <div class="community-form-grid">
+            <div>
+                <label asp-for="Image" class="form-label">Replace image</label>
+                <input asp-for="Image" class="form-control" type="file" accept="image/jpeg,image/png,image/webp" />
+                <span asp-validation-for="Image" class="text-danger"></span>
+                @if (Model.ExistingImagePath != null)
+                {
+                    <label class="form-check mt-2">
+                        <input asp-for="RemoveImage" class="form-check-input" />
+                        <span class="form-check-label">Remove current image</span>
+                    </label>
+                }
+            </div>
+            <div>
+                <label asp-for="Form.YouTubeUrl" class="form-label"></label>
+                <input asp-for="Form.YouTubeUrl" class="form-control" />
+                <span asp-validation-for="Form.YouTubeUrl" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="form-check community-spoiler-check">
+            <input asp-for="Form.IsSpoiler" class="form-check-input" />
+            <label asp-for="Form.IsSpoiler" class="form-check-label"></label>
+        </div>
+        <div class="community-form-actions">
+            <button type="submit" class="btn btn-primary">Save changes</button>
+            <a asp-page="./Details" asp-route-id="@Model.Id" class="btn btn-outline-light">Cancel</a>
+        </div>
+    </form>
+</section>

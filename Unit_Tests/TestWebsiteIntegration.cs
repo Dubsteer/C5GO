@@ -1,12 +1,17 @@
 using System.Net;
 using System.Xml.Linq;
+using LogicLayer.Enums;
+using LogicLayer.IRepos;
+using LogicLayer.Models.Community;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.DataProtection.Repositories;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Unit_Tests.MockRepos;
 
 namespace Unit_Tests
 {
@@ -101,6 +106,7 @@ namespace Unit_Tests
         [DataRow("/lib/jquery/dist/jquery.min.js")]
         [DataRow("/lib/jquery-validation/dist/jquery.validate.min.js")]
         [DataRow("/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js")]
+        [DataRow("/js/community.js")]
         public async Task RequiredStaticAssetsAreAvailable(string path)
         {
             using var client = CreateClient();
@@ -119,6 +125,60 @@ namespace Unit_Tests
             Assert.AreEqual(HttpStatusCode.Redirect, response.StatusCode);
             Assert.AreEqual("/Login", response.Headers.Location?.AbsolutePath);
             StringAssert.Contains(response.Headers.Location?.Query, "ReturnUrl=%2FAdmin");
+        }
+
+        [TestMethod]
+        public async Task DisabledCommunityIsNotPubliclyExposed()
+        {
+            using var client = CreateClient();
+            using var response = await client.GetAsync("/Community");
+
+            Assert.AreEqual(HttpStatusCode.Redirect, response.StatusCode);
+            Assert.AreEqual("/errors/404", response.Headers.Location?.OriginalString);
+        }
+
+        [TestMethod]
+        public async Task CommunityFeedRendersWhenEnabled()
+        {
+            var communityRepo = new MockCommunityRepo();
+            communityRepo.Discussions.Add(new Discussion
+            {
+                Id = 1,
+                AuthorId = 1,
+                CategoryId = 1,
+                Title = "Useful community discussion",
+                Content = "A helpful topic for the community.",
+                Status = CommunityContentStatus.Published,
+                CreatedAt = DateTime.UtcNow,
+                Author = new LogicLayer.Models.User(1) { Username = "member" },
+                Category = communityRepo.Categories[0]
+            });
+
+            using var communityFactory = factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureAppConfiguration((_, configuration) =>
+                    configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                    {
+                        ["Features:CommunityEnabled"] = "true"
+                    }));
+                builder.ConfigureServices(services =>
+                {
+                    services.RemoveAll<ICommunityRepo>();
+                    services.AddSingleton<ICommunityRepo>(communityRepo);
+                });
+            });
+            using var client = communityFactory.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                AllowAutoRedirect = false,
+                BaseAddress = new Uri("https://c5g0.com")
+            });
+
+            using var response = await client.GetAsync("/Community");
+            var html = await response.Content.ReadAsStringAsync();
+
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            StringAssert.Contains(html, "Useful community discussion");
+            StringAssert.Contains(html, "Log in to post");
         }
 
         [TestMethod]

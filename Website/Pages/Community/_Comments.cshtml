@@ -1,0 +1,191 @@
+@model Website.Models.CommunityCommentsViewModel
+@using LogicLayer.Enums
+
+<div class="community-comment-list" data-community-comment-list>
+    @if (Model.Comments.Count == 0)
+    {
+        <div class="community-empty compact">
+            <h3>No comments yet</h3>
+            <p>Start the conversation with a useful response.</p>
+        </div>
+    }
+    else
+    {
+        @foreach (var comment in Model.Comments)
+        {
+            <article id="comment-@comment.Id" class="community-comment-card @(comment.Status == CommunityContentStatus.Removed ? "is-removed" : string.Empty)">
+                <div class="community-comment-main">
+                    <div class="community-comment-meta">
+                        <strong>@comment.Author?.Username</strong>
+                        <time datetime="@comment.CreatedAt.ToString("O")">@comment.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</time>
+                    </div>
+
+                    @if (comment.Status == CommunityContentStatus.Removed)
+                    {
+                        <p class="community-removed-content">This comment was removed.</p>
+                    }
+                    else
+                    {
+                        <p class="community-comment-text">@comment.Content</p>
+                    }
+
+                    <div class="community-comment-actions">
+                        <form method="post" asp-page-handler="VoteComment" class="vote-control compact" data-community-vote>
+                            <input name="Id" type="hidden" value="@Model.DiscussionId" />
+                            <input name="commentId" type="hidden" value="@comment.Id" />
+                            <button type="submit" name="value" value="1" class="vote-button @(comment.CurrentUserVote == 1 ? "is-active" : string.Empty)" aria-label="Upvote comment">▲</button>
+                            <strong data-vote-score>@comment.Score</strong>
+                            <button type="submit" name="value" value="-1" class="vote-button @(comment.CurrentUserVote == -1 ? "is-active" : string.Empty)" aria-label="Downvote comment">▼</button>
+                        </form>
+                        @if (Model.IsAuthenticated && comment.Status == CommunityContentStatus.Published)
+                        {
+                            <button type="button" class="community-text-button" data-reply-toggle="reply-@comment.Id">Reply</button>
+                        }
+                        @if (Model.CurrentUserId == comment.AuthorId && comment.Status == CommunityContentStatus.Published)
+                        {
+                            <form method="post" asp-page-handler="DeleteComment" data-community-comment-form data-confirm="Remove this comment?">
+                                <input name="Id" type="hidden" value="@Model.DiscussionId" />
+                                <input name="commentId" type="hidden" value="@comment.Id" />
+                                <button type="submit" class="community-text-button danger">Remove</button>
+                            </form>
+                        }
+                        @if (Model.IsAuthenticated && Model.CurrentUserId != comment.AuthorId && comment.Status == CommunityContentStatus.Published)
+                        {
+                            <button type="button" class="community-text-button" data-report-toggle="comment-report-@comment.Id">Report</button>
+                        }
+                    </div>
+
+                    @if (Model.IsAuthenticated && comment.Status == CommunityContentStatus.Published)
+                    {
+                        <form method="post" asp-page-handler="Comment" id="reply-@comment.Id" class="community-reply-form" hidden data-community-comment-form>
+                            <input name="Id" type="hidden" value="@Model.DiscussionId" />
+                            <input name="NewComment.DiscussionId" type="hidden" value="@Model.DiscussionId" />
+                            <input name="NewComment.ParentCommentId" type="hidden" value="@comment.Id" />
+                            <label for="reply-text-@comment.Id" class="visually-hidden">Reply to @comment.Author?.Username</label>
+                            <textarea id="reply-text-@comment.Id" name="NewComment.Content" class="form-control" rows="3" maxlength="2000" placeholder="Reply to @comment.Author?.Username" required></textarea>
+                            <button type="submit" class="btn btn-sm btn-primary">Reply</button>
+                        </form>
+
+                        @if (Model.CurrentUserId != comment.AuthorId)
+                        {
+                            <form method="post" asp-page-handler="Report" id="comment-report-@comment.Id" class="community-inline-form" hidden data-community-report>
+                                <input name="Id" type="hidden" value="@Model.DiscussionId" />
+                                <input name="NewReport.CommentId" type="hidden" value="@comment.Id" />
+                                <select name="NewReport.Reason" class="form-select" required>
+                                    <option value="">Choose a reason</option>
+                                    @foreach (var reason in Model.ReportReasons)
+                                    {
+                                        <option value="@reason">@reason</option>
+                                    }
+                                </select>
+                                <input name="NewReport.Details" class="form-control" maxlength="1000" placeholder="Optional details" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Submit report</button>
+                            </form>
+                        }
+                    }
+
+                    @if (Model.CanModerate)
+                    {
+                        <details class="comment-moderation">
+                            <summary>Moderate</summary>
+                            <form method="post" asp-page-handler="ModerateComment" data-community-comment-form>
+                                <input name="Id" type="hidden" value="@Model.DiscussionId" />
+                                <input name="commentId" type="hidden" value="@comment.Id" />
+                                <input name="reason" class="form-control" maxlength="500" placeholder="Reason (optional)" />
+                                @if (comment.Status == CommunityContentStatus.Published)
+                                {
+                                    <button type="submit" name="action" value="@ModerationActionType.RemoveComment" class="btn btn-sm btn-outline-danger">Remove</button>
+                                }
+                                else
+                                {
+                                    <button type="submit" name="action" value="@ModerationActionType.RestoreComment" class="btn btn-sm btn-outline-success">Restore</button>
+                                }
+                            </form>
+                        </details>
+                    }
+                </div>
+
+                @if (comment.Replies.Count > 0)
+                {
+                    <div class="community-replies">
+                        @foreach (var reply in comment.Replies)
+                        {
+                            <article id="comment-@reply.Id" class="community-reply-card @(reply.Status == CommunityContentStatus.Removed ? "is-removed" : string.Empty)">
+                                <div class="community-comment-meta">
+                                    <strong>@reply.Author?.Username</strong>
+                                    <span>replied</span>
+                                    <time datetime="@reply.CreatedAt.ToString("O")">@reply.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</time>
+                                </div>
+                                @if (reply.Status == CommunityContentStatus.Removed)
+                                {
+                                    <p class="community-removed-content">This reply was removed.</p>
+                                }
+                                else
+                                {
+                                    <p class="community-comment-text">@reply.Content</p>
+                                }
+                                <div class="community-comment-actions">
+                                    <form method="post" asp-page-handler="VoteComment" class="vote-control compact" data-community-vote>
+                                        <input name="Id" type="hidden" value="@Model.DiscussionId" />
+                                        <input name="commentId" type="hidden" value="@reply.Id" />
+                                        <button type="submit" name="value" value="1" class="vote-button @(reply.CurrentUserVote == 1 ? "is-active" : string.Empty)" aria-label="Upvote reply">▲</button>
+                                        <strong data-vote-score>@reply.Score</strong>
+                                        <button type="submit" name="value" value="-1" class="vote-button @(reply.CurrentUserVote == -1 ? "is-active" : string.Empty)" aria-label="Downvote reply">▼</button>
+                                    </form>
+                                    @if (Model.CurrentUserId == reply.AuthorId && reply.Status == CommunityContentStatus.Published)
+                                    {
+                                        <form method="post" asp-page-handler="DeleteComment" data-community-comment-form data-confirm="Remove this reply?">
+                                            <input name="Id" type="hidden" value="@Model.DiscussionId" />
+                                            <input name="commentId" type="hidden" value="@reply.Id" />
+                                            <button type="submit" class="community-text-button danger">Remove</button>
+                                        </form>
+                                    }
+                                    @if (Model.IsAuthenticated && Model.CurrentUserId != reply.AuthorId && reply.Status == CommunityContentStatus.Published)
+                                    {
+                                        <button type="button" class="community-text-button" data-report-toggle="comment-report-@reply.Id">Report</button>
+                                    }
+                                </div>
+
+                                @if (Model.IsAuthenticated && Model.CurrentUserId != reply.AuthorId && reply.Status == CommunityContentStatus.Published)
+                                {
+                                    <form method="post" asp-page-handler="Report" id="comment-report-@reply.Id" class="community-inline-form" hidden data-community-report>
+                                        <input name="Id" type="hidden" value="@Model.DiscussionId" />
+                                        <input name="NewReport.CommentId" type="hidden" value="@reply.Id" />
+                                        <select name="NewReport.Reason" class="form-select" required>
+                                            <option value="">Choose a reason</option>
+                                            @foreach (var reason in Model.ReportReasons)
+                                            {
+                                                <option value="@reason">@reason</option>
+                                            }
+                                        </select>
+                                        <input name="NewReport.Details" class="form-control" maxlength="1000" placeholder="Optional details" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Submit report</button>
+                                    </form>
+                                }
+                                @if (Model.CanModerate)
+                                {
+                                    <details class="comment-moderation">
+                                        <summary>Moderate</summary>
+                                        <form method="post" asp-page-handler="ModerateComment" data-community-comment-form>
+                                            <input name="Id" type="hidden" value="@Model.DiscussionId" />
+                                            <input name="commentId" type="hidden" value="@reply.Id" />
+                                            <input name="reason" class="form-control" maxlength="500" placeholder="Reason (optional)" />
+                                            @if (reply.Status == CommunityContentStatus.Published)
+                                            {
+                                                <button type="submit" name="action" value="@ModerationActionType.RemoveComment" class="btn btn-sm btn-outline-danger">Remove</button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" name="action" value="@ModerationActionType.RestoreComment" class="btn btn-sm btn-outline-success">Restore</button>
+                                            }
+                                        </form>
+                                    </details>
+                                }
+                            </article>
+                        }
+                    </div>
+                }
+            </article>
+        }
+    }
+</div>

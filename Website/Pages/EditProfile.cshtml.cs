@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Website.Services;
 
 namespace Website.Pages
 {
@@ -15,10 +16,14 @@ namespace Website.Pages
     public class EditProfileModel : PageModel
     {
         private readonly UserManager userManager;
+        private readonly UserRoleClaimsService roleClaimsService;
 
-        public EditProfileModel(UserManager userManager)
+        public EditProfileModel(
+            UserManager userManager,
+            UserRoleClaimsService roleClaimsService)
         {
             this.userManager = userManager;
+            this.roleClaimsService = roleClaimsService;
         }
 
         [BindProperty]
@@ -133,8 +138,7 @@ namespace Website.Pages
                 new("id", user.Id!.Value.ToString())
             };
 
-            if (user.IsAdmin)
-                claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+            claims.AddRange(roleClaimsService.CreateRoleClaims(user));
 
             var identity = new ClaimsIdentity(
                 claims,

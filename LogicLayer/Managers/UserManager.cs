@@ -197,12 +197,15 @@ namespace LogicLayer.Managers
             userRepo.DeleteUser(user);
         }
 
-        public void DeleteUserAsAdmin(int userId, int actingAdminId)
+        public void DeleteUserAsAdmin(
+            int userId,
+            int actingAdminId,
+            bool hasAdministratorRole = false)
         {
             var actingAdmin = userRepo.GetUserById(actingAdminId)
                 ?? throw new InvalidOperationException("Administrator account was not found.");
 
-            if (!actingAdmin.IsAdmin)
+            if (!actingAdmin.IsAdmin && !hasAdministratorRole)
                 throw new InvalidOperationException("Only administrators can delete user accounts.");
 
             var user = userRepo.GetUserById(userId)

@@ -38,20 +38,25 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        public List<Notification> GetForUser(int userId)
+        public List<Notification> GetForUser(int userId, int limit, bool unreadOnly = false)
         {
             EnsureOpen();
 
             var list = new List<Notification>();
+            limit = Math.Clamp(limit, 1, 100);
 
             var cmd = new MySqlCommand(
                 @"SELECT id, message, link, is_read, created_at
                   FROM notification
                   WHERE user_id=@u
-                  ORDER BY created_at DESC",
+                    AND (@unreadOnly=0 OR is_read=0)
+                  ORDER BY created_at DESC, id DESC
+                  LIMIT @limit",
                 conn.Connection);
 
             cmd.Parameters.AddWithValue("@u", userId);
+            cmd.Parameters.AddWithValue("@unreadOnly", unreadOnly);
+            cmd.Parameters.AddWithValue("@limit", limit);
 
             using var r = cmd.ExecuteReader();
             while (r.Read())
@@ -125,6 +130,20 @@ namespace DataLayer.Repos
             updateCommand.ExecuteNonQuery();
 
             return notification;
+        }
+
+        public int MarkAllAsRead(int userId)
+        {
+            EnsureOpen();
+
+            using var command = new MySqlCommand(
+                @"UPDATE notification
+                  SET is_read=1
+                  WHERE user_id=@userId AND is_read=0",
+                conn.Connection);
+
+            command.Parameters.AddWithValue("@userId", userId);
+            return command.ExecuteNonQuery();
         }
     }
 }

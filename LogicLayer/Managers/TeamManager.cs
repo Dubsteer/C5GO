@@ -164,11 +164,33 @@ namespace LogicLayer.Managers
 
             if (team.Captain.Id == userId)
             {
+                var members = teamRepo.GetTeamMembers(team.Id)
+                    .Where(member => member.Id != userId && member.Id.HasValue)
+                    .ToList();
                 teamRepo.DeleteTeam(team.Id);
+
+                foreach (var member in members)
+                {
+                    notificationRepo.Create(
+                        member.Id!.Value,
+                        $"Team '{team.Name}' was disbanded by its captain.",
+                        "/Teams/Teams");
+                }
+
                 return;
             }
 
+            var user = teamRepo.GetUserById(userId)
+                ?? throw new InvalidOperationException("User was not found.");
             teamRepo.RemovePlayer(team.Id, userId);
+
+            if (team.Captain.Id is int captainId)
+            {
+                notificationRepo.Create(
+                    captainId,
+                    $"{user.Username} left your team '{team.Name}'.",
+                    $"/Teams/Details?id={team.Id}");
+            }
         }
 
         public void KickMember(int captainId, int userId)
@@ -183,7 +205,16 @@ namespace LogicLayer.Managers
             if (captainId == userId)
                 throw new Exception("Captain cannot kick himself.");
 
+            _ = teamRepo.GetTeamMembers(team.Id)
+                .FirstOrDefault(item => item.Id == userId)
+                ?? throw new Exception("User is not a member of this team.");
+
             teamRepo.RemovePlayer(team.Id, userId);
+
+            notificationRepo.Create(
+                userId,
+                $"You were removed from team '{team.Name}'.",
+                "/Teams/Teams");
         }
     }
 }

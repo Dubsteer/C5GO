@@ -97,6 +97,25 @@ public class TestCommunityManager
 
         Assert.AreEqual(1, notificationRepo.Notifications.Count);
         Assert.AreEqual(2, notificationRepo.Notifications[0].UserId);
+        StringAssert.Contains(notificationRepo.Notifications[0].Message, "author");
+        StringAssert.Contains(notificationRepo.Notifications[0].Message, "replied");
+    }
+
+    [TestMethod]
+    public void CommentNotificationIdentifiesAuthorAndDiscussion()
+    {
+        var discussionId = manager.CreateDiscussion(1, CreateDiscussionForm(), null);
+
+        manager.CreateComment(2, new DiscussionCommentFormModel
+        {
+            DiscussionId = discussionId,
+            Content = "A useful response"
+        });
+
+        Assert.HasCount(1, notificationRepo.Notifications);
+        Assert.AreEqual(1, notificationRepo.Notifications[0].UserId);
+        StringAssert.Contains(notificationRepo.Notifications[0].Message, "member");
+        StringAssert.Contains(notificationRepo.Notifications[0].Message, "Useful discussion");
     }
 
     [TestMethod]

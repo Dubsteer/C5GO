@@ -30,7 +30,7 @@ namespace Website.Pages.Notifications
                 return LocalRedirect(notification.Link);
             }
 
-            return RedirectToPage("/Index");
+            return RedirectToPage("/Notifications/Index");
         }
     }
 }

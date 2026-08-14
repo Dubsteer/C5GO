@@ -1094,6 +1094,19 @@ label {
     margin-bottom: 1rem;
 }
 
+.auth-turnstile {
+    width: 100%;
+    min-height: 65px;
+    margin: 0.25rem 0 1rem;
+    display: flex;
+    justify-content: center;
+}
+
+.auth-turnstile noscript {
+    color: #fda4af;
+    font-size: 0.85rem;
+}
+
 .auth-input {
     width: 100%;
     min-height: 46px;

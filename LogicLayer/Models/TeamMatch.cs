@@ -19,6 +19,7 @@ namespace LogicLayer.Models
 
         public DateTime MatchDate { get; set; }
         public Status Status { get; set; }
+        public string TournamentName { get; set; } = string.Empty;
 
         public TeamMatch(int id, int tournamentId, Team t1, Team t2,
                          int s1, int s2, DateTime date, Status status)

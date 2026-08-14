@@ -1,0 +1,141 @@
+@page
+@model Website.Pages.Matches.HistoryModel
+@{
+    ViewData["Title"] = "Match history";
+}
+
+<section class="matches-container history-page" aria-labelledby="historyTitle">
+    <header class="page-header history-page-header">
+        <div>
+            <h1 id="historyTitle" class="matches-title">Match history</h1>
+            <p class="page-subtitle ms-0">Recent professional results and completed C5GO tournament matches.</p>
+        </div>
+        <nav class="matches-view-switch" aria-label="Match views">
+            <a asp-page="/Matches/Index">Live &amp; upcoming</a>
+            <span aria-current="page">History</span>
+        </nav>
+    </header>
+
+    <section class="history-section" aria-labelledby="professionalHistoryTitle">
+        <div class="history-section-heading">
+            <div>
+                <span class="history-eyebrow">PandaScore</span>
+                <h2 id="professionalHistoryTitle">Professional results</h2>
+            </div>
+            <span class="history-count">@Model.ProfessionalMatches.Count matches</span>
+        </div>
+
+        @if (!Model.ProfessionalMatches.Any())
+        {
+            <div class="empty-state"><strong>No professional results available</strong><span>Try again later when PandaScore is available.</span></div>
+        }
+        else
+        {
+            foreach (var match in Model.ProfessionalMatches)
+            {
+                <a asp-page="/Matches/Details" asp-route-id="@match.Id" asp-route-history="true" class="match-card match-card-finished">
+                    <div class="teams">
+                        <div class="team-box">
+                            <img class="team-logo" src="@(string.IsNullOrEmpty(match.Team1LogoUrl) ? "/Images/default-team.svg" : match.Team1LogoUrl)"
+                                 data-fallback-image="/Images/default-team.svg" alt="" />
+                            <span class="team">@match.Team1Name</span>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(match.Score))
+                        {
+                            <div class="score">@match.Score</div>
+                        }
+                        else if (!string.IsNullOrWhiteSpace(match.WinnerName))
+                        {
+                            <div class="score professional-winner"><span>Winner</span><strong>@match.WinnerName</strong></div>
+                        }
+                        else
+                        {
+                            <div class="score result-unavailable">Result unavailable</div>
+                        }
+                        <div class="team-box right">
+                            <span class="team">@match.Team2Name</span>
+                            <img class="team-logo" src="@(string.IsNullOrEmpty(match.Team2LogoUrl) ? "/Images/default-team.svg" : match.Team2LogoUrl)"
+                                 data-fallback-image="/Images/default-team.svg" alt="" />
+                        </div>
+                    </div>
+                    <div class="match-meta">
+                        <span>@match.EventName</span>
+                        <span class="badge-finished">@(match.StartTimeUtc?.ToLocalTime().ToString("dd.MM.yyyy") ?? "Finished")</span>
+                    </div>
+                </a>
+            }
+        }
+    </section>
+
+    <section class="history-section" aria-labelledby="playerHistoryTitle">
+        <div class="history-section-heading">
+            <div>
+                <span class="history-eyebrow">C5GO solo</span>
+                <h2 id="playerHistoryTitle">Player results</h2>
+            </div>
+            <span class="history-count">@Model.PlayerMatches.Count matches</span>
+        </div>
+
+        @if (!Model.PlayerMatches.Any())
+        {
+            <div class="empty-state"><strong>No completed solo matches</strong><span>Results will appear after a solo tournament match is closed.</span></div>
+        }
+        else
+        {
+            <div class="local-history-list">
+                @foreach (var match in Model.PlayerMatches)
+                {
+                    var tournamentName = string.IsNullOrWhiteSpace(match.TournamentName) ? $"Tournament #{match.TournamentId}" : match.TournamentName;
+                    <article class="local-history-card">
+                        <div class="local-history-type">Solo</div>
+                        <div class="local-history-matchup">
+                            <a asp-page="/UserProfile" asp-route-id="@match.User1.Id">@match.User1.Username</a>
+                            <strong>@match.Player1Score - @match.Player2Score</strong>
+                            <a asp-page="/UserProfile" asp-route-id="@match.User2.Id">@match.User2.Username</a>
+                        </div>
+                        <div class="local-history-meta">
+                            <a asp-page="/Tournaments/Details" asp-route-id="@match.TournamentId">@tournamentName</a>
+                            <time datetime="@match.MatchDate.ToString("O")">@match.MatchDate.ToString("dd.MM.yyyy HH:mm")</time>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="history-section" aria-labelledby="teamHistoryTitle">
+        <div class="history-section-heading">
+            <div>
+                <span class="history-eyebrow">C5GO teams</span>
+                <h2 id="teamHistoryTitle">Team results</h2>
+            </div>
+            <span class="history-count">@Model.TeamMatches.Count matches</span>
+        </div>
+
+        @if (!Model.TeamMatches.Any())
+        {
+            <div class="empty-state"><strong>No completed team matches</strong><span>Results will appear after a team tournament match is closed.</span></div>
+        }
+        else
+        {
+            <div class="local-history-list">
+                @foreach (var match in Model.TeamMatches)
+                {
+                    var tournamentName = string.IsNullOrWhiteSpace(match.TournamentName) ? $"Tournament #{match.TournamentId}" : match.TournamentName;
+                    <article class="local-history-card">
+                        <div class="local-history-type local-history-type-team">Team</div>
+                        <div class="local-history-matchup">
+                            <a asp-page="/Teams/Details" asp-route-id="@match.Team1Id">@match.Team1.Name</a>
+                            <strong>@match.Team1Score - @match.Team2Score</strong>
+                            <a asp-page="/Teams/Details" asp-route-id="@match.Team2Id">@match.Team2.Name</a>
+                        </div>
+                        <div class="local-history-meta">
+                            <a asp-page="/Tournaments/Details" asp-route-id="@match.TournamentId">@tournamentName</a>
+                            <time datetime="@match.MatchDate.ToString("O")">@match.MatchDate.ToString("dd.MM.yyyy HH:mm")</time>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+</section>

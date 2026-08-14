@@ -2,6 +2,7 @@ using System.Net;
 using System.Xml.Linq;
 using LogicLayer.Enums;
 using LogicLayer.IRepos;
+using LogicLayer.Models;
 using LogicLayer.Models.Community;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.DataProtection.Repositories;
@@ -51,6 +52,12 @@ namespace Unit_Tests
                     });
                     builder.ConfigureServices(services =>
                     {
+                        services.RemoveAll<IMatchRepo>();
+                        services.AddSingleton<IMatchRepo>(
+                            new MockMatchRepo(CreatePlayerHistoryMatches()));
+                        services.RemoveAll<ITeamMatchRepo>();
+                        services.AddSingleton<ITeamMatchRepo>(
+                            new MockTeamMatchRepo(CreateTeamHistoryMatches()));
                         services.PostConfigure<KeyManagementOptions>(options =>
                         {
                             options.XmlRepository = new InMemoryXmlRepository();
@@ -115,6 +122,7 @@ namespace Unit_Tests
         [DataRow("/RegisterSuccess")]
         [DataRow("/ForgotPasswordConfirmation")]
         [DataRow("/ResetPasswordConfirmation")]
+        [DataRow("/Matches/History")]
         [DataRow("/Errors/401")]
         [DataRow("/Errors/403")]
         [DataRow("/Errors/404")]
@@ -141,6 +149,35 @@ namespace Unit_Tests
 
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode, path);
             Assert.IsTrue(response.Content.Headers.ContentLength > 0, path);
+        }
+
+        [TestMethod]
+        public async Task MatchHistoryRendersProfessionalAndCommunityResults()
+        {
+            using var client = CreateClient();
+            using var response = await client.GetAsync("/Matches/History");
+            var html = await response.Content.ReadAsStringAsync();
+
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            StringAssert.Contains(html, "Professional results");
+            StringAssert.Contains(html, "Vitality");
+            StringAssert.Contains(html, "Winner");
+            StringAssert.Contains(html, "solo-player-one");
+            StringAssert.Contains(html, "Team Alpha");
+            StringAssert.Contains(html, "C5GO Championship");
+        }
+
+        [TestMethod]
+        public async Task FinishedMatchDetailsShowWinnerWhenScoreIsUnavailable()
+        {
+            using var client = CreateClient();
+            using var response = await client.GetAsync("/Matches/Details?id=5&history=true");
+            var html = await response.Content.ReadAsStringAsync();
+
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            StringAssert.Contains(html, "Back to history");
+            StringAssert.Contains(html, "Winner");
+            StringAssert.Contains(html, "MOUZ");
         }
 
         [TestMethod]
@@ -225,6 +262,65 @@ namespace Unit_Tests
                 AllowAutoRedirect = false,
                 BaseAddress = new Uri("https://c5g0.com")
             });
+        }
+
+        private static List<Match> CreatePlayerHistoryMatches()
+        {
+            var playerOne = new Player(
+                1,
+                "Solo",
+                "One",
+                20,
+                "solo-player-one",
+                "one@c5go.local",
+                string.Empty,
+                "76561198000000001",
+                false);
+            var playerTwo = new Player(
+                2,
+                "Solo",
+                "Two",
+                21,
+                "solo-player-two",
+                "two@c5go.local",
+                string.Empty,
+                "76561198000000002",
+                false);
+
+            return
+            [
+                new Match(
+                    1,
+                    1,
+                    playerOne,
+                    playerTwo,
+                    13,
+                    9,
+                    DateTime.Now.AddDays(-1),
+                    Status.Closed)
+                {
+                    TournamentName = "C5GO Championship"
+                }
+            ];
+        }
+
+        private static List<TeamMatch> CreateTeamHistoryMatches()
+        {
+            return
+            [
+                new TeamMatch(
+                    1,
+                    1,
+                    new Team(1, "Team Alpha", null),
+                    new Team(2, "Team Bravo", null),
+                    2,
+                    1,
+                    DateTime.Now.AddDays(-1),
+                    Status.Closed)
+                {
+                    TournamentName = "C5GO Championship"
+                }
+            ];
         }
 
         private static void AssertHeader(

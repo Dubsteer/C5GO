@@ -13,6 +13,13 @@
     </span>
 </div>
 
+<hr class="section-divider" />
+
+<section aria-labelledby="publicMatchHistoryTitle">
+    <h2 id="publicMatchHistoryTitle" class="profile-section-title">Recent match history</h2>
+    <partial name="_PlayerMatchHistory" model="Model.MatchHistory" />
+</section>
+
 <div class="profile-info-grid">
     <div class="profile-info-item"><span class="profile-label">First name</span><div class="profile-value">@Model.ViewedUser.Firstname</div></div>
     <div class="profile-info-item"><span class="profile-label">Last name</span><div class="profile-value">@Model.ViewedUser.Lastname</div></div>

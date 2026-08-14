@@ -15,6 +15,7 @@
 
         public string Status { get; set; } = "";
         public string Score { get; set; } = "";
+        public string WinnerName { get; set; } = "";
 
         public DateTime? StartTimeUtc { get; set; }
 

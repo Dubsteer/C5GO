@@ -28,6 +28,33 @@ namespace LogicLayer.Managers
                        .ToList();
         }
 
+        public List<TeamMatch> GetRecentCompletedMatches(int limit = 20)
+        {
+            ValidateHistoryLimit(limit);
+
+            return repo.GetAllTeamMatches()
+                .Where(match => match.Status == Status.Closed)
+                .OrderByDescending(match => match.MatchDate)
+                .Take(limit)
+                .ToList();
+        }
+
+        public List<TeamMatch> GetCompletedMatchesForTeam(int teamId, int limit = 5)
+        {
+            if (teamId <= 0)
+                return [];
+
+            ValidateHistoryLimit(limit);
+
+            return repo.GetAllTeamMatches()
+                .Where(match =>
+                    match.Status == Status.Closed &&
+                    (match.Team1Id == teamId || match.Team2Id == teamId))
+                .OrderByDescending(match => match.MatchDate)
+                .Take(limit)
+                .ToList();
+        }
+
         public TeamMatch GetTeamMatchById(int id)
         {
             return GetAllTeamMatches().FirstOrDefault(match => match.Id == id)
@@ -122,6 +149,12 @@ namespace LogicLayer.Managers
 
             if (status == Status.Closed && score1 == score2)
                 throw new InvalidOperationException("A closed bracket match must have a winner.");
+        }
+
+        private static void ValidateHistoryLimit(int limit)
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(limit, 1);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(limit, 100);
         }
     }
 }

@@ -74,40 +74,5 @@
 
 <section aria-labelledby="matchHistoryTitle">
     <h2 id="matchHistoryTitle" class="profile-section-title">Match history</h2>
-
-    @if (!Model.Matches.Any())
-    {
-        <div class="empty-state"><strong>No matches yet</strong><span>Your tournament matches will appear here.</span></div>
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table table-dark table-striped align-middle">
-                <thead><tr><th>Tournament</th><th>Date</th><th>Your score</th></tr></thead>
-                <tbody>
-                    @foreach (var match in Model.Matches)
-                    {
-                        <tr>
-                            <td>@match.TournamentId</td>
-                            <td>@match.MatchDate.ToString("dd.MM.yyyy")</td>
-                            <td>
-                                @if (match.User1?.Username == Model.PageUser.Username)
-                                {
-                                    @match.Player1Score
-                                }
-                                else if (match.User2?.Username == Model.PageUser.Username)
-                                {
-                                    @match.Player2Score
-                                }
-                                else
-                                {
-                                    @:—
-                                }
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
+    <partial name="_PlayerMatchHistory" model="Model.MatchHistory" />
 </section>

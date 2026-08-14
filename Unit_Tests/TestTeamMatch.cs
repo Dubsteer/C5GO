@@ -70,6 +70,45 @@ namespace Unit_Tests
                 () => manager.UpdateResult(1, 1, 10, 10, Status.Closed, DateTime.Now));
         }
 
+        [TestMethod]
+        public void TestTeamHistoryContainsOnlyTeamCompletedMatches()
+        {
+            var recent = CreateMatch(1);
+            recent.Status = Status.Closed;
+            recent.MatchDate = DateTime.Now.AddDays(-1);
+            var older = CreateMatch(2);
+            older.Status = Status.Closed;
+            older.MatchDate = DateTime.Now.AddDays(-2);
+            var otherTeamMatch = new TeamMatch(
+                3,
+                1,
+                new Team(3, "Other One", null),
+                new Team(4, "Other Two", null),
+                13,
+                9,
+                DateTime.Now,
+                Status.Closed);
+            matches.AddRange([older, otherTeamMatch, recent]);
+
+            var result = manager.GetCompletedMatchesForTeam(1, 1);
+
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(recent.Id, result[0].Id);
+        }
+
+        [TestMethod]
+        public void TestRecentTeamResultsExcludeOpenMatches()
+        {
+            var closed = CreateMatch(1);
+            closed.Status = Status.Closed;
+            matches.AddRange([CreateMatch(2), closed]);
+
+            var result = manager.GetRecentCompletedMatches();
+
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(closed.Id, result[0].Id);
+        }
+
         private static TeamMatch CreateMatch(int id) => new(
             id,
             1,

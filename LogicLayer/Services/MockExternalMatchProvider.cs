@@ -43,7 +43,9 @@ namespace LogicLayer.Services
             return Task.FromResult(matches);
         }
 
-        public Task<ExternalMatchDetailsDto?> GetMatchDetailsAsync(string matchId)
+        public Task<ExternalMatchDetailsDto?> GetMatchDetailsAsync(
+            string matchId,
+            bool preferPast = false)
         {
             var matches = new Dictionary<string, ExternalMatchDetailsDto>
             {
@@ -111,12 +113,76 @@ namespace LogicLayer.Services
                     StartTimeUtc = DateTime.UtcNow.AddHours(2),
                     Maps = new List<ExternalMapDto>(),
                     Streams = new List<ExternalStreamDto>()
+                },
+
+                ["4"] = new ExternalMatchDetailsDto
+                {
+                    Id = "4",
+                    Team1Name = "Vitality",
+                    Team2Name = "Spirit",
+                    EventName = "IEM Cologne",
+                    Format = "Best of 3",
+                    Status = "Finished",
+                    Score = "2 - 1",
+                    WinnerName = "Vitality",
+                    StartTimeUtc = DateTime.UtcNow.AddDays(-1),
+                    Maps = [],
+                    Streams = []
+                },
+
+                ["5"] = new ExternalMatchDetailsDto
+                {
+                    Id = "5",
+                    Team1Name = "NAVI",
+                    Team2Name = "MOUZ",
+                    EventName = "BLAST Premier",
+                    Format = "Best of 3",
+                    Status = "Finished",
+                    Score = "",
+                    WinnerName = "MOUZ",
+                    StartTimeUtc = DateTime.UtcNow.AddDays(-2),
+                    Maps = [],
+                    Streams = []
                 }
             };
 
             matches.TryGetValue(matchId, out var result);
 
             return Task.FromResult(result);
+        }
+
+        public Task<List<ExternalMatchDto>> GetRecentMatchesAsync(int limit = 20)
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(limit, 1);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(limit, 50);
+
+            var matches = new List<ExternalMatchDto>
+            {
+                new()
+                {
+                    Id = "4",
+                    Team1Name = "Vitality",
+                    Team2Name = "Spirit",
+                    EventName = "IEM Cologne",
+                    Status = "Finished",
+                    Score = "2 - 1",
+                    WinnerName = "Vitality",
+                    StartTimeUtc = DateTime.UtcNow.AddDays(-1)
+                },
+                new()
+                {
+                    Id = "5",
+                    Team1Name = "NAVI",
+                    Team2Name = "MOUZ",
+                    EventName = "BLAST Premier",
+                    Status = "Finished",
+                    Score = "",
+                    WinnerName = "MOUZ",
+                    StartTimeUtc = DateTime.UtcNow.AddDays(-2)
+                }
+            };
+
+            return Task.FromResult(matches.Take(limit).ToList());
         }
     }
 }

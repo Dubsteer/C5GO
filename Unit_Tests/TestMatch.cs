@@ -103,6 +103,38 @@ namespace Unit_Tests
                 () => matchManager.UpdateResult(1, 2, 13, 8, Status.Closed, DateTime.Now));
         }
 
+        [TestMethod]
+        public void TestPlayerHistoryContainsOnlyCompletedMatchesInNewestOrder()
+        {
+            var recent = CreateMatch(1);
+            recent.Status = Status.Closed;
+            recent.MatchDate = DateTime.Now.AddDays(-1);
+            var older = CreateMatch(2);
+            older.Status = Status.Closed;
+            older.MatchDate = DateTime.Now.AddDays(-3);
+            var open = CreateMatch(3);
+            open.MatchDate = DateTime.Now;
+            matches.AddRange([older, open, recent]);
+
+            var result = matchManager.GetPastMatches(recent.User1, 1);
+
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(recent.Id, result[0].Id);
+        }
+
+        [TestMethod]
+        public void TestRecentCompletedMatchesExcludeOpenMatches()
+        {
+            var closed = CreateMatch(1);
+            closed.Status = Status.Closed;
+            matches.AddRange([CreateMatch(2), closed]);
+
+            var result = matchManager.GetRecentCompletedMatches();
+
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(closed.Id, result[0].Id);
+        }
+
         private static Match CreateMatch(int id)
         {
             var player1 = new Player(1, "Player", "One", 20, "player1", "p1@test.local", "password", "steam1", false);

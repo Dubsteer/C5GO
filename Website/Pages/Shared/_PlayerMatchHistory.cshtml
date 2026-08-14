@@ -1,0 +1,47 @@
+@model Website.Models.PlayerMatchHistoryViewModel
+
+@if (!Model.Matches.Any())
+{
+    <div class="empty-state">
+        <strong>No completed matches</strong>
+        <span>@Model.EmptyMessage</span>
+    </div>
+}
+else
+{
+    <div class="player-history-list">
+        @foreach (var match in Model.Matches)
+        {
+            var isPlayerOne = match.User1.Id == Model.UserId;
+            var opponent = isPlayerOne ? match.User2 : match.User1;
+            var playerScore = isPlayerOne ? match.Player1Score : match.Player2Score;
+            var opponentScore = isPlayerOne ? match.Player2Score : match.Player1Score;
+            var won = playerScore > opponentScore;
+            var tournamentName = string.IsNullOrWhiteSpace(match.TournamentName)
+                ? $"Tournament #{match.TournamentId}"
+                : match.TournamentName;
+
+            <article class="player-history-card">
+                <div class="player-history-result @(won ? "result-win" : "result-loss")">
+                    <span>@(won ? "Win" : "Loss")</span>
+                    <strong>@playerScore - @opponentScore</strong>
+                </div>
+                <div class="player-history-opponent">
+                    <span class="history-label">Opponent</span>
+                    @if (opponent.Id is int opponentId)
+                    {
+                        <a asp-page="/UserProfile" asp-route-id="@opponentId">@opponent.Username</a>
+                    }
+                    else
+                    {
+                        <strong>@opponent.Username</strong>
+                    }
+                </div>
+                <div class="player-history-meta">
+                    <a asp-page="/Tournaments/Details" asp-route-id="@match.TournamentId">@tournamentName</a>
+                    <time datetime="@match.MatchDate.ToString("O")">@match.MatchDate.ToString("dd.MM.yyyy")</time>
+                </div>
+            </article>
+        }
+    </div>
+}

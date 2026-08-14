@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using LogicLayer.Services;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Unit_Tests
 {
@@ -26,7 +27,8 @@ namespace Unit_Tests
             {
                 BaseAddress = new Uri("https://api.pandascore.co")
             };
-            var provider = new PandaScoreMatchProvider(client);
+            using var cache = new MemoryCache(new MemoryCacheOptions());
+            var provider = new PandaScoreMatchProvider(client, cache);
 
             var matches = await provider.GetTodayMatchesAsync();
 
@@ -58,7 +60,8 @@ namespace Unit_Tests
             {
                 BaseAddress = new Uri("https://api.pandascore.co")
             };
-            var provider = new PandaScoreMatchProvider(client);
+            using var cache = new MemoryCache(new MemoryCacheOptions());
+            var provider = new PandaScoreMatchProvider(client, cache);
 
             var match = await provider.GetMatchDetailsAsync("42");
 
@@ -68,6 +71,84 @@ namespace Unit_Tests
             Assert.AreEqual("Best of 3", match.Format);
             Assert.AreEqual(2, requestedUris.Count);
             Assert.IsFalse(requestedUris.Any(uri => uri.StartsWith("/csgo/matches/42")));
+        }
+
+        [TestMethod]
+        public async Task GetRecentMatchesAsync_ReturnsFinishedMatchesAndUsesCache()
+        {
+            var requestCount = 0;
+            string? requestedUri = null;
+            var handler = new StubHttpMessageHandler(request =>
+            {
+                requestCount++;
+                requestedUri = request.RequestUri!.PathAndQuery;
+                return JsonResponse(PastMatchJson);
+            });
+
+            using var client = new HttpClient(handler)
+            {
+                BaseAddress = new Uri("https://api.pandascore.co")
+            };
+            using var cache = new MemoryCache(new MemoryCacheOptions());
+            var provider = new PandaScoreMatchProvider(client, cache);
+
+            var firstResult = await provider.GetRecentMatchesAsync(10);
+            var secondResult = await provider.GetRecentMatchesAsync(10);
+
+            Assert.AreEqual(1, requestCount);
+            Assert.AreEqual(1, firstResult.Count);
+            Assert.AreEqual("Finished", firstResult[0].Status);
+            Assert.AreEqual("2 - 1", firstResult[0].Score);
+            Assert.AreEqual("Spirit", firstResult[0].WinnerName);
+            Assert.AreEqual(firstResult[0].Id, secondResult[0].Id);
+            StringAssert.Contains(requestedUri, "/csgo/matches/past");
+            StringAssert.Contains(requestedUri, "sort=-begin_at");
+            StringAssert.Contains(requestedUri, "page[size]=10");
+        }
+
+        [TestMethod]
+        public async Task GetRecentMatchesAsync_DoesNotInventZeroScoreWhenResultsAreMissing()
+        {
+            var handler = new StubHttpMessageHandler(_ => JsonResponse(PastMatchWithoutScoresJson));
+
+            using var client = new HttpClient(handler)
+            {
+                BaseAddress = new Uri("https://api.pandascore.co")
+            };
+            using var cache = new MemoryCache(new MemoryCacheOptions());
+            var provider = new PandaScoreMatchProvider(client, cache);
+
+            var matches = await provider.GetRecentMatchesAsync();
+
+            Assert.AreEqual(1, matches.Count);
+            Assert.AreEqual("", matches[0].Score);
+            Assert.AreEqual("Spirit", matches[0].WinnerName);
+        }
+
+        [TestMethod]
+        public async Task GetMatchDetailsAsync_PreferPastUsesSinglePastRequest()
+        {
+            var requestedUris = new List<string>();
+            var handler = new StubHttpMessageHandler(request =>
+            {
+                requestedUris.Add(request.RequestUri!.PathAndQuery);
+                return JsonResponse(PastMatchJson);
+            });
+
+            using var client = new HttpClient(handler)
+            {
+                BaseAddress = new Uri("https://api.pandascore.co")
+            };
+            using var cache = new MemoryCache(new MemoryCacheOptions());
+            var provider = new PandaScoreMatchProvider(client, cache);
+
+            var match = await provider.GetMatchDetailsAsync("43", preferPast: true);
+
+            Assert.IsNotNull(match);
+            Assert.AreEqual("Finished", match.Status);
+            Assert.AreEqual("Spirit", match.WinnerName);
+            Assert.AreEqual(1, requestedUris.Count);
+            StringAssert.Contains(requestedUris[0], "/csgo/matches/past");
         }
 
         private static HttpResponseMessage JsonResponse(string json)
@@ -133,6 +214,45 @@ namespace Unit_Tests
                   { "team_id": 30, "score": 0 },
                   { "team_id": 40, "score": 0 }
                 ],
+                "streams_list": []
+              }
+            ]
+            """;
+
+        private const string PastMatchJson = """
+            [
+              {
+                "id": 43,
+                "status": "finished",
+                "begin_at": "2026-08-08T18:00:00Z",
+                "winner_id": 50,
+                "opponents": [
+                  { "opponent": { "id": 50, "name": "Spirit" } },
+                  { "opponent": { "id": 60, "name": "Vitality" } }
+                ],
+                "league": { "name": "IEM Cologne" },
+                "results": [
+                  { "team_id": 50, "score": 2 },
+                  { "team_id": 60, "score": 1 }
+                ],
+                "streams_list": []
+              }
+            ]
+            """;
+
+        private const string PastMatchWithoutScoresJson = """
+            [
+              {
+                "id": 44,
+                "status": "finished",
+                "begin_at": "2026-08-07T18:00:00Z",
+                "winner_id": 50,
+                "opponents": [
+                  { "opponent": { "id": 50, "name": "Spirit" } },
+                  { "opponent": { "id": 60, "name": "Vitality" } }
+                ],
+                "league": { "name": "IEM Cologne" },
+                "results": [],
                 "streams_list": []
               }
             ]

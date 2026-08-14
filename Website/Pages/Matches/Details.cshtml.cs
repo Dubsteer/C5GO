@@ -15,16 +15,19 @@ namespace Website.Pages.Matches
         }
 
         public ExternalMatchDetailsDto? Match { get; set; }
+        public bool FromHistory { get; private set; }
 
-        public async Task<IActionResult> OnGetAsync(string id)
+        public async Task<IActionResult> OnGetAsync(string id, bool history = false)
         {
-            if (string.IsNullOrEmpty(id))
-                return RedirectToPage("/Matches/Index");
+            FromHistory = history;
 
-            Match = await _provider.GetMatchDetailsAsync(id);
+            if (string.IsNullOrEmpty(id))
+                return RedirectToPage(history ? "/Matches/History" : "/Matches/Index");
+
+            Match = await _provider.GetMatchDetailsAsync(id, history);
 
             if (Match == null)
-                return RedirectToPage("/Matches/Index");
+                return RedirectToPage(history ? "/Matches/History" : "/Matches/Index");
 
             return Page();
         }

@@ -37,6 +37,7 @@ namespace DataLayer.Repos
                     m.player2Score,
                     m.match_date,
                     m.status_int,
+                    t.name AS tournamentName,
 
                     u1.id AS u1_id, u1.first_name AS u1_first_name,
                     u1.last_name AS u1_last_name, u1.age AS u1_age,
@@ -48,6 +49,7 @@ namespace DataLayer.Repos
                     u2.username AS u2_username, u2.email AS u2_email,
                     u2.is_moderator AS u2_is_moderator, u2.steam_id AS u2_steam_id
                 FROM matches m
+                JOIN tournament t ON m.tournamentId = t.id
                 JOIN user u1 ON m.user_id1 = u1.id
                 JOIN user u2 ON m.user_id2 = u2.id
             ", conn.Connection);
@@ -89,7 +91,10 @@ namespace DataLayer.Repos
                         r.GetInt32("player2Score"),
                         r.GetDateTime("match_date"),
                         (Status)r.GetInt32("status_int")
-                    ));
+                    )
+                    {
+                        TournamentName = r.GetString("tournamentName")
+                    });
                 }
             }
 

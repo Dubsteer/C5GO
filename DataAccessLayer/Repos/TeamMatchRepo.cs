@@ -39,9 +39,11 @@ namespace DataLayer.Repos
                     tm.team2_score,
                     tm.match_date,
                     tm.status_int,
+                    tournament.name AS tournamentName,
                     t1.name AS team1Name,
                     t2.name AS team2Name
                 FROM team_matches tm
+                JOIN tournament ON tm.tournamentId = tournament.id
                 JOIN team t1 ON tm.team_id1 = t1.id
                 JOIN team t2 ON tm.team_id2 = t2.id
             ", conn.Connection);
@@ -71,7 +73,10 @@ namespace DataLayer.Repos
                         r.GetInt32("team2_score"),
                         r.GetDateTime("match_date"),
                         (Status)r.GetInt32("status_int")
-                    ));
+                    )
+                    {
+                        TournamentName = r.GetString("tournamentName")
+                    });
                 }
             }
 

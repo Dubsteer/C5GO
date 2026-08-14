@@ -917,6 +917,53 @@ h6 {
     border-color: var(--site-border);
 }
 
+.profile-menu-dropdown .profile-access-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    border: 1px solid rgba(251, 191, 36, 0.18);
+    background: rgba(251, 191, 36, 0.055);
+}
+
+.profile-menu-dropdown .profile-access-link:hover,
+.profile-menu-dropdown .profile-access-link:focus,
+.profile-menu-dropdown .profile-menu-current {
+    border-color: rgba(251, 191, 36, 0.42);
+    background: rgba(251, 191, 36, 0.11);
+}
+
+.profile-access-copy {
+    min-width: 0;
+    display: grid;
+    gap: 0.08rem;
+}
+
+.profile-access-copy strong {
+    color: #fde68a;
+    font-size: 0.87rem;
+}
+
+.profile-access-copy small {
+    overflow: hidden;
+    color: #aeb9c6;
+    font-size: 0.68rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.profile-role-badge {
+    padding: 0.18rem 0.4rem;
+    flex: 0 0 auto;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 999px;
+    color: #fde68a;
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
 .profile-menu-dropdown form {
     margin: 0;
 }

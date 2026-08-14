@@ -5,14 +5,20 @@
 @model Website.Pages.Admin.IndexModel
 @{
     ViewData["Title"] = "Administration";
+    var dashboardRole = User.IsInRole("Owner") ? "Owner" : "Administrator";
 }
 
 <section class="admin-shell">
-    <header class="admin-page-header">
+    <header class="admin-page-header admin-dashboard-header">
         <div>
             <p class="admin-eyebrow">C5GO control panel</p>
             <h1>Administration</h1>
             <p>Manage the website from one protected area.</p>
+        </div>
+        <div class="admin-access-summary" aria-label="Current administration access">
+            <span>Signed in as</span>
+            <strong>@dashboardRole</strong>
+            <small>Protected workspace</small>
         </div>
     </header>
 

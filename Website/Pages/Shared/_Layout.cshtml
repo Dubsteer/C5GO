@@ -8,6 +8,15 @@
     var userInitial = string.IsNullOrWhiteSpace(username)
         ? "?"
         : char.ToUpperInvariant(username[0]).ToString();
+    var canAccessAdministration = User.IsInRole("Owner") || User.IsInRole("Admin");
+    var canAccessModeration = !canAccessAdministration &&
+        FeatureOptions.Value.CommunityEnabled &&
+        User.IsInRole("Moderator");
+    var isAdministrationPage = currentPage.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase);
+    var isModerationPage = currentPage.StartsWith("/Moderation", StringComparison.OrdinalIgnoreCase);
+    var isAccountArea = currentPage is "/ViewProfile" or "/EditProfile" ||
+        isAdministrationPage ||
+        isModerationPage;
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -64,20 +73,6 @@
                                asp-page="/Community/Index">Community</a>
                         </li>
                     }
-                    @if (User.IsInRole("Owner") || User.IsInRole("Admin"))
-                    {
-                        <li class="nav-item">
-                            <a class="nav-link admin-nav-link @(currentPage.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase) ? "nav-active" : string.Empty)"
-                               asp-page="/Admin/Index">Admin</a>
-                        </li>
-                    }
-                    else if (FeatureOptions.Value.CommunityEnabled && User.IsInRole("Moderator"))
-                    {
-                        <li class="nav-item">
-                            <a class="nav-link admin-nav-link @(currentPage.StartsWith("/Moderation", StringComparison.OrdinalIgnoreCase) ? "nav-active" : string.Empty)"
-                               asp-page="/Moderation/Reports">Moderation</a>
-                        </li>
-                    }
                 </ul>
 
                 <ul class="navbar-nav ms-lg-auto align-items-lg-center nav-account-list">
@@ -87,7 +82,7 @@
                             @await Html.PartialAsync("_NotificationsBell")
 
                             <div class="dropdown profile-menu">
-                                <button class="profile-menu-trigger dropdown-toggle @(currentPage is "/ViewProfile" or "/EditProfile" ? "profile-menu-active" : string.Empty)"
+                                <button class="profile-menu-trigger dropdown-toggle @(isAccountArea ? "profile-menu-active" : string.Empty)"
                                         id="profileDropdown"
                                         type="button"
                                         data-bs-toggle="dropdown"
@@ -104,6 +99,37 @@
                                     <li>
                                         <a class="dropdown-item" asp-page="/EditProfile">Edit profile</a>
                                     </li>
+                                    @if (canAccessAdministration)
+                                    {
+                                        var administrationRole = User.IsInRole("Owner") ? "Owner" : "Admin";
+                                        <li><hr class="dropdown-divider" /></li>
+                                        <li>
+                                            <a class="dropdown-item profile-access-link @(isAdministrationPage ? "profile-menu-current" : string.Empty)"
+                                               asp-page="/Admin/Index"
+                                               aria-current="@(isAdministrationPage ? "page" : null)">
+                                                <span class="profile-access-copy">
+                                                    <strong>Administration</strong>
+                                                    <small>Users, news and tournaments</small>
+                                                </span>
+                                                <span class="profile-role-badge">@administrationRole</span>
+                                            </a>
+                                        </li>
+                                    }
+                                    else if (canAccessModeration)
+                                    {
+                                        <li><hr class="dropdown-divider" /></li>
+                                        <li>
+                                            <a class="dropdown-item profile-access-link @(isModerationPage ? "profile-menu-current" : string.Empty)"
+                                               asp-page="/Moderation/Reports"
+                                               aria-current="@(isModerationPage ? "page" : null)">
+                                                <span class="profile-access-copy">
+                                                    <strong>Moderation</strong>
+                                                    <small>Community reports and review</small>
+                                                </span>
+                                                <span class="profile-role-badge">Moderator</span>
+                                            </a>
+                                        </li>
+                                    }
                                     <li><hr class="dropdown-divider" /></li>
                                     <li>
                                         <form method="post" asp-page="/Logout">

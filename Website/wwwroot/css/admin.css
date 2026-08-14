@@ -1,14 +1,41 @@
-.admin-nav-link {
-    color: #ffd166 !important;
-    font-weight: 700 !important;
-}
-
 .admin-shell {
     color: #edf2f7;
 }
 
 .admin-page-header {
     margin-bottom: 2rem;
+}
+
+.admin-dashboard-header {
+    padding: clamp(1.25rem, 3vw, 2rem);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    border: 1px solid #303946;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #17232d, #121a22);
+}
+
+.admin-access-summary {
+    min-width: 180px;
+    padding: 0.85rem 1rem;
+    display: grid;
+    gap: 0.12rem;
+    border: 1px solid rgba(94, 234, 212, 0.22);
+    border-radius: 12px;
+    background: rgba(45, 212, 191, 0.055);
+}
+
+.admin-access-summary span,
+.admin-access-summary small {
+    color: #91a1b1;
+    font-size: 0.7rem;
+}
+
+.admin-access-summary strong {
+    color: #99f6e4;
+    font-size: 1rem;
 }
 
 .admin-page-header-row {
@@ -76,7 +103,7 @@
 }
 
 .admin-action-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 }
 
 .admin-action-card {
@@ -571,6 +598,15 @@ a.admin-action-card:hover {
 
     .admin-action-card p {
         min-height: auto;
+    }
+
+    .admin-dashboard-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .admin-access-summary {
+        min-width: 0;
     }
 
     .admin-tournament-grid,

@@ -1,17 +1,22 @@
 using System.Net;
+using System.Security.Claims;
+using System.Text.Encodings.Web;
 using System.Xml.Linq;
 using LogicLayer.Enums;
 using LogicLayer.IRepos;
 using LogicLayer.Models;
 using LogicLayer.Models.Community;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.DataProtection.Repositories;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Unit_Tests.MockRepos;
 
 namespace Unit_Tests
@@ -189,6 +194,64 @@ namespace Unit_Tests
             Assert.AreEqual(HttpStatusCode.Redirect, response.StatusCode);
             Assert.AreEqual("/Login", response.Headers.Location?.AbsolutePath);
             StringAssert.Contains(response.Headers.Location?.Query, "ReturnUrl=%2FAdmin");
+        }
+
+        [TestMethod]
+        public async Task AdministrationLinkIsInAdminProfileMenuInsteadOfPrimaryNavigation()
+        {
+            using var adminFactory = factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureTestServices(services =>
+                {
+                    services.RemoveAll<IUserRepo>();
+                    services.AddSingleton<IUserRepo>(new MockUserRepo([]));
+                    services.RemoveAll<IPostRepo>();
+                    services.AddSingleton<IPostRepo>(new MockPostRepo());
+                    services.RemoveAll<ITournamentRepo>();
+                    services.AddSingleton<ITournamentRepo>(new MockTournamentRepo([]));
+                    services.AddAuthentication(options =>
+                    {
+                        options.DefaultAuthenticateScheme = AdminTestAuthenticationHandler.SchemeName;
+                        options.DefaultChallengeScheme = AdminTestAuthenticationHandler.SchemeName;
+                    }).AddScheme<AuthenticationSchemeOptions, AdminTestAuthenticationHandler>(
+                        AdminTestAuthenticationHandler.SchemeName,
+                        _ => { });
+                });
+            });
+            using var client = adminFactory.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                AllowAutoRedirect = false,
+                BaseAddress = new Uri("https://c5g0.com")
+            });
+
+            using var response = await client.GetAsync("/errors/404");
+            var html = await response.Content.ReadAsStringAsync();
+            var primaryNavigationStart = html.IndexOf(
+                "<ul class=\"navbar-nav mx-auto",
+                StringComparison.Ordinal);
+            var accountNavigationStart = html.IndexOf(
+                "<ul class=\"navbar-nav ms-lg-auto",
+                StringComparison.Ordinal);
+
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.IsTrue(primaryNavigationStart >= 0);
+            Assert.IsTrue(accountNavigationStart > primaryNavigationStart);
+
+            var primaryNavigation = html[primaryNavigationStart..accountNavigationStart];
+            Assert.IsFalse(primaryNavigation.Contains(">Admin<", StringComparison.Ordinal));
+            StringAssert.Contains(html, "Administration");
+            StringAssert.Contains(html, "Users, news and tournaments");
+            StringAssert.Contains(html, "profile-role-badge\">Admin");
+
+            using var adminResponse = await client.GetAsync("/Admin");
+            var adminHtml = await adminResponse.Content.ReadAsStringAsync();
+
+            Assert.AreEqual(HttpStatusCode.OK, adminResponse.StatusCode);
+            StringAssert.Contains(adminHtml, "Protected workspace");
+            StringAssert.Contains(adminHtml, "Administrator");
+            StringAssert.Contains(adminHtml, "User management");
+            StringAssert.Contains(adminHtml, "News management");
+            StringAssert.Contains(adminHtml, "Tournament management");
         }
 
         [TestMethod]
@@ -446,6 +509,29 @@ namespace Unit_Tests
                 {
                     elements.Add(new XElement(element));
                 }
+            }
+        }
+
+        private sealed class AdminTestAuthenticationHandler(
+            IOptionsMonitor<AuthenticationSchemeOptions> options,
+            ILoggerFactory logger,
+            UrlEncoder encoder)
+            : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
+        {
+            public const string SchemeName = "AdminTest";
+
+            protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+            {
+                Claim[] claims =
+                [
+                    new(ClaimTypes.NameIdentifier, "1"),
+                    new(ClaimTypes.Name, "admin"),
+                    new(ClaimTypes.Role, PlatformRole.Admin.ToString())
+                ];
+                var identity = new ClaimsIdentity(claims, SchemeName);
+                var ticket = new AuthenticationTicket(new ClaimsPrincipal(identity), SchemeName);
+
+                return Task.FromResult(AuthenticateResult.Success(ticket));
             }
         }
     }

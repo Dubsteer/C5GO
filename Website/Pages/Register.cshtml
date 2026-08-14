@@ -47,6 +47,14 @@
                 <span asp-validation-for="FullUserFormModel.Password" class="field-error"></span>
             </div>
 
+            <div class="auth-field">
+                <label asp-for="FullUserFormModel.ConfirmPassword">Confirm password</label>
+                <input asp-for="FullUserFormModel.ConfirmPassword" class="auth-input" type="password" autocomplete="new-password" />
+                <span asp-validation-for="FullUserFormModel.ConfirmPassword" class="field-error"></span>
+            </div>
+
+            <partial name="_TurnstileWidget" model="Model.TurnstileSiteKey" />
+
             <button type="submit" class="auth-btn">Create account</button>
         </form>
 
@@ -58,4 +66,5 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 }

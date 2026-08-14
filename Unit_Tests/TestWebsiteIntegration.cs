@@ -44,7 +44,9 @@ namespace Unit_Tests
                             ["EmailSettings:SenderEmail"] = "test@c5go.local",
                             ["EmailSettings:Username"] = "test",
                             ["EmailSettings:Password"] = "test",
-                            ["AppSettings:AuthUrl"] = "https://localhost"
+                            ["AppSettings:AuthUrl"] = "https://localhost",
+                            ["Turnstile:SiteKey"] = "1x00000000000000000000AA",
+                            ["Turnstile:SecretKey"] = "1x0000000000000000000000000000000AA"
                         });
                     });
                     builder.ConfigureServices(services =>
@@ -77,8 +79,33 @@ namespace Unit_Tests
             AssertHeader(response, "Referrer-Policy", "strict-origin-when-cross-origin");
             AssertHeader(response, "Permissions-Policy", "camera=(), microphone=(), geolocation=()");
             AssertHeaderContains(response, "Content-Security-Policy", "frame-ancestors 'none'");
+            AssertHeaderContains(
+                response,
+                "Content-Security-Policy",
+                "frame-src https://www.youtube-nocookie.com https://challenges.cloudflare.com");
+            AssertHeaderContains(
+                response,
+                "Content-Security-Policy",
+                "script-src 'self' https://challenges.cloudflare.com");
             AssertHeaderContains(response, "Strict-Transport-Security", "max-age=");
             Assert.IsFalse(response.Headers.Contains("Server"));
+        }
+
+        [TestMethod]
+        [DataRow("/Register")]
+        [DataRow("/ForgotPassword")]
+        public async Task ProtectedPublicFormsRenderTurnstile(string path)
+        {
+            using var client = CreateClient();
+            using var response = await client.GetAsync(path);
+            var html = await response.Content.ReadAsStringAsync();
+
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode, path);
+            StringAssert.Contains(html, "cf-turnstile");
+            StringAssert.Contains(html, "1x00000000000000000000AA");
+            StringAssert.Contains(
+                html,
+                "https://challenges.cloudflare.com/turnstile/v0/api.js");
         }
 
         [TestMethod]

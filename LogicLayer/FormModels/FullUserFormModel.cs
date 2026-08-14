@@ -33,6 +33,11 @@ namespace LogicLayer.FormModels
         [StringLength(72, MinimumLength = 8, ErrorMessage = "Password must be between 8 and 72 characters")]
         public string Password { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "Please confirm your password")]
+        [DisplayName("Confirm password")]
+        [Compare(nameof(Password), ErrorMessage = "Passwords do not match")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+
         public FullUserFormModel() { }
 
         public FullUserFormModel(
@@ -49,6 +54,7 @@ namespace LogicLayer.FormModels
             Username = username;
             Gmail = gmail;
             Password = password;
+            ConfirmPassword = password;
         }
     }
 }

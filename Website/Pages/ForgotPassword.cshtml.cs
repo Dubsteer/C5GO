@@ -14,22 +14,27 @@ namespace Website.Pages
         private readonly UserManager userManager;
         private readonly EmailService emailService;
         private readonly PasswordResetTokenService tokenService;
+        private readonly TurnstileService turnstileService;
         private readonly ILogger<ForgotPasswordModel> logger;
 
         public ForgotPasswordModel(
             UserManager userManager,
             EmailService emailService,
             PasswordResetTokenService tokenService,
+            TurnstileService turnstileService,
             ILogger<ForgotPasswordModel> logger)
         {
             this.userManager = userManager;
             this.emailService = emailService;
             this.tokenService = tokenService;
+            this.turnstileService = turnstileService;
             this.logger = logger;
         }
 
         [BindProperty]
         public ForgotPasswordFormModel Form { get; set; } = new();
+
+        public string TurnstileSiteKey => turnstileService.SiteKey;
 
         public IActionResult OnGet()
         {
@@ -45,6 +50,19 @@ namespace Website.Pages
 
             if (!ModelState.IsValid)
                 return Page();
+
+            var turnstileToken = Request.Form["cf-turnstile-response"].ToString();
+            var isHuman = await turnstileService.ValidateAsync(
+                turnstileToken,
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                HttpContext.RequestAborted);
+            if (!isHuman)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Verification could not be completed. Please try again.");
+                return Page();
+            }
 
             var user = userManager.GetUserByEmail(Form.Email);
             if (user is { Id: int userId, EmailConfirmed: true })

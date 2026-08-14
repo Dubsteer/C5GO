@@ -6,8 +6,7 @@ using LogicLayer.Managers;
 using LogicLayer.Models;
 using LogicLayer.Exceptions;
 using LogicLayer.Services;
-using System.Diagnostics;
-using System.Threading.Tasks;
+using Website.Services;
 
 namespace Website.Pages
 {
@@ -19,12 +18,22 @@ namespace Website.Pages
 
         private readonly UserManager userManager;
         private readonly EmailService emailService;
+        private readonly TurnstileService turnstileService;
+        private readonly ILogger<RegisterModel> logger;
 
-        public RegisterModel(UserManager userManager, EmailService emailService)
+        public RegisterModel(
+            UserManager userManager,
+            EmailService emailService,
+            TurnstileService turnstileService,
+            ILogger<RegisterModel> logger)
         {
             this.userManager = userManager;
             this.emailService = emailService;
+            this.turnstileService = turnstileService;
+            this.logger = logger;
         }
+
+        public string TurnstileSiteKey => turnstileService.SiteKey;
 
         public IActionResult OnGet()
         {
@@ -34,10 +43,23 @@ namespace Website.Pages
             return Page();
         }
 
-        public async Task<IActionResult> OnPost()
+        public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
                 return Page();
+
+            var turnstileToken = Request.Form["cf-turnstile-response"].ToString();
+            var isHuman = await turnstileService.ValidateAsync(
+                turnstileToken,
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                HttpContext.RequestAborted);
+            if (!isHuman)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Verification could not be completed. Please try again.");
+                return Page();
+            }
 
             var user = new User(
                 FullUserFormModel.Firstname,
@@ -79,7 +101,7 @@ namespace Website.Pages
             }
             catch (System.Exception ex)
             {
-                Debug.WriteLine(ex.Message);
+                logger.LogError(ex, "Registration could not be completed.");
                 return StatusCode(500);
             }
 

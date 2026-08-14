@@ -16,8 +16,31 @@ using Website.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var turnstileConfiguration = builder.Configuration
+    .GetSection(TurnstileOptions.SectionName)
+    .Get<TurnstileOptions>() ?? new TurnstileOptions();
+if (builder.Environment.IsDevelopment() && !turnstileConfiguration.IsConfigured)
+{
+    builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+    {
+        ["Turnstile:SiteKey"] = TurnstileOptions.DevelopmentSiteKey,
+        ["Turnstile:SecretKey"] = TurnstileOptions.DevelopmentSecretKey
+    });
+    turnstileConfiguration = builder.Configuration
+        .GetSection(TurnstileOptions.SectionName)
+        .Get<TurnstileOptions>() ?? new TurnstileOptions();
+}
+
 builder.Services.Configure<FeatureOptions>(
     builder.Configuration.GetSection(FeatureOptions.SectionName));
+builder.Services.Configure<TurnstileOptions>(
+    builder.Configuration.GetSection(TurnstileOptions.SectionName));
+
+if (builder.Environment.IsProduction() && !turnstileConfiguration.IsConfigured)
+{
+    throw new InvalidOperationException(
+        "Turnstile configuration is missing. Configure Turnstile:SiteKey and Turnstile:SecretKey.");
+}
 
 if (builder.Environment.IsDevelopment())
 {
@@ -178,6 +201,11 @@ builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<PostImageStorage>();
 builder.Services.AddScoped<CommunityImageStorage>();
 builder.Services.AddScoped<UserRoleClaimsService>();
+builder.Services.AddHttpClient<TurnstileService>(client =>
+{
+    client.BaseAddress = new Uri("https://challenges.cloudflare.com/turnstile/v0/");
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
 
 var pandaScoreApiKey = builder.Configuration["PandaScore:ApiKey"];
 
@@ -218,10 +246,10 @@ app.Use(async (context, next) =>
         "font-src 'self' data:; " +
         "form-action 'self'; " +
         "frame-ancestors 'none'; " +
-        "frame-src https://www.youtube-nocookie.com; " +
+        "frame-src https://www.youtube-nocookie.com https://challenges.cloudflare.com; " +
         "img-src 'self' data: https:; " +
         "object-src 'none'; " +
-        "script-src 'self'; " +
+        "script-src 'self' https://challenges.cloudflare.com; " +
         "style-src 'self';";
 
     await next();

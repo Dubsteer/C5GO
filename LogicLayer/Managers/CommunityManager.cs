@@ -156,6 +156,7 @@ public class CommunityManager
     public int CreateComment(int userId, DiscussionCommentFormModel form)
     {
         EnsureUserExists(userId);
+        var commentAuthor = userRepo.GetUserById(userId)!;
         var discussion = GetRequiredDiscussion(form.DiscussionId);
         if (discussion.Status != CommunityContentStatus.Published || discussion.IsLocked)
             throw new InvalidOperationException("Comments are closed for this discussion.");
@@ -190,8 +191,8 @@ public class CommunityManager
             notificationRepo.Create(
                 notificationUserId,
                 parent == null
-                    ? "Someone commented on your discussion."
-                    : "Someone replied to your comment.",
+                    ? $"{commentAuthor.Username} commented on your discussion \"{GetNotificationTitle(discussion.Title)}\"."
+                    : $"{commentAuthor.Username} replied to your comment.",
                 $"/Community/Details?id={discussion.Id}#comment-{commentId}");
         }
 
@@ -398,6 +399,14 @@ public class CommunityManager
     {
         if (voteValue is not (-1 or 1))
             throw new ArgumentOutOfRangeException(nameof(voteValue));
+    }
+
+    private static string GetNotificationTitle(string title)
+    {
+        const int maximumLength = 70;
+        return title.Length <= maximumLength
+            ? title
+            : $"{title[..(maximumLength - 3)]}...";
     }
 
     private static string? NormalizeOptional(string? value, int maximumLength)

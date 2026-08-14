@@ -197,6 +197,67 @@ namespace Unit_Tests
         }
 
         [TestMethod]
+        public async Task NotificationsPageRequiresAuthentication()
+        {
+            using var client = CreateClient();
+            using var response = await client.GetAsync("/Notifications");
+
+            Assert.AreEqual(HttpStatusCode.Redirect, response.StatusCode);
+            Assert.AreEqual("/Login", response.Headers.Location?.AbsolutePath);
+            StringAssert.Contains(response.Headers.Location?.Query, "ReturnUrl=%2FNotifications");
+        }
+
+        [TestMethod]
+        public async Task NotificationCenterShowsOnlyCurrentUsersNotifications()
+        {
+            var notificationRepo = new MockNotificationRepo();
+            notificationRepo.Create(1, "Your team request was accepted.", "/Teams/Teams");
+            notificationRepo.Create(1, "member replied to your comment.", "/Community");
+            notificationRepo.Create(2, "Private notification for another user.");
+            notificationRepo.Notifications[0].IsRead = true;
+
+            using var notificationFactory = factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureTestServices(services =>
+                {
+                    services.RemoveAll<INotificationRepo>();
+                    services.AddSingleton<INotificationRepo>(notificationRepo);
+                    services.RemoveAll<IUserRepo>();
+                    services.AddSingleton<IUserRepo>(new MockUserRepo([]));
+                    services.RemoveAll<IPostRepo>();
+                    services.AddSingleton<IPostRepo>(new MockPostRepo());
+                    services.RemoveAll<ITournamentRepo>();
+                    services.AddSingleton<ITournamentRepo>(new MockTournamentRepo([]));
+                    services.AddAuthentication(options =>
+                    {
+                        options.DefaultAuthenticateScheme = AdminTestAuthenticationHandler.SchemeName;
+                        options.DefaultChallengeScheme = AdminTestAuthenticationHandler.SchemeName;
+                    }).AddScheme<AuthenticationSchemeOptions, AdminTestAuthenticationHandler>(
+                        AdminTestAuthenticationHandler.SchemeName,
+                        _ => { });
+                });
+            });
+            using var client = notificationFactory.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                AllowAutoRedirect = false,
+                BaseAddress = new Uri("https://c5g0.com")
+            });
+
+            using var response = await client.GetAsync("/Notifications");
+            var html = await response.Content.ReadAsStringAsync();
+
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            StringAssert.Contains(html, "Your team request was accepted.");
+            StringAssert.Contains(html, "member replied to your comment.");
+            StringAssert.Contains(html, "Mark all as read");
+            StringAssert.Contains(html, "New");
+            StringAssert.Contains(html, "Read");
+            Assert.IsFalse(html.Contains(
+                "Private notification for another user.",
+                StringComparison.Ordinal));
+        }
+
+        [TestMethod]
         public async Task AdministrationLinkIsInAdminProfileMenuInsteadOfPrimaryNavigation()
         {
             using var adminFactory = factory.WithWebHostBuilder(builder =>
@@ -524,6 +585,7 @@ namespace Unit_Tests
             {
                 Claim[] claims =
                 [
+                    new("id", "1"),
                     new(ClaimTypes.NameIdentifier, "1"),
                     new(ClaimTypes.Name, "admin"),
                     new(ClaimTypes.Role, PlatformRole.Admin.ToString())

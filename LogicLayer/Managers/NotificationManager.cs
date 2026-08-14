@@ -13,9 +13,15 @@ namespace LogicLayer.Managers
             repo = r;
         }
 
-        public List<Notification> GetForUser(int userId)
+        public List<Notification> GetForUser(
+            int userId,
+            int limit = 50,
+            bool unreadOnly = false)
         {
-            return repo.GetForUser(userId);
+            if (userId <= 0)
+                return [];
+
+            return repo.GetForUser(userId, Math.Clamp(limit, 1, 100), unreadOnly);
         }
 
         public int GetUnreadCount(int userId)
@@ -25,7 +31,15 @@ namespace LogicLayer.Managers
 
         public Notification? MarkAsRead(int notificationId, int userId)
         {
+            if (notificationId <= 0 || userId <= 0)
+                return null;
+
             return repo.MarkAsRead(notificationId, userId);
+        }
+
+        public int MarkAllAsRead(int userId)
+        {
+            return userId > 0 ? repo.MarkAllAsRead(userId) : 0;
         }
     }
 }

@@ -1,0 +1,73 @@
+@page "/Notifications"
+@model Website.Pages.Notifications.IndexModel
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<section class="notifications-page">
+    <header class="notifications-page-header">
+        <div>
+            <p class="page-eyebrow">Your activity</p>
+            <h1>Notifications</h1>
+            <p>Team requests, Community replies and important account updates in one place.</p>
+        </div>
+        @if (Model.UnreadCount > 0)
+        {
+            <form method="post" asp-page-handler="MarkAllRead" asp-route-unreadOnly="@Model.UnreadOnly">
+                <button type="submit" class="btn btn-outline-light">Mark all as read</button>
+            </form>
+        }
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+    {
+        <div class="notifications-status" role="status">@Model.StatusMessage</div>
+    }
+
+    <nav class="notifications-filter" aria-label="Notification filters">
+        <a asp-page="/Notifications/Index"
+           class="@(!Model.UnreadOnly ? "is-active" : string.Empty)"
+           aria-current="@(!Model.UnreadOnly ? "page" : null)">All</a>
+        <a asp-page="/Notifications/Index"
+           asp-route-unreadOnly="true"
+           class="@(Model.UnreadOnly ? "is-active" : string.Empty)"
+           aria-current="@(Model.UnreadOnly ? "page" : null)">
+            Unread <span>@Model.UnreadCount</span>
+        </a>
+    </nav>
+
+    @if (!Model.Notifications.Any())
+    {
+        <div class="page-empty-state">
+            <strong>@(Model.UnreadOnly ? "No unread notifications" : "No notifications yet")</strong>
+            <span>
+                @(Model.UnreadOnly
+                    ? "You are fully caught up."
+                    : "Team and Community updates will appear here.")
+            </span>
+        </div>
+    }
+    else
+    {
+        <div class="notifications-list">
+            @foreach (var notification in Model.Notifications)
+            {
+                <form method="post" asp-page="/Notifications/Read" class="notification-row-form">
+                    <input type="hidden" name="id" value="@notification.Id" />
+                    <button type="submit" class="notification-row @(notification.IsRead ? "is-read" : "is-unread")">
+                        <span class="notification-row-state" aria-hidden="true"></span>
+                        <span class="notification-row-content">
+                            <strong>@notification.Message</strong>
+                            <time datetime="@notification.CreatedAt.ToString("O")">
+                                @notification.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                            </time>
+                        </span>
+                        <span class="notification-row-status">
+                            @(notification.IsRead ? "Read" : "New")
+                        </span>
+                    </button>
+                </form>
+            }
+        </div>
+    }
+</section>

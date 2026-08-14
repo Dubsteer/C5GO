@@ -1,13 +1,25 @@
 @using LogicLayer.Models
 @inject LogicLayer.Managers.NotificationManager NotificationManager
+@inject ILoggerFactory LoggerFactory
 
 @{
-    var notifications = new List<Notification>();
+    IReadOnlyList<Notification> notifications = [];
     var unread = 0;
+    var isAvailable = true;
     if (int.TryParse(User.FindFirst("id")?.Value, out var userId))
     {
-        notifications = NotificationManager.GetForUser(userId);
-        unread = NotificationManager.GetUnreadCount(userId);
+        try
+        {
+            notifications = NotificationManager.GetForUser(userId, 5);
+            unread = NotificationManager.GetUnreadCount(userId);
+        }
+        catch (Exception exception)
+        {
+            isAvailable = false;
+            LoggerFactory
+                .CreateLogger("NotificationBell")
+                .LogWarning(exception, "Unable to load notifications for user {UserId}.", userId);
+        }
     }
 }
 
@@ -24,33 +36,63 @@
         @if (unread > 0)
         {
             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                @unread
+                @(unread > 99 ? "99+" : unread.ToString())
                 <span class="visually-hidden">unread notifications</span>
             </span>
         }
     </button>
 
-    <ul class="dropdown-menu dropdown-menu-end notification-menu" aria-labelledby="notifDropdown">
-        @if (!notifications.Any())
-        {
-            <li><span class="dropdown-item-text text-secondary">No notifications</span></li>
-        }
-        else
-        {
-            foreach (var notification in notifications)
+    <div class="dropdown-menu dropdown-menu-end notification-menu" aria-labelledby="notifDropdown">
+        <header class="notification-menu-header">
+            <div>
+                <strong>Notifications</strong>
+                <span>@(unread == 0 ? "You're all caught up" : $"{unread} unread")</span>
+            </div>
+            @if (unread > 0)
             {
-                <li>
-                    <form method="post" asp-page="/Notifications/Read">
+                <form method="post" asp-page="/Notifications/Index" asp-page-handler="MarkAllRead">
+                    <button type="submit">Mark all read</button>
+                </form>
+            }
+        </header>
+
+        <div class="notification-menu-list">
+            @if (!isAvailable)
+            {
+                <div class="notification-menu-empty">
+                    <strong>Notifications are unavailable</strong>
+                    <span>Try again in a moment.</span>
+                </div>
+            }
+            else if (!notifications.Any())
+            {
+                <div class="notification-menu-empty">
+                    <strong>No notifications yet</strong>
+                    <span>Team and Community updates will appear here.</span>
+                </div>
+            }
+            else
+            {
+                foreach (var notification in notifications)
+                {
+                    <form method="post" asp-page="/Notifications/Read" class="notification-preview-form">
                         <input type="hidden" name="id" value="@notification.Id" />
-                        <button type="submit" class="dropdown-item @(notification.IsRead ? string.Empty : "fw-bold")">
-                            @notification.Message
-                            <span class="d-block text-secondary small">
-                                @notification.CreatedAt.ToString("dd.MM.yyyy HH:mm")
+                        <button type="submit" class="notification-preview @(notification.IsRead ? "is-read" : "is-unread")">
+                            <span class="notification-state-dot" aria-hidden="true"></span>
+                            <span class="notification-preview-copy">
+                                <strong>@notification.Message</strong>
+                                <time datetime="@notification.CreatedAt.ToString("O")">
+                                    @notification.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                                </time>
                             </span>
                         </button>
                     </form>
-                </li>
+                }
             }
-        }
-    </ul>
+        </div>
+
+        <footer class="notification-menu-footer">
+            <a asp-page="/Notifications/Index">View all notifications</a>
+        </footer>
+    </div>
 </div>

@@ -14,6 +14,7 @@ CREATE TABLE `user` (
     password VARCHAR(255) NOT NULL,
     is_moderator TINYINT(1) NOT NULL DEFAULT 0,
     steam_id VARCHAR(17) NULL,
+    show_steam_profile TINYINT(1) NOT NULL DEFAULT 0,
     email_confirmed TINYINT(1) NOT NULL DEFAULT 0,
     email_token VARCHAR(255) NULL,
     token_created_at DATETIME NULL,

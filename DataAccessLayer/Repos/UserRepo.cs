@@ -50,9 +50,11 @@ namespace DataLayer.Repos
             var cmd = new MySqlCommand(@"
                 INSERT INTO user
                 (first_name, last_name, age, username, email, password, is_moderator, steam_id,
+                 show_steam_profile,
                  email_confirmed, email_token, token_created_at)
                 VALUES
                 (@FIRST_NAME, @LAST_NAME, @AGE, @USERNAME, @EMAIL, @PASSWORD, @IS_MODERATOR, @STEAM_ID,
+                 @SHOW_STEAM_PROFILE,
                  @EMAIL_CONFIRMED, @EMAIL_TOKEN, @TOKEN_CREATED_AT)
             ", conn.Connection);
 
@@ -65,6 +67,7 @@ namespace DataLayer.Repos
             cmd.Parameters.AddWithValue("@IS_MODERATOR", user.IsAdmin);
             cmd.Parameters.AddWithValue("@STEAM_ID",
                 string.IsNullOrWhiteSpace(user.SteamId) ? (object)DBNull.Value : user.SteamId);
+            cmd.Parameters.AddWithValue("@SHOW_STEAM_PROFILE", user.ShowSteamProfile);
 
             cmd.Parameters.AddWithValue("@EMAIL_CONFIRMED", user.EmailConfirmed);
             cmd.Parameters.AddWithValue("@EMAIL_TOKEN",
@@ -81,7 +84,8 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(@"
                 SELECT id, first_name, last_name, birthday, age, username, email, password,
-                       is_moderator, steam_id, email_confirmed, email_token, token_created_at
+                       is_moderator, steam_id, show_steam_profile,
+                       email_confirmed, email_token, token_created_at
                 FROM user
             ", conn.Connection);
 
@@ -102,7 +106,8 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(@"
                 SELECT id, first_name, last_name, birthday, age, username, email, password,
-                       is_moderator, steam_id, email_confirmed, email_token, token_created_at
+                       is_moderator, steam_id, show_steam_profile,
+                       email_confirmed, email_token, token_created_at
                 FROM user
                 WHERE id = @ID
             ", conn.Connection);
@@ -121,7 +126,8 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(@"
                 SELECT id, first_name, last_name, birthday, age, username, email, password,
-                       is_moderator, steam_id, email_confirmed, email_token, token_created_at
+                       is_moderator, steam_id, show_steam_profile,
+                       email_confirmed, email_token, token_created_at
                 FROM user
                 WHERE email_token = @TOKEN
             ", conn.Connection);
@@ -140,7 +146,8 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(@"
                 SELECT id, first_name, last_name, birthday, age, username, email, password,
-                       is_moderator, steam_id, email_confirmed, email_token, token_created_at
+                       is_moderator, steam_id, show_steam_profile,
+                       email_confirmed, email_token, token_created_at
                 FROM user
                 WHERE LOWER(email) = LOWER(@EMAIL)
                 LIMIT 1
@@ -165,7 +172,8 @@ namespace DataLayer.Repos
                     email = @EMAIL,
                     password = @PASSWORD,
                     is_moderator = @IS_MODERATOR,
-                    steam_id = @STEAM_ID
+                    steam_id = @STEAM_ID,
+                    show_steam_profile = @SHOW_STEAM_PROFILE
                 WHERE id = @ID
             ", conn.Connection);
 
@@ -179,6 +187,7 @@ namespace DataLayer.Repos
             cmd.Parameters.AddWithValue("@IS_MODERATOR", user.IsAdmin);
             cmd.Parameters.AddWithValue("@STEAM_ID",
                 string.IsNullOrWhiteSpace(user.SteamId) ? (object)DBNull.Value : user.SteamId);
+            cmd.Parameters.AddWithValue("@SHOW_STEAM_PROFILE", user.ShowSteamProfile);
 
             cmd.ExecuteNonQuery();
         }
@@ -284,7 +293,8 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(@"
                 SELECT id, first_name, last_name, birthday, age, username, email, password,
-                       is_moderator, steam_id, email_confirmed, email_token, token_created_at
+                       is_moderator, steam_id, show_steam_profile,
+                       email_confirmed, email_token, token_created_at
                 FROM user
                 WHERE username LIKE CONCAT('%', @TERM, '%')
                    OR email LIKE CONCAT('%', @TERM, '%')
@@ -319,6 +329,7 @@ namespace DataLayer.Repos
             );
 
             user.Birthday = SafeDateTime(reader, "birthday");
+            user.ShowSteamProfile = SafeBool(reader, "show_steam_profile");
             user.EmailConfirmed = SafeBool(reader, "email_confirmed");
             user.EmailToken = SafeString(reader, "email_token");
             user.TokenCreatedAt = SafeDateTime(reader, "token_created_at");
@@ -332,7 +343,8 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(@"
         SELECT id, first_name, last_name, birthday, age, username, email, password,
-               is_moderator, steam_id, email_confirmed, email_token, token_created_at
+               is_moderator, steam_id, show_steam_profile,
+               email_confirmed, email_token, token_created_at
         FROM user
         WHERE username = @USERNAME
         LIMIT 1

@@ -4,36 +4,113 @@
 @{
     ViewData["Title"] = "User profile";
     Layout = "_ProfileLayout";
+    var roleLabel = Model.Profile.HighestRole > PlatformRole.Member
+        ? Model.Profile.HighestRole.ToString()
+        : Model.Profile.HasPlayerProfile ? "Player" : "Member";
+    var initial = string.IsNullOrWhiteSpace(Model.Profile.Username)
+        ? "?"
+        : Model.Profile.Username[..1].ToUpperInvariant();
 }
 
-<div class="profile-actions">
-    <div><span class="profile-label">Username</span><div class="profile-username">@Model.ViewedUser.Username</div></div>
-    <span class="tag @(Model.HighestRole >= PlatformRole.Admin ? "tag-status-running" : "tag-solo")">
-        @(Model.HighestRole > PlatformRole.Member ? Model.HighestRole : Model.ViewedPlayer != null ? "Player" : "Member")
-    </span>
-</div>
+<header class="public-profile-hero">
+    <div class="public-profile-avatar" aria-hidden="true">@initial</div>
+    <div class="public-profile-identity">
+        <span class="profile-label">C5GO public profile</span>
+        <h2>@Model.Profile.Username</h2>
+        <div class="public-profile-badges">
+            <span class="tag @(Model.Profile.HighestRole >= PlatformRole.Admin ? "tag-status-running" : "tag-solo")">
+                @roleLabel
+            </span>
+            @if (Model.Profile.IsTeamCaptain)
+            {
+                <span class="tag tag-team">Team captain</span>
+            }
+        </div>
+    </div>
+    @if (Model.IsOwnProfile)
+    {
+        <a asp-page="/EditProfile" class="btn btn-outline-light">Edit my profile</a>
+    }
+</header>
+
+<hr class="section-divider" />
+
+<section aria-labelledby="publicOverviewTitle">
+    <div class="public-profile-section-heading">
+        <div>
+            <span class="profile-label">Overview</span>
+            <h2 id="publicOverviewTitle" class="profile-section-title">Player activity</h2>
+        </div>
+        <span class="public-profile-privacy-note">Personal account details are private</span>
+    </div>
+
+    <div class="public-profile-grid">
+        <article class="public-profile-card">
+            <span>Team</span>
+            @if (Model.Profile.TeamId is int teamId)
+            {
+                <a asp-page="/Teams/Details" asp-route-id="@teamId">@Model.Profile.TeamName</a>
+                <small>@(Model.Profile.IsTeamCaptain ? "Captain" : "Member")</small>
+            }
+            else
+            {
+                <strong>Free agent</strong>
+                <small>Not currently on a team</small>
+            }
+        </article>
+
+        <article class="public-profile-card">
+            <span>Steam profile</span>
+            @if (!Model.Profile.HasPlayerProfile)
+            {
+                <strong>Not connected</strong>
+                <small>No active player profile</small>
+            }
+            else if (Model.Profile.IsSteamProfilePublic)
+            {
+                <a asp-page="/UserProfile"
+                   asp-page-handler="Steam"
+                   asp-route-id="@Model.Profile.UserId"
+                   target="_blank"
+                   rel="noopener noreferrer">Open Steam profile</a>
+                <small>Shared by the user</small>
+            }
+            else
+            {
+                <strong>Private</strong>
+                <small>The user chose not to share it</small>
+            }
+        </article>
+
+        @if (Model.Profile.CommunityEnabled)
+        {
+            <article class="public-profile-card public-profile-stat-card">
+                <span>Discussions</span>
+                <strong>@Model.Profile.DiscussionCount</strong>
+                <small>Published Community topics</small>
+            </article>
+            <article class="public-profile-card public-profile-stat-card">
+                <span>Comments</span>
+                <strong>@Model.Profile.CommentCount</strong>
+                <small>Community responses</small>
+            </article>
+            <article class="public-profile-card public-profile-stat-card">
+                <span>Community score</span>
+                <strong>@Model.Profile.VoteScore</strong>
+                <small>Combined vote score</small>
+            </article>
+        }
+    </div>
+</section>
 
 <hr class="section-divider" />
 
 <section aria-labelledby="publicMatchHistoryTitle">
-    <h2 id="publicMatchHistoryTitle" class="profile-section-title">Recent match history</h2>
+    <div class="public-profile-section-heading">
+        <div>
+            <span class="profile-label">Results</span>
+            <h2 id="publicMatchHistoryTitle" class="profile-section-title">Recent match history</h2>
+        </div>
+    </div>
     <partial name="_PlayerMatchHistory" model="Model.MatchHistory" />
 </section>
-
-<div class="profile-info-grid">
-    <div class="profile-info-item"><span class="profile-label">First name</span><div class="profile-value">@Model.ViewedUser.Firstname</div></div>
-    <div class="profile-info-item"><span class="profile-label">Last name</span><div class="profile-value">@Model.ViewedUser.Lastname</div></div>
-    <div class="profile-info-item"><span class="profile-label">Birthday</span><div class="profile-value">@(Model.ViewedUser.Birthday?.ToString("dd.MM.yyyy") ?? "Not provided")</div></div>
-    <div class="profile-info-item profile-info-wide">
-        <span class="profile-label">Steam profile</span>
-        @if (Model.SteamProfileUrl != null)
-        {
-            <div class="profile-value">@Model.ViewedPlayer!.SteamId</div>
-            <a href="@Model.SteamProfileUrl" target="_blank" rel="noopener noreferrer">Open Steam profile</a>
-        }
-        else
-        {
-            <div class="profile-value">No player profile</div>
-        }
-    </div>
-</div>

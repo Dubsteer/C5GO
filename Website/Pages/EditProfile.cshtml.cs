@@ -45,7 +45,8 @@ namespace Website.Pages
                 Age = user.Age,
                 Username = user.Username,
                 Email = user.Gmail,
-                SteamProfile = user.SteamId is null or "0" ? null : user.SteamId
+                SteamProfile = user.SteamId is null or "0" ? null : user.SteamId,
+                ShowSteamProfile = user.ShowSteamProfile
             };
 
             return Page();
@@ -92,6 +93,9 @@ namespace Website.Pages
                 passwordHash,
                 existingUser.IsAdmin,
                 requestedSteamProfile);
+            updatedUser.ShowSteamProfile = CanManageSteamId &&
+                                           Form.ShowSteamProfile &&
+                                           !string.IsNullOrWhiteSpace(requestedSteamProfile);
 
             try
             {

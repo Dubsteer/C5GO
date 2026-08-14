@@ -75,11 +75,31 @@ namespace LogicLayer.Managers
             matchRepo.UpdateMatch(match);
         }
 
-        public List<Match> GetPastMatches(User user)
+        public List<Match> GetPastMatches(User user, int limit = 20)
         {
+            ArgumentNullException.ThrowIfNull(user);
+            if (user.Id is not int userId)
+                return [];
+
+            ValidateHistoryLimit(limit);
+
             return GetAllMatches()
-                .Where(m => m.User1.Id == user.Id || m.User2.Id == user.Id)
+                .Where(m =>
+                    m.Status == Status.Closed &&
+                    (m.User1.Id == userId || m.User2.Id == userId))
                 .OrderByDescending(m => m.MatchDate)
+                .Take(limit)
+                .ToList();
+        }
+
+        public List<Match> GetRecentCompletedMatches(int limit = 20)
+        {
+            ValidateHistoryLimit(limit);
+
+            return GetAllMatches()
+                .Where(match => match.Status == Status.Closed)
+                .OrderByDescending(match => match.MatchDate)
+                .Take(limit)
                 .ToList();
         }
 
@@ -135,6 +155,12 @@ namespace LogicLayer.Managers
 
             if (status == Status.Closed && score1 == score2)
                 throw new InvalidOperationException("A closed bracket match must have a winner.");
+        }
+
+        private static void ValidateHistoryLimit(int limit)
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(limit, 1);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(limit, 100);
         }
     }
 }

@@ -10,18 +10,24 @@ namespace Website.Pages.Teams
     public class DetailsModel : PageModel
     {
         private readonly TeamManager teamManager;
+        private readonly TeamMatchManager teamMatchManager;
         private readonly UserManager userManager;
 
         public Team Team { get; set; } = null!;
         public List<User> Members { get; set; } = [];
         public List<TeamJoinRequest> Pending { get; set; } = [];
+        public List<TeamMatch> RecentMatches { get; set; } = [];
         public User CurrentUser { get; set; } = null!;
 
         public bool IsCaptain { get; set; }
 
-        public DetailsModel(TeamManager tm, UserManager um)
+        public DetailsModel(
+            TeamManager tm,
+            TeamMatchManager teamMatchManager,
+            UserManager um)
         {
             teamManager = tm;
+            this.teamMatchManager = teamMatchManager;
             userManager = um;
         }
 
@@ -50,6 +56,7 @@ namespace Website.Pages.Teams
             Team = team;
             Members = Team.Members;
             Pending = teamManager.GetJoinRequests(id);
+            RecentMatches = teamMatchManager.GetCompletedMatchesForTeam(id, 5);
 
             IsCaptain = Team.Captain.Id == CurrentUser.Id;
 

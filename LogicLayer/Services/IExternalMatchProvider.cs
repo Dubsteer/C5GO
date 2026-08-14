@@ -6,6 +6,10 @@ namespace LogicLayer.Services
     {
         Task<List<ExternalMatchDto>> GetTodayMatchesAsync();
 
-        Task<ExternalMatchDetailsDto?> GetMatchDetailsAsync(string matchId);
+        Task<List<ExternalMatchDto>> GetRecentMatchesAsync(int limit = 20);
+
+        Task<ExternalMatchDetailsDto?> GetMatchDetailsAsync(
+            string matchId,
+            bool preferPast = false);
     }
 }

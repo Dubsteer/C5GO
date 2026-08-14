@@ -1,5 +1,6 @@
 using System.Text.Json;
 using LogicLayer.Dtos;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace LogicLayer.Services
 {
@@ -10,14 +11,50 @@ namespace LogicLayer.Services
             PropertyNameCaseInsensitive = true
         };
 
-        private readonly HttpClient _http;
+        private static readonly TimeSpan CurrentMatchesCacheDuration = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan RecentMatchesCacheDuration = TimeSpan.FromMinutes(5);
 
-        public PandaScoreMatchProvider(HttpClient http)
+        private readonly HttpClient httpClient;
+        private readonly IMemoryCache cache;
+
+        public PandaScoreMatchProvider(HttpClient httpClient, IMemoryCache cache)
         {
-            _http = http;
+            this.httpClient = httpClient;
+            this.cache = cache;
         }
 
         public async Task<List<ExternalMatchDto>> GetTodayMatchesAsync()
+        {
+            var cachedMatches = await cache.GetOrCreateAsync(
+                "pandascore-current-matches",
+                async entry =>
+                {
+                    entry.AbsoluteExpirationRelativeToNow = CurrentMatchesCacheDuration;
+                    return await LoadCurrentMatchesAsync();
+                });
+
+            return cachedMatches ?? [];
+        }
+
+        public async Task<List<ExternalMatchDto>> GetRecentMatchesAsync(int limit = 20)
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(limit, 1);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(limit, 50);
+
+            var cachedMatches = await cache.GetOrCreateAsync(
+                $"pandascore-recent-matches-{limit}",
+                async entry =>
+                {
+                    entry.AbsoluteExpirationRelativeToNow = RecentMatchesCacheDuration;
+                    var matches = await GetMatchesAsync(
+                        $"/csgo/matches/past?sort=-begin_at&page[size]={limit}");
+                    return matches.Select(Map).ToList();
+                });
+
+            return cachedMatches ?? [];
+        }
+
+        private async Task<List<ExternalMatchDto>> LoadCurrentMatchesAsync()
         {
             var runningTask = GetMatchesAsync(
                 "/csgo/matches/running?sort=begin_at&page[size]=50");
@@ -33,18 +70,23 @@ namespace LogicLayer.Services
                 .ToList();
         }
 
-        public async Task<ExternalMatchDetailsDto?> GetMatchDetailsAsync(string matchId)
+        public async Task<ExternalMatchDetailsDto?> GetMatchDetailsAsync(
+            string matchId,
+            bool preferPast = false)
         {
             if (!long.TryParse(matchId, out _))
                 return null;
 
             var encodedId = Uri.EscapeDataString(matchId);
-            var endpoints = new[]
-            {
-                $"/csgo/matches/running?filter[id]={encodedId}&page[size]=1",
-                $"/csgo/matches/upcoming?filter[id]={encodedId}&page[size]=1",
-                $"/csgo/matches/past?filter[id]={encodedId}&page[size]=1"
-            };
+            var pastEndpoint = $"/csgo/matches/past?filter[id]={encodedId}&page[size]=1";
+            string[] endpoints = preferPast
+                ? [pastEndpoint]
+                :
+                [
+                    $"/csgo/matches/running?filter[id]={encodedId}&page[size]=1",
+                    $"/csgo/matches/upcoming?filter[id]={encodedId}&page[size]=1",
+                    pastEndpoint
+                ];
 
             PandaMatch? match = null;
 
@@ -71,6 +113,7 @@ namespace LogicLayer.Services
                 Status = NormalizeStatus(match.Status),
                 StartTimeUtc = match.BeginAt,
                 Score = BuildScore(match),
+                WinnerName = GetWinnerName(match),
 
                 Maps = new List<ExternalMapDto>(),
 
@@ -104,8 +147,17 @@ namespace LogicLayer.Services
 
                 Status = NormalizeStatus(m.Status),
 
-                Score = BuildScore(m)
+                Score = BuildScore(m),
+                WinnerName = GetWinnerName(m)
             };
+        }
+
+        private static string GetWinnerName(PandaMatch match)
+        {
+            return match.Opponents
+                .Select(wrapper => wrapper.Opponent)
+                .FirstOrDefault(opponent => opponent?.Id == match.WinnerId)
+                ?.Name ?? "";
         }
 
         private static string NormalizeStatus(string? status)
@@ -143,8 +195,17 @@ namespace LogicLayer.Services
             var t1 = m.Opponents.ElementAtOrDefault(0)?.Opponent?.Id;
             var t2 = m.Opponents.ElementAtOrDefault(1)?.Opponent?.Id;
 
-            var s1 = m.Results.FirstOrDefault(x => x.TeamId == t1)?.Score ?? 0;
-            var s2 = m.Results.FirstOrDefault(x => x.TeamId == t2)?.Score ?? 0;
+            var result1 = m.Results.FirstOrDefault(x => x.TeamId == t1);
+            var result2 = m.Results.FirstOrDefault(x => x.TeamId == t2);
+
+            if (result1 == null || result2 == null)
+                return "";
+
+            var s1 = result1.Score;
+            var s2 = result2.Score;
+
+            if (m.Status == "finished" && s1 == 0 && s2 == 0)
+                return "";
 
             return $"{s1} - {s2}";
         }
@@ -153,7 +214,7 @@ namespace LogicLayer.Services
         {
             try
             {
-                using var response = await _http.GetAsync(url);
+                using var response = await httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                     return new List<PandaMatch>();
@@ -170,6 +231,10 @@ namespace LogicLayer.Services
                 return new List<PandaMatch>();
             }
             catch (JsonException)
+            {
+                return new List<PandaMatch>();
+            }
+            catch (TaskCanceledException)
             {
                 return new List<PandaMatch>();
             }

@@ -71,6 +71,52 @@
         </div>
     </section>
 
+    <hr class="section-divider" />
+
+    <section aria-labelledby="teamHistoryTitle">
+        <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+            <h2 id="teamHistoryTitle" class="section-heading mb-0">Recent match history</h2>
+            <a asp-page="/Matches/History" asp-fragment="teamHistoryTitle" class="back-link">View all results</a>
+        </div>
+
+        @if (!Model.RecentMatches.Any())
+        {
+            <div class="empty-state">
+                <strong>No completed matches</strong>
+                <span>Completed C5GO team tournament matches will appear here.</span>
+            </div>
+        }
+        else
+        {
+            <div class="team-history-list">
+                @foreach (var match in Model.RecentMatches)
+                {
+                    var isTeamOne = match.Team1Id == Model.Team.Id;
+                    var opponent = isTeamOne ? match.Team2 : match.Team1;
+                    var teamScore = isTeamOne ? match.Team1Score : match.Team2Score;
+                    var opponentScore = isTeamOne ? match.Team2Score : match.Team1Score;
+                    var won = teamScore > opponentScore;
+                    var tournamentName = string.IsNullOrWhiteSpace(match.TournamentName) ? $"Tournament #{match.TournamentId}" : match.TournamentName;
+
+                    <article class="player-history-card">
+                        <div class="player-history-result @(won ? "result-win" : "result-loss")">
+                            <span>@(won ? "Win" : "Loss")</span>
+                            <strong>@teamScore - @opponentScore</strong>
+                        </div>
+                        <div class="player-history-opponent">
+                            <span class="history-label">Opponent</span>
+                            <a asp-page="/Teams/Details" asp-route-id="@opponent.Id">@opponent.Name</a>
+                        </div>
+                        <div class="player-history-meta">
+                            <a asp-page="/Tournaments/Details" asp-route-id="@match.TournamentId">@tournamentName</a>
+                            <time datetime="@match.MatchDate.ToString("O")">@match.MatchDate.ToString("dd.MM.yyyy")</time>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
     @if (Model.IsCaptain)
     {
         <hr class="section-divider" />

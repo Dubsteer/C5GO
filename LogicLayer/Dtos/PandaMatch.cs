@@ -23,6 +23,9 @@ namespace LogicLayer.Dtos
 
         public List<PandaResult>? Results { get; set; }
 
+        [JsonPropertyName("winner_id")]
+        public long? WinnerId { get; set; }
+
         [JsonPropertyName("streams_list")]
         public List<PandaStream>? StreamsList { get; set; }
     }

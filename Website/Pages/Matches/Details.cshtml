@@ -6,7 +6,7 @@
 
 <section class="details-container">
     <div class="details-heading-row">
-        <a asp-page="/Matches/Index" class="back-link">&larr; Back to matches</a>
+        <a asp-page="@(Model.FromHistory ? "/Matches/History" : "/Matches/Index")" class="back-link">&larr; Back to @(Model.FromHistory ? "history" : "matches")</a>
         <h1>Match details</h1>
     </div>
 
@@ -16,7 +16,9 @@
     }
     else
     {
-        var matchHeaderClass = Model.Match.Status == "Live" ? "match-header-live" : "match-header-upcoming";
+        var matchHeaderClass = Model.Match.Status == "Live"
+            ? "match-header-live"
+            : Model.Match.Status == "Finished" ? "match-header-finished" : "match-header-upcoming";
 
         <header class="match-header @matchHeaderClass">
             <div class="teams">
@@ -25,7 +27,18 @@
                          data-fallback-image="/Images/default-team.svg" alt="" />
                     <span class="team-name">@Model.Match.Team1Name</span>
                 </div>
-                <div class="score">@(string.IsNullOrEmpty(Model.Match.Score) ? "-" : Model.Match.Score)</div>
+                @if (!string.IsNullOrWhiteSpace(Model.Match.Score))
+                {
+                    <div class="score">@Model.Match.Score</div>
+                }
+                else if (Model.Match.Status == "Finished" && !string.IsNullOrWhiteSpace(Model.Match.WinnerName))
+                {
+                    <div class="score professional-winner"><span>Winner</span><strong>@Model.Match.WinnerName</strong></div>
+                }
+                else
+                {
+                    <div class="score">-</div>
+                }
                 <div class="team-side right">
                     <span class="team-name">@Model.Match.Team2Name</span>
                     <img class="team-logo" src="@(string.IsNullOrEmpty(Model.Match.Team2LogoUrl) ? "/Images/default-team.svg" : Model.Match.Team2LogoUrl)"
@@ -89,7 +102,10 @@
             }
             else
             {
-                <div class="empty-state"><strong>No stream available</strong><span>An official stream may appear closer to the match start.</span></div>
+                <div class="empty-state">
+                    <strong>No stream available</strong>
+                    <span>@(Model.Match.Status == "Finished" ? "Streams are usually unavailable after a match ends." : "An official stream may appear closer to the match start.")</span>
+                </div>
             }
         </section>
     }

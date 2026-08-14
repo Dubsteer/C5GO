@@ -4,6 +4,7 @@ using LogicLayer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Website.Models;
 
 namespace Website.Pages
 {
@@ -27,6 +28,7 @@ namespace Website.Pages
         public User PageUser { get; private set; } = null!;
         public Player? Player { get; private set; }
         public List<Match> Matches { get; private set; } = [];
+        public PlayerMatchHistoryViewModel MatchHistory { get; private set; } = new();
         public bool RequireSteam { get; private set; }
         public bool NeedsSteamUpdate { get; private set; }
         public string? SteamProfileUrl { get; private set; }
@@ -46,6 +48,12 @@ namespace Website.Pages
             Matches = Player != null
                 ? matchManager.GetPastMatches(user)
                 : [];
+            MatchHistory = new PlayerMatchHistoryViewModel
+            {
+                UserId = user.Id.GetValueOrDefault(),
+                Matches = Matches,
+                EmptyMessage = "Your completed C5GO solo tournament matches will appear here."
+            };
 
             RequireSteam = TempData.ContainsKey("RequireSteam");
             NeedsSteamUpdate = Player == null &&

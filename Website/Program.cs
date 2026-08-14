@@ -42,7 +42,8 @@ if (builder.Environment.IsProduction() && !turnstileConfiguration.IsConfigured)
         "Turnstile configuration is missing. Configure Turnstile:SiteKey and Turnstile:SecretKey.");
 }
 
-if (builder.Environment.IsDevelopment())
+if (builder.Environment.IsDevelopment() &&
+    string.IsNullOrWhiteSpace(builder.Configuration["urls"]))
 {
     builder.WebHost.UseUrls("http://localhost:5063");
 }
@@ -152,6 +153,7 @@ if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
 }
 
 builder.Services.AddSingleton<PasswordResetTokenService>();
+builder.Services.AddMemoryCache();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;

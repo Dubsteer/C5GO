@@ -4,6 +4,8 @@ using LogicLayer.Managers;
 using LogicLayer.Models;
 using System.Collections.Generic;
 using System.Linq;
+using LogicLayer.Enums;
+using Website.Models;
 
 namespace Website.Pages.Tournaments
 {
@@ -19,6 +21,9 @@ namespace Website.Pages.Tournaments
 
         public List<TeamMatch> TeamMatches { get; set; } = new();
         public Dictionary<int, Team> TeamsById { get; set; } = new();
+        public int ParticipantCount => Tournament.IsTeamTournament ? TeamsById.Count : SoloPlayers.Count;
+        public Player? SoloChampion => GetSoloChampion();
+        public Team? TeamChampion => GetTeamChampion();
 
         public DetailsModel(TournamentManager tournamentManager, TeamManager teamManager)
         {
@@ -41,14 +46,16 @@ namespace Website.Pages.Tournaments
                 Tournament.Players = SoloPlayers;
 
                 SoloMatches = tournamentManager.GetAllMatchesInTournament(Tournament)
-                                               .OrderBy(m => m.MatchDate)
+                                               .OrderBy(m => m.RoundNumber)
+                                               .ThenBy(m => m.BracketPosition)
                                                .ToList();
             }
 
             else
             {
                 TeamMatches = tournamentManager.GetAllTeamMatchesInTournament(Tournament)
-                                               .OrderBy(m => m.MatchDate)
+                                               .OrderBy(m => m.RoundNumber)
+                                               .ThenBy(m => m.BracketPosition)
                                                .ToList();
 
                 var teamIds = tournamentManager.GetTeamsInTournament(Tournament);
@@ -62,6 +69,41 @@ namespace Website.Pages.Tournaments
             }
 
             return Page();
+        }
+
+        public string GetRoundName(int roundNumber, int matchCount) =>
+            BracketRoundPresentation.GetName(ParticipantCount, roundNumber, matchCount);
+
+        private Player? GetSoloChampion()
+        {
+            var final = SoloMatches
+                .Where(match => match.Status == Status.Closed)
+                .OrderByDescending(match => match.RoundNumber)
+                .FirstOrDefault();
+
+            if (Tournament.Status != Status.Closed || final == null ||
+                SoloMatches.Count(match => match.RoundNumber == final.RoundNumber) != 1)
+            {
+                return null;
+            }
+
+            return final.Player1Score > final.Player2Score ? final.User1 : final.User2;
+        }
+
+        private Team? GetTeamChampion()
+        {
+            var final = TeamMatches
+                .Where(match => match.Status == Status.Closed)
+                .OrderByDescending(match => match.RoundNumber)
+                .FirstOrDefault();
+
+            if (Tournament.Status != Status.Closed || final == null ||
+                TeamMatches.Count(match => match.RoundNumber == final.RoundNumber) != 1)
+            {
+                return null;
+            }
+
+            return final.Team1Score > final.Team2Score ? final.Team1 : final.Team2;
         }
     }
 }

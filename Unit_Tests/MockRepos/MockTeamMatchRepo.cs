@@ -14,7 +14,12 @@ namespace Unit_Tests.MockRepos
 
         public List<TeamMatch> GetAllTeamMatches() => Matches;
 
-        public void AddTeamMatch(TeamMatch match) => Matches.Add(match);
+        public void AddTeamMatch(TeamMatch match)
+        {
+            if (match.Id == 0)
+                match.Id = Matches.Count == 0 ? 1 : Matches.Max(existing => existing.Id) + 1;
+            Matches.Add(match);
+        }
 
         public void UpdateTeamMatch(TeamMatch match)
         {

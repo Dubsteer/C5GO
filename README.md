@@ -42,6 +42,16 @@ docker compose down
 images and data-protection keys in named Docker volumes. The schema is imported
 automatically only when a new empty database volume is created.
 
+An existing database volume created before the full tournament bracket feature
+can be upgraded without deleting data:
+
+```powershell
+docker compose cp database/full-tournament-bracket.sql database:/tmp/full-tournament-bracket.sql
+docker compose exec -T database sh -lc 'mysql --user=root --password="$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" < /tmp/full-tournament-bracket.sql'
+```
+
+The migration can be run more than once safely.
+
 The following command permanently deletes the Docker database, uploads and
 keys. Use it only when a completely clean installation is intended:
 

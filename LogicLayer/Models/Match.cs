@@ -16,9 +16,12 @@ namespace LogicLayer.Models
 
         public DateTime MatchDate { get; set; }
         public Status Status { get; set; }
+        public int RoundNumber { get; set; }
+        public int BracketPosition { get; set; }
 
         public Match(int id, int tournamentId, Player u1, Player u2,
-                     int p1, int p2, DateTime date, Status status)
+                     int p1, int p2, DateTime date, Status status,
+                     int roundNumber = 1, int bracketPosition = 1)
         {
             Id = id;
             TournamentId = tournamentId;
@@ -28,6 +31,8 @@ namespace LogicLayer.Models
             Player2Score = p2;
             MatchDate = date;
             Status = status;
+            RoundNumber = roundNumber;
+            BracketPosition = bracketPosition;
         }
 
         public string TournamentName { get; set; } = string.Empty;

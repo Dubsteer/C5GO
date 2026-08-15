@@ -4,6 +4,7 @@ using LogicLayer.Managers;
 using LogicLayer.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Website.Models;
 
 namespace Website.Pages.Admin.Tournaments
 {
@@ -23,6 +24,14 @@ namespace Website.Pages.Admin.Tournaments
         public bool HasBracket => Tournament.IsTeamTournament
             ? TeamMatches.Count > 0
             : SoloMatches.Count > 0;
+        public int ParticipantCount => Tournament.IsTeamTournament
+            ? RegisteredTeams.Count
+            : Players.Count;
+        public int LatestRoundNumber => Tournament.IsTeamTournament
+            ? TeamMatches.Select(match => match.RoundNumber).DefaultIfEmpty(0).Max()
+            : SoloMatches.Select(match => match.RoundNumber).DefaultIfEmpty(0).Max();
+        public Player? SoloChampion => GetSoloChampion();
+        public Team? TeamChampion => GetTeamChampion();
 
         public DetailsModel(
             TournamentManager tournamentManager,
@@ -184,7 +193,7 @@ namespace Website.Pages.Admin.Tournaments
 
                 TempData["SuccessMessage"] = replaceExisting
                     ? "Bracket regenerated. Previous matches were removed."
-                    : "Opening-round bracket generated.";
+                    : "Full tournament bracket generated.";
             }
             catch (TournamentNotFoundException)
             {
@@ -286,8 +295,8 @@ namespace Website.Pages.Admin.Tournaments
                     .OrderBy(team => team.Name)
                     .ToList();
                 TeamMatches = teamMatchManager.GetTeamMatchesByTournament(id)
-                    .OrderBy(match => match.MatchDate)
-                    .ThenBy(match => match.Id)
+                    .OrderBy(match => match.RoundNumber)
+                    .ThenBy(match => match.BracketPosition)
                     .ToList();
             }
             else
@@ -296,8 +305,8 @@ namespace Website.Pages.Admin.Tournaments
                     .OrderBy(player => player.Username)
                     .ToList();
                 SoloMatches = matchManager.GetMatchesByTournamentId(id)
-                    .OrderBy(match => match.MatchDate)
-                    .ThenBy(match => match.Id)
+                    .OrderBy(match => match.RoundNumber)
+                    .ThenBy(match => match.BracketPosition)
                     .ToList();
             }
 
@@ -308,6 +317,41 @@ namespace Website.Pages.Admin.Tournaments
         {
             var tournament = tournamentManager.GetTournamentById(id);
             tournamentManager.UpdateTournamentStatus(tournament);
+        }
+
+        public string GetRoundName(int roundNumber, int matchCount) =>
+            BracketRoundPresentation.GetName(ParticipantCount, roundNumber, matchCount);
+
+        private Player? GetSoloChampion()
+        {
+            var final = SoloMatches
+                .Where(match => match.Status == Status.Closed)
+                .OrderByDescending(match => match.RoundNumber)
+                .FirstOrDefault();
+
+            if (Tournament.Status != Status.Closed || final == null ||
+                SoloMatches.Count(match => match.RoundNumber == final.RoundNumber) != 1)
+            {
+                return null;
+            }
+
+            return final.Player1Score > final.Player2Score ? final.User1 : final.User2;
+        }
+
+        private Team? GetTeamChampion()
+        {
+            var final = TeamMatches
+                .Where(match => match.Status == Status.Closed)
+                .OrderByDescending(match => match.RoundNumber)
+                .FirstOrDefault();
+
+            if (Tournament.Status != Status.Closed || final == null ||
+                TeamMatches.Count(match => match.RoundNumber == final.RoundNumber) != 1)
+            {
+                return null;
+            }
+
+            return final.Team1Score > final.Team2Score ? final.Team1 : final.Team2;
         }
     }
 }

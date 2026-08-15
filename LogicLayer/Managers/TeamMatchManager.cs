@@ -79,6 +79,9 @@ namespace LogicLayer.Managers
             if (match.TournamentId != tournamentId)
                 throw new InvalidOperationException("Match does not belong to this tournament.");
 
+            if (GetTeamMatchesByTournament(tournamentId).Any(candidate => candidate.RoundNumber > match.RoundNumber))
+                throw new InvalidOperationException("A completed bracket round cannot be changed after the next round starts.");
+
             ValidateResult(team1Score, team2Score, status, matchDate);
 
             match.Team1Score = team1Score;
@@ -111,23 +114,38 @@ namespace LogicLayer.Managers
             foreach (var match in existing)
                 RemoveTeamMatch(match);
 
-            var rnd = new Random();
-            var shuffled = uniqueTeamIds.OrderBy(_ => rnd.Next()).ToList();
+            var shuffled = BracketPlanner.Shuffle(uniqueTeamIds);
+            var openingCount = BracketPlanner.GetOpeningParticipantCount(shuffled.Count);
+            GenerateRound(shuffled.Take(openingCount).ToList(), tournamentId, DateTime.Now, 1);
+        }
 
-            for (int i = 0; i < shuffled.Count - 1; i += 2)
+        public void GenerateRound(
+            IReadOnlyList<int> teamIds,
+            int tournamentId,
+            DateTime matchDate,
+            int roundNumber)
+        {
+            if (teamIds.Count < 2 || teamIds.Count % 2 != 0)
+                throw new InvalidOperationException("A bracket round requires an even number of at least two teams.");
+
+            if (teamIds.Any(teamId => teamId <= 0) || teamIds.Distinct().Count() != teamIds.Count)
+                throw new InvalidOperationException("Bracket teams must be unique and valid.");
+
+            ArgumentOutOfRangeException.ThrowIfLessThan(roundNumber, 1);
+
+            for (var index = 0; index < teamIds.Count; index += 2)
             {
-                var match = new TeamMatch(
+                AddTeamMatch(new TeamMatch(
                     0,
                     tournamentId,
-                    new Team(shuffled[i], "", null!),
-                    new Team(shuffled[i + 1], "", null!),
+                    new Team(teamIds[index], string.Empty, null!),
+                    new Team(teamIds[index + 1], string.Empty, null!),
                     0,
                     0,
-                    DateTime.Now,
-                    Status.Open
-                );
-
-                AddTeamMatch(match);
+                    matchDate,
+                    Status.Open,
+                    roundNumber,
+                    index / 2 + 1));
             }
         }
 

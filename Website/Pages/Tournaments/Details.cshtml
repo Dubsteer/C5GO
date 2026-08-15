@@ -36,53 +36,101 @@
         </section>
 
         <section class="tournament-section" aria-labelledby="teamMatchesTitle">
-            <h2 id="teamMatchesTitle" class="tournament-section-title">Team matches</h2>
+            <h2 id="teamMatchesTitle" class="tournament-section-title">Tournament bracket</h2>
             @if (!Model.TeamMatches.Any())
             {
                 <div class="empty-state"><strong>No matches scheduled</strong><span>Matches will appear after the bracket is generated.</span></div>
             }
             else
             {
-                foreach (var match in Model.TeamMatches)
+                @if (Model.TeamChampion is not null)
                 {
-                    var teamOne = Model.TeamsById.TryGetValue(match.Team1Id, out var firstTeam) ? firstTeam.Name : $"Team {match.Team1Id}";
-                    var teamTwo = Model.TeamsById.TryGetValue(match.Team2Id, out var secondTeam) ? secondTeam.Name : $"Team {match.Team2Id}";
-
-                    <div class="match-box">
-                        <div class="team-row @(match.Team1Score < match.Team2Score ? "loser" : string.Empty)">
-                            <div class="d-flex justify-content-between gap-3"><span>@teamOne</span><span class="score">@match.Team1Score</span></div>
-                        </div>
-                        <div class="team-row @(match.Team2Score < match.Team1Score ? "loser" : string.Empty)">
-                            <div class="d-flex justify-content-between gap-3"><span>@teamTwo</span><span class="score">@match.Team2Score</span></div>
-                        </div>
-                        <time class="text-secondary small" datetime="@match.MatchDate.ToString("O")">@match.MatchDate.ToString("dd.MM.yyyy HH:mm")</time>
+                    <div class="bracket-champion">
+                        <span>Tournament champion</span>
+                        <strong>@Model.TeamChampion.Name</strong>
                     </div>
                 }
-            }
+
+                <div class="bracket-rounds">
+                    @foreach (var round in Model.TeamMatches.GroupBy(match => match.RoundNumber).OrderBy(round => round.Key))
+                    {
+                        <section class="bracket-round">
+                            <header class="bracket-round-header">
+                                <span>Round @round.Key</span>
+                                <h3>@Model.GetRoundName(round.Key, round.Count())</h3>
+                            </header>
+                            <div class="bracket-match-grid">
+                                @foreach (var match in round.OrderBy(match => match.BracketPosition))
+                                {
+                                    var teamOne = Model.TeamsById.TryGetValue(match.Team1Id, out var firstTeam) ? firstTeam.Name : match.Team1.Name;
+                                    var teamTwo = Model.TeamsById.TryGetValue(match.Team2Id, out var secondTeam) ? secondTeam.Name : match.Team2.Name;
+
+                                    <div class="match-box">
+                                        <div class="team-row @(match.Status == LogicLayer.Enums.Status.Closed && match.Team1Score < match.Team2Score ? "loser" : string.Empty)">
+                                            <div class="d-flex justify-content-between gap-3"><span>@teamOne</span><span class="score">@match.Team1Score</span></div>
+                                        </div>
+                                        <div class="team-row @(match.Status == LogicLayer.Enums.Status.Closed && match.Team2Score < match.Team1Score ? "loser" : string.Empty)">
+                                            <div class="d-flex justify-content-between gap-3"><span>@teamTwo</span><span class="score">@match.Team2Score</span></div>
+                                        </div>
+                                        <div class="match-meta">
+                                            <time datetime="@match.MatchDate.ToString("O")">@match.MatchDate.ToString("dd.MM.yyyy HH:mm")</time>
+                                            <span>@match.Status</span>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </section>
+                    }
+                </div>
+                }
         </section>
     }
     else
     {
         <section class="tournament-section" aria-labelledby="soloMatchesTitle">
-            <h2 id="soloMatchesTitle" class="tournament-section-title">Matches</h2>
+            <h2 id="soloMatchesTitle" class="tournament-section-title">Tournament bracket</h2>
             @if (!Model.SoloMatches.Any())
             {
                 <div class="empty-state"><strong>No matches generated</strong><span>Matches will appear after the bracket is generated.</span></div>
             }
             else
             {
-                foreach (var match in Model.SoloMatches)
+                @if (Model.SoloChampion is not null)
                 {
-                    <div class="match-box">
-                        <div class="team-row @(match.Player1Score < match.Player2Score ? "loser" : string.Empty)">
-                            <div class="d-flex justify-content-between gap-3"><span>@match.User1.Username</span><span class="score">@match.Player1Score</span></div>
-                        </div>
-                        <div class="team-row @(match.Player2Score < match.Player1Score ? "loser" : string.Empty)">
-                            <div class="d-flex justify-content-between gap-3"><span>@match.User2.Username</span><span class="score">@match.Player2Score</span></div>
-                        </div>
-                        <time class="text-secondary small" datetime="@match.MatchDate.ToString("O")">@match.MatchDate.ToString("dd.MM.yyyy HH:mm")</time>
+                    <div class="bracket-champion">
+                        <span>Tournament champion</span>
+                        <strong>@Model.SoloChampion.Username</strong>
                     </div>
                 }
+
+                <div class="bracket-rounds">
+                    @foreach (var round in Model.SoloMatches.GroupBy(match => match.RoundNumber).OrderBy(round => round.Key))
+                    {
+                        <section class="bracket-round">
+                            <header class="bracket-round-header">
+                                <span>Round @round.Key</span>
+                                <h3>@Model.GetRoundName(round.Key, round.Count())</h3>
+                            </header>
+                            <div class="bracket-match-grid">
+                                @foreach (var match in round.OrderBy(match => match.BracketPosition))
+                                {
+                                    <div class="match-box">
+                                        <div class="team-row @(match.Status == LogicLayer.Enums.Status.Closed && match.Player1Score < match.Player2Score ? "loser" : string.Empty)">
+                                            <div class="d-flex justify-content-between gap-3"><span>@match.User1.Username</span><span class="score">@match.Player1Score</span></div>
+                                        </div>
+                                        <div class="team-row @(match.Status == LogicLayer.Enums.Status.Closed && match.Player2Score < match.Player1Score ? "loser" : string.Empty)">
+                                            <div class="d-flex justify-content-between gap-3"><span>@match.User2.Username</span><span class="score">@match.Player2Score</span></div>
+                                        </div>
+                                        <div class="match-meta">
+                                            <time datetime="@match.MatchDate.ToString("O")">@match.MatchDate.ToString("dd.MM.yyyy HH:mm")</time>
+                                            <span>@match.Status</span>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </section>
+                    }
+                </div>
             }
         </section>
 

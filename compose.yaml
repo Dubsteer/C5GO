@@ -36,7 +36,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_HTTP_PORTS: 8080
-      ConnectionStrings__DefaultConnection: "Server=database;Port=3306;Database=${MYSQL_DATABASE:-c5go};User ID=${MYSQL_USER:-c5go_app};Password=${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env};SslMode=None;AllowPublicKeyRetrieval=True;"
+      ConnectionStrings__DefaultConnection: "Server=database;Port=3306;Database=${MYSQL_DATABASE:-c5go};User ID=${MYSQL_USER:-c5go_app};Password=${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env};SslMode=Disabled;AllowPublicKeyRetrieval=True;"
       AppSettings__BaseUrl: "${APP_BASE_URL:-http://localhost:5063}"
       AppSettings__AuthUrl: "${APP_AUTH_URL:-http://localhost:5063}"
       AppSettings__ApiUrl: "${APP_API_URL:-http://localhost:5063}"

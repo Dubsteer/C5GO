@@ -11,6 +11,7 @@ namespace Unit_Tests
         private static List<Tournament> tournaments = null!;
         private static List<Match> matches = null!;
         private static List<TeamMatch> teamMatches = null!;
+        private static MockTeamRepo teamRepo = null!;
         private static TournamentManager tournamentManager = null!;
 
         [ClassInitialize]
@@ -21,8 +22,17 @@ namespace Unit_Tests
             teamMatches = new List<TeamMatch>();
             var matchManager = new MatchManager(new MockMatchRepo(matches));
             var teamMatchManager = new TeamMatchManager(new MockTeamMatchRepo(teamMatches));
+            teamRepo = new MockTeamRepo([]);
+            foreach (var teamId in Enumerable.Range(1, 16))
+            {
+                var members = Enumerable.Range(1, 5)
+                    .Select(memberNumber => CreateUser(teamId * 10 + memberNumber))
+                    .ToArray();
+                teamRepo.SeedTeam(new Team(teamId, $"Team {teamId}", members[0]), members);
+            }
             tournamentManager = new TournamentManager(
                 new MockTournamentRepo(tournaments),
+                teamRepo,
                 matchManager,
                 teamMatchManager);
         }
@@ -268,6 +278,63 @@ namespace Unit_Tests
         }
 
         [TestMethod]
+        public void TestSoloRegistrationRequiresValidSteamId()
+        {
+            var tournament = CreateTournament(1, "Tournament");
+            var player = CreatePlayer(1);
+            player.SteamId = null;
+            tournaments.Add(tournament);
+
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                tournamentManager.AddTournamentApp(player, tournament));
+            Assert.AreEqual(0, tournament.Players.Count);
+        }
+
+        [TestMethod]
+        public void TestSoloBracketRevalidatesSteamIds()
+        {
+            var tournament = CreateTournament(1, "Tournament");
+            var players = new List<Player> { CreatePlayer(1), CreatePlayer(2) };
+            players[1].SteamId = "invalid";
+            tournaments.Add(tournament);
+
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                tournamentManager.GenerateSoloBracket(players, tournament));
+            Assert.AreEqual(0, matches.Count);
+        }
+
+        [TestMethod]
+        public void TestTeamRegistrationRequiresCompleteRoster()
+        {
+            var members = Enumerable.Range(1, 4).Select(CreateUser).ToArray();
+            teamRepo.SeedTeam(new Team(100, "Incomplete Team", members[0]), members);
+            var tournament = CreateTournament(1, "Team Tournament");
+            tournament.IsTeamTournament = true;
+            tournament.TeamSizeRequired = 5;
+            tournaments.Add(tournament);
+
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                tournamentManager.AddTeamToTournament(100, tournament.Id));
+            Assert.AreEqual(0, tournament.TeamIds.Count);
+        }
+
+        [TestMethod]
+        public void TestTeamBracketRevalidatesEveryMemberSteamId()
+        {
+            var members = Enumerable.Range(1, 5).Select(CreateUser).ToArray();
+            members[4].SteamId = null;
+            teamRepo.SeedTeam(new Team(101, "Invalid Team", members[0]), members);
+            var tournament = CreateTournament(1, "Team Tournament");
+            tournament.IsTeamTournament = true;
+            tournament.TeamSizeRequired = 5;
+            tournaments.Add(tournament);
+
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                tournamentManager.GenerateTeamBracket([1, 101], tournament));
+            Assert.AreEqual(0, teamMatches.Count);
+        }
+
+        [TestMethod]
         public void TestGetAllMatchesInTournament()
         {
             var tournament = CreateTournament(1, "Tournament 1");
@@ -295,7 +362,12 @@ namespace Unit_Tests
         };
 
         private static Player CreatePlayer(int id) =>
-            new Player(id, "Player", id.ToString(), 20, $"player{id}", $"player{id}@test.local", "password", $"steam{id}", false);
+            new Player(id, "Player", id.ToString(), 20, $"player{id}", $"player{id}@test.local", "password", CreateSteamId(id), false);
+
+        private static User CreateUser(int id) =>
+            new(id, "Player", id.ToString(), 20, $"user{id}", $"user{id}@test.local", "password", false, CreateSteamId(id));
+
+        private static string CreateSteamId(int id) => $"7656119800000{id:D4}";
 
         private static void CloseSoloRound(int roundNumber)
         {

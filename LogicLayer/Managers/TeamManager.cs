@@ -1,5 +1,6 @@
 ﻿using LogicLayer.IRepos;
 using LogicLayer.Models;
+using LogicLayer.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,15 +12,18 @@ namespace LogicLayer.Managers
         private readonly ITeamRepo teamRepo;
         private readonly IUserRepo userRepo;
         private readonly INotificationRepo notificationRepo;
+        private readonly ITournamentRepo tournamentRepo;
 
         public TeamManager(
             ITeamRepo teamRepo,
             IUserRepo userRepo,
-            INotificationRepo notificationRepo)
+            INotificationRepo notificationRepo,
+            ITournamentRepo tournamentRepo)
         {
             this.teamRepo = teamRepo;
             this.userRepo = userRepo;
             this.notificationRepo = notificationRepo;
+            this.tournamentRepo = tournamentRepo;
         }
 
 
@@ -53,8 +57,8 @@ namespace LogicLayer.Managers
             var captain = userRepo.GetUserById(captainId)
                 ?? throw new InvalidOperationException("Captain does not exist.");
 
-            if (string.IsNullOrWhiteSpace(captain.SteamId) || captain.SteamId == "0")
-                throw new InvalidOperationException("Captain must have a SteamID.");
+            if (!PlayerEligibilityPolicy.HasValidSteamId(captain))
+                throw new InvalidOperationException("Captain must have a valid SteamID64.");
 
             teamRepo.CreateTeam(name.Trim(), captainId);
         }
@@ -65,8 +69,8 @@ namespace LogicLayer.Managers
             var user = userRepo.GetUserById(userId)
                 ?? throw new InvalidOperationException("User was not found.");
 
-            if (string.IsNullOrWhiteSpace(user.SteamId) || user.SteamId == "0")
-                throw new Exception("You must add your SteamID before joining a team.");
+            if (!PlayerEligibilityPolicy.HasValidSteamId(user))
+                throw new InvalidOperationException("You must add a valid SteamID64 before joining a team.");
 
             if (teamRepo.GetTeamByUser(userId) != null)
                 throw new Exception("You are already in a team.");
@@ -121,10 +125,12 @@ namespace LogicLayer.Managers
             if (req == null)
                 throw new Exception("Request not found.");
 
+            EnsureRosterCanChange(captainTeam.Id);
+
             var user = userRepo.GetUserById(req.UserId)
                 ?? throw new InvalidOperationException("User was not found.");
-            if (string.IsNullOrWhiteSpace(user.SteamId))
-                throw new Exception("User must add SteamID before joining team.");
+            if (!PlayerEligibilityPolicy.HasValidSteamId(user))
+                throw new InvalidOperationException("User must add a valid SteamID64 before joining the team.");
 
             teamRepo.AddPlayerToTeam(
                 captainTeam.Id,
@@ -173,6 +179,8 @@ namespace LogicLayer.Managers
             if (team == null)
                 throw new Exception("User is not in a team.");
 
+            EnsureRosterCanChange(team.Id);
+
             if (team.Captain.Id == userId)
             {
                 var members = teamRepo.GetTeamMembers(team.Id)
@@ -216,6 +224,8 @@ namespace LogicLayer.Managers
             if (captainId == userId)
                 throw new Exception("Captain cannot kick himself.");
 
+            EnsureRosterCanChange(team.Id);
+
             _ = teamRepo.GetTeamMembers(team.Id)
                 .FirstOrDefault(item => item.Id == userId)
                 ?? throw new Exception("User is not a member of this team.");
@@ -226,6 +236,13 @@ namespace LogicLayer.Managers
                 userId,
                 $"You were removed from team '{team.Name}'.",
                 "/Teams/Teams");
+        }
+
+        private void EnsureRosterCanChange(int teamId)
+        {
+            if (tournamentRepo.HasActiveTeamRegistration(teamId))
+                throw new InvalidOperationException(
+                    "Team membership cannot change while the team is registered for an active tournament.");
         }
     }
 }

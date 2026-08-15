@@ -16,6 +16,8 @@ namespace LogicLayer.IRepos
         void RemovePlayerFromTournament(Player player, Tournament tournament);
 
         List<Player> GetAllPlayersInTournament(int tournamentId);
+        bool HasActivePlayerRegistration(int userId);
+        bool HasActiveTeamRegistration(int teamId);
 
         void AddTeamTournamentApp(int teamId, int tournamentId);
         List<int> GetTeamApplications(int tournamentId);

@@ -1,6 +1,7 @@
 ﻿using LogicLayer.Enums;
 using LogicLayer.IRepos;
 using LogicLayer.Models;
+using LogicLayer.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,15 +11,18 @@ namespace LogicLayer.Managers
     public class TournamentManager
     {
         private readonly ITournamentRepo repo;
+        private readonly ITeamRepo teamRepo;
         private readonly MatchManager matchManager;
         private readonly TeamMatchManager teamMatchManager;
 
         public TournamentManager(
             ITournamentRepo repo,
+            ITeamRepo teamRepo,
             MatchManager matchManager,
             TeamMatchManager teamMatchManager)
         {
             this.repo = repo;
+            this.teamRepo = teamRepo;
             this.matchManager = matchManager;
             this.teamMatchManager = teamMatchManager;
         }
@@ -72,6 +76,9 @@ namespace LogicLayer.Managers
             if (player?.Id == null)
                 throw new InvalidOperationException("A valid player account is required.");
 
+            if (!PlayerEligibilityPolicy.HasValidSteamId(player))
+                throw new InvalidOperationException("A valid SteamID64 is required to enter a tournament.");
+
             if (tournament.IsTeamTournament)
                 throw new InvalidOperationException("Individual players cannot register for a team tournament.");
 
@@ -102,6 +109,7 @@ namespace LogicLayer.Managers
             EnsureTeamTournament(tournament);
             EnsureRegistrationIsOpen(tournament);
             EnsureRosterCanChange(tournament);
+            EnsureTeamIsEligible(teamId, tournament.TeamSizeRequired);
 
             if (repo.GetTeamApplications(tournamentId).Contains(teamId))
                 throw new InvalidOperationException("This team is already registered.");
@@ -145,6 +153,9 @@ namespace LogicLayer.Managers
             if (players == null || players.Count < 2 || players.Count % 2 != 0)
                 throw new InvalidOperationException("A solo bracket requires an even number of at least two players.");
 
+            if (players.Any(player => player.Id == null || !PlayerEligibilityPolicy.HasValidSteamId(player)))
+                throw new InvalidOperationException("Every participant must have a valid SteamID64 before generating the bracket.");
+
             foreach (var match in existing)
                 matchManager.RemoveMatch(match);
 
@@ -155,6 +166,9 @@ namespace LogicLayer.Managers
         public void GenerateTeamBracket(List<int> teamIds, Tournament tournament, bool replaceExisting = false)
         {
             EnsureTeamTournament(tournament);
+            foreach (var teamId in teamIds.Distinct())
+                EnsureTeamIsEligible(teamId, tournament.TeamSizeRequired);
+
             teamMatchManager.GenerateTeamBracket(teamIds, tournament.Id, replaceExisting);
             UpdateTournamentStatus(tournament);
         }
@@ -179,6 +193,19 @@ namespace LogicLayer.Managers
         {
             if (tournament.Status != Status.Open)
                 throw new InvalidOperationException("Registration is closed for this tournament.");
+        }
+
+        private void EnsureTeamIsEligible(int teamId, int requiredSize)
+        {
+            var team = teamRepo.GetTeamById(teamId)
+                ?? throw new InvalidOperationException("Team was not found.");
+            var members = teamRepo.GetTeamMembers(team.Id);
+
+            if (members.Count != requiredSize)
+                throw new InvalidOperationException($"Team must have exactly {requiredSize} approved players.");
+
+            if (members.Any(member => !PlayerEligibilityPolicy.HasValidSteamId(member)))
+                throw new InvalidOperationException("Every team member must have a valid SteamID64.");
         }
 
         private static void ValidateTournament(Tournament tournament)

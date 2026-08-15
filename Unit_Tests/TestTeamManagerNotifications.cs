@@ -13,6 +13,8 @@ public class TestTeamManagerNotifications
     private List<User> users = null!;
     private MockTeamRepo teamRepo = null!;
     private MockNotificationRepo notificationRepo = null!;
+    private MockTournamentRepo tournamentRepo = null!;
+    private List<Tournament> tournaments = null!;
     private TeamManager manager = null!;
 
     [TestInitialize]
@@ -29,7 +31,13 @@ public class TestTeamManagerNotifications
             member,
             secondMember);
         notificationRepo = new MockNotificationRepo();
-        manager = new TeamManager(teamRepo, new MockUserRepo(users), notificationRepo);
+        tournaments = [];
+        tournamentRepo = new MockTournamentRepo(tournaments);
+        manager = new TeamManager(
+            teamRepo,
+            new MockUserRepo(users),
+            notificationRepo,
+            tournamentRepo);
     }
 
     [TestMethod]
@@ -56,6 +64,18 @@ public class TestTeamManagerNotifications
 
         Assert.ThrowsExactly<InvalidOperationException>(() =>
             manager.CreateTeam("New Team", userWithoutSteamId.Id!.Value));
+    }
+
+    [TestMethod]
+    public void JoiningTeamRejectsInvalidSteamIdFormat()
+    {
+        var userWithInvalidSteamId = CreateUser(4, "invalid-steam");
+        userWithInvalidSteamId.SteamId = "steam123";
+        users.Add(userWithInvalidSteamId);
+
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            manager.RequestJoinTeam(1, userWithInvalidSteamId.Id!.Value));
+        Assert.HasCount(0, teamRepo.GetRequestsForUser(userWithInvalidSteamId.Id!.Value));
     }
 
     [TestMethod]
@@ -90,6 +110,25 @@ public class TestTeamManagerNotifications
             new[] { member.Id!.Value, secondMember.Id!.Value },
             notificationRepo.Notifications.Select(item => item.UserId).ToArray());
         Assert.IsNull(teamRepo.GetTeamById(1));
+    }
+
+    [TestMethod]
+    public void ActiveTournamentLocksTeamMembership()
+    {
+        tournaments.Add(new Tournament
+        {
+            Id = 1,
+            Name = "Team Cup",
+            Description = "Description",
+            Status = LogicLayer.Enums.Status.Open,
+            IsTeamTournament = true,
+            TeamSizeRequired = 5,
+            TeamIds = [1]
+        });
+
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            manager.LeaveTeam(member.Id!.Value));
+        Assert.IsNotNull(teamRepo.GetTeamByUser(member.Id!.Value));
     }
 
     private static User CreateUser(int id, string username) =>

@@ -46,6 +46,16 @@ namespace Unit_Tests.MockRepos
         public List<Player> GetAllPlayersInTournament(int tournamentId) =>
             GetTournamentById(tournamentId)?.Players ?? new List<Player>();
 
+        public bool HasActivePlayerRegistration(int userId) =>
+            Tournaments.Any(tournament =>
+                tournament.Status != LogicLayer.Enums.Status.Closed &&
+                tournament.Players.Any(player => player.Id == userId));
+
+        public bool HasActiveTeamRegistration(int teamId) =>
+            Tournaments.Any(tournament =>
+                tournament.Status != LogicLayer.Enums.Status.Closed &&
+                tournament.TeamIds.Contains(teamId));
+
         public void AddTeamTournamentApp(int teamId, int tournamentId)
         {
             var tournament = GetTournamentById(tournamentId);

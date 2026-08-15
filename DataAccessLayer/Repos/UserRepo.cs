@@ -271,22 +271,6 @@ namespace DataLayer.Repos
             return Convert.ToInt32(cmd.ExecuteScalar()) == 1;
         }
 
-        public bool CheckIfUsernameExists(string username, int selfId)
-        {
-            EnsureConnection();
-
-            var cmd = new MySqlCommand(@"
-                SELECT EXISTS(
-                    SELECT 1 FROM user
-                    WHERE username=@USERNAME AND id != @ID
-                )", conn.Connection);
-
-            cmd.Parameters.AddWithValue("@USERNAME", username);
-            cmd.Parameters.AddWithValue("@ID", selfId);
-
-            return Convert.ToInt32(cmd.ExecuteScalar()) == 1;
-        }
-
         public List<User> SearchUser(string term)
         {
             EnsureConnection();

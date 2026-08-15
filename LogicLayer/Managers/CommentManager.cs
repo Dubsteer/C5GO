@@ -23,8 +23,6 @@ namespace LogicLayer.Managers
 
         public void DeleteComment(Comment c) => repo.DeleteComment(c);
         public Comment? GetCommentById(int id) => repo.GetCommentById(id);
-        public List<Comment> GetAllCommentsByPostId(int postId) => repo.GetAllCommentsByPostId(postId);
-
         public List<Comment> GetAllCommentsWithReplies(int postId)
         {
             var list = repo.GetAllCommentsByPostId(postId);

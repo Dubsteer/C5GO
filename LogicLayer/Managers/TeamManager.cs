@@ -9,12 +9,17 @@ namespace LogicLayer.Managers
     public class TeamManager
     {
         private readonly ITeamRepo teamRepo;
+        private readonly IUserRepo userRepo;
         private readonly INotificationRepo notificationRepo;
 
-        public TeamManager(ITeamRepo repo, INotificationRepo notifRepo)
+        public TeamManager(
+            ITeamRepo teamRepo,
+            IUserRepo userRepo,
+            INotificationRepo notificationRepo)
         {
-            teamRepo = repo;
-            notificationRepo = notifRepo;
+            this.teamRepo = teamRepo;
+            this.userRepo = userRepo;
+            this.notificationRepo = notificationRepo;
         }
 
 
@@ -45,13 +50,19 @@ namespace LogicLayer.Managers
 
         public void CreateTeam(string name, int captainId)
         {
-            teamRepo.CreateTeam(name, captainId);
+            var captain = userRepo.GetUserById(captainId)
+                ?? throw new InvalidOperationException("Captain does not exist.");
+
+            if (string.IsNullOrWhiteSpace(captain.SteamId) || captain.SteamId == "0")
+                throw new InvalidOperationException("Captain must have a SteamID.");
+
+            teamRepo.CreateTeam(name.Trim(), captainId);
         }
 
 
         public void RequestJoinTeam(int teamId, int userId)
         {
-            var user = teamRepo.GetUserById(userId)
+            var user = userRepo.GetUserById(userId)
                 ?? throw new InvalidOperationException("User was not found.");
 
             if (string.IsNullOrWhiteSpace(user.SteamId) || user.SteamId == "0")
@@ -110,7 +121,7 @@ namespace LogicLayer.Managers
             if (req == null)
                 throw new Exception("Request not found.");
 
-            var user = teamRepo.GetUserById(req.UserId)
+            var user = userRepo.GetUserById(req.UserId)
                 ?? throw new InvalidOperationException("User was not found.");
             if (string.IsNullOrWhiteSpace(user.SteamId))
                 throw new Exception("User must add SteamID before joining team.");
@@ -180,7 +191,7 @@ namespace LogicLayer.Managers
                 return;
             }
 
-            var user = teamRepo.GetUserById(userId)
+            var user = userRepo.GetUserById(userId)
                 ?? throw new InvalidOperationException("User was not found.");
             teamRepo.RemovePlayer(team.Id, userId);
 

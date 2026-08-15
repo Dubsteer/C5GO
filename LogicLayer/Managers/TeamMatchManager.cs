@@ -55,7 +55,7 @@ namespace LogicLayer.Managers
                 .ToList();
         }
 
-        public TeamMatch GetTeamMatchById(int id)
+        private TeamMatch GetTeamMatchById(int id)
         {
             return GetAllTeamMatches().FirstOrDefault(match => match.Id == id)
                 ?? throw new InvalidOperationException("Team match was not found.");
@@ -64,11 +64,6 @@ namespace LogicLayer.Managers
         public void AddTeamMatch(TeamMatch match)
         {
             repo.AddTeamMatch(match);
-        }
-
-        public void UpdateTeamMatch(TeamMatch match)
-        {
-            repo.UpdateTeamMatch(match);
         }
 
         public void UpdateResult(

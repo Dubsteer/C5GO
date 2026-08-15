@@ -31,16 +31,12 @@ namespace Unit_Tests.MockRepos
 
         public void UpdatePost(Post post)
         {
-            var existingPost = posts.Find(p => p.Id == post.Id);
+            var index = posts.FindIndex(p => p.Id == post.Id);
 
-            if (existingPost != null)
-            {
-                existingPost.Content = post.Content;
-            }
-            else
-            {
+            if (index < 0)
                 throw new Exception("Post not found");
-            }
+
+            posts[index] = post;
         }
     }
 }

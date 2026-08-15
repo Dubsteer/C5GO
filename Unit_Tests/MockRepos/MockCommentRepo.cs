@@ -13,22 +13,10 @@ namespace Unit_Tests.MockRepos
         public List<Comment> GetAllCommentsByPostId(int id) =>
             comments.Where(c => c.PostId == id).ToList();
 
-        public Comment GetCommentByUserId(int id) =>
-            comments.FirstOrDefault(c => c.User.Id == id)!;
-
-        public void UpdateComment(Comment comment)
-        {
-            var index = comments.FindIndex(c => c.Id == comment.Id);
-            if (index >= 0)
-                comments[index] = comment;
-        }
-
         public void DeleteComment(Comment comment) => comments.Remove(comment);
 
         public Comment GetCommentById(int id) =>
             comments.FirstOrDefault(c => c.Id == id)!;
-
-        public List<Comment> GetAllComments() => comments;
 
         public void AddReply(CommentReply reply) => replies.Add(reply);
 
@@ -39,8 +27,5 @@ namespace Unit_Tests.MockRepos
             replies.FirstOrDefault(r => r.Id == replyId)!;
 
         public void DeleteReply(CommentReply reply) => replies.Remove(reply);
-
-        public bool CheckIfCommentExists(string commentText) =>
-            comments.Any(c => c.Content == commentText);
     }
 }

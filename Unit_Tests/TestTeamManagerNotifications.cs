@@ -10,6 +10,7 @@ public class TestTeamManagerNotifications
     private User captain = null!;
     private User member = null!;
     private User secondMember = null!;
+    private List<User> users = null!;
     private MockTeamRepo teamRepo = null!;
     private MockNotificationRepo notificationRepo = null!;
     private TeamManager manager = null!;
@@ -20,14 +21,41 @@ public class TestTeamManagerNotifications
         captain = CreateUser(1, "captain");
         member = CreateUser(2, "member");
         secondMember = CreateUser(3, "second-member");
-        teamRepo = new MockTeamRepo([captain, member, secondMember]);
+        users = [captain, member, secondMember];
+        teamRepo = new MockTeamRepo(users);
         teamRepo.SeedTeam(
             new Team(1, "C5GO Squad", captain),
             captain,
             member,
             secondMember);
         notificationRepo = new MockNotificationRepo();
-        manager = new TeamManager(teamRepo, notificationRepo);
+        manager = new TeamManager(teamRepo, new MockUserRepo(users), notificationRepo);
+    }
+
+    [TestMethod]
+    public void CreatingTeamTrimsNameAndUsesExistingCaptain()
+    {
+        manager.CreateTeam("  New Team  ", captain.Id!.Value);
+
+        Assert.IsNotNull(teamRepo.Teams.SingleOrDefault(team => team.Name == "New Team"));
+    }
+
+    [TestMethod]
+    public void CreatingTeamRejectsMissingCaptain()
+    {
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            manager.CreateTeam("New Team", 999));
+    }
+
+    [TestMethod]
+    public void CreatingTeamRequiresCaptainSteamId()
+    {
+        var userWithoutSteamId = CreateUser(4, "no-steam");
+        userWithoutSteamId.SteamId = null;
+        users.Add(userWithoutSteamId);
+
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            manager.CreateTeam("New Team", userWithoutSteamId.Id!.Value));
     }
 
     [TestMethod]

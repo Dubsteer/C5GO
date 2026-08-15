@@ -117,17 +117,6 @@ namespace Unit_Tests
         }
 
         [TestMethod]
-        public void TestDeleteUser()
-        {
-            var user = CreateUser(1, "dubsteer", "dubsteer@test.local");
-            userManager.CreateUser(user);
-
-            userManager.DeleteUser(user);
-
-            Assert.AreEqual(0, users.Count);
-        }
-
-        [TestMethod]
         public void TestAdminCanDeleteRegularUser()
         {
             var admin = CreateUser(1, "admin", "admin@test.local");

@@ -23,7 +23,7 @@ namespace Unit_Tests
             var comment = CreateComment();
 
             commentManager.AddComment(comment);
-            var allComments = commentManager.GetAllCommentsByPostId(1);
+            var allComments = commentManager.GetAllCommentsWithReplies(1);
 
             Assert.AreEqual(1, allComments.Count);
             Assert.AreEqual("This is a test comment", allComments[0].Content);
@@ -37,7 +37,7 @@ namespace Unit_Tests
 
             commentManager.DeleteComment(comment);
 
-            Assert.AreEqual(0, commentManager.GetAllCommentsByPostId(1).Count);
+            Assert.AreEqual(0, commentManager.GetAllCommentsWithReplies(1).Count);
         }
 
         [TestMethod]
@@ -61,7 +61,7 @@ namespace Unit_Tests
 
             commentManager.AddComment(comment);
 
-            Assert.AreEqual("Trimmed comment", commentManager.GetAllCommentsByPostId(1)[0].Content);
+            Assert.AreEqual("Trimmed comment", commentManager.GetAllCommentsWithReplies(1)[0].Content);
         }
 
         [TestMethod]
@@ -70,7 +70,7 @@ namespace Unit_Tests
             var comment = new Comment(1, testUser, "   ", DateTime.Now, 1);
 
             Assert.ThrowsExactly<ArgumentException>(() => commentManager.AddComment(comment));
-            Assert.AreEqual(0, commentManager.GetAllCommentsByPostId(1).Count);
+            Assert.AreEqual(0, commentManager.GetAllCommentsWithReplies(1).Count);
         }
 
         [TestMethod]

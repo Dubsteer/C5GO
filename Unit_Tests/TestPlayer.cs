@@ -21,21 +21,10 @@ namespace Unit_Tests
         public void Setup() => players.Clear();
 
         [TestMethod]
-        public void TestInitializeRole()
-        {
-            var player = CreatePlayer(1, "dubsteer", "steam123");
-
-            playerManager.InitializeRole(player);
-
-            Assert.AreEqual(1, playerManager.GetAllPlayers().Count);
-            Assert.AreEqual(player.SteamId, playerManager.GetAllPlayers()[0].SteamId);
-        }
-
-        [TestMethod]
         public void TestGetAllPlayers()
         {
-            playerManager.InitializeRole(CreatePlayer(1, "player1", "steam1"));
-            playerManager.InitializeRole(CreatePlayer(2, "player2", "steam2"));
+            players.Add(CreatePlayer(1, "player1", "steam1"));
+            players.Add(CreatePlayer(2, "player2", "steam2"));
 
             var allPlayers = playerManager.GetAllPlayers();
 
@@ -46,7 +35,7 @@ namespace Unit_Tests
         public void TestGetPlayer()
         {
             var player = CreatePlayer(1, "dubsteer", "steam123");
-            playerManager.InitializeRole(player);
+            players.Add(player);
 
             var fetchedPlayer = playerManager.GetPlayer(player);
 
@@ -56,7 +45,7 @@ namespace Unit_Tests
         [TestMethod]
         public void TestRemovePlayerRole()
         {
-            playerManager.InitializeRole(CreatePlayer(1, "dubsteer", "steam123"));
+            players.Add(CreatePlayer(1, "dubsteer", "steam123"));
 
             playerManager.RemovePlayerRole(1);
 

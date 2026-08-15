@@ -192,11 +192,6 @@ namespace LogicLayer.Managers
             return true;
         }
 
-        public void DeleteUser(User user)
-        {
-            userRepo.DeleteUser(user);
-        }
-
         public void DeleteUserAsAdmin(
             int userId,
             int actingAdminId,
@@ -223,19 +218,9 @@ namespace LogicLayer.Managers
             userRepo.DeleteUser(user);
         }
 
-        public bool CheckIfUsernameExists(string username, int selfId)
-        {
-            return userRepo.CheckIfUsernameExists(username, selfId);
-        }
-
         public List<User> SearchUser(string term)
         {
             return userRepo.SearchUser(term);
-        }
-
-        public bool SteamIdExists(string steamId)
-        {
-            return userRepo.SteamIdExists(steamId);
         }
 
     }

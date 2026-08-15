@@ -86,31 +86,6 @@ namespace DataLayer.Repos
             return comments;
         }
 
-        public Comment? GetCommentByUserId(int userId)
-        {
-            EnsureOpen();
-
-            var cmd = new MySqlCommand(@"
-                SELECT * FROM comment 
-                WHERE authorid = @uid
-                ORDER BY posted_on DESC
-                LIMIT 1
-            ", conn.Connection);
-
-            cmd.Parameters.AddWithValue("@uid", userId);
-
-            using var r = cmd.ExecuteReader();
-            if (!r.Read()) return null;
-
-            return new Comment(
-                r.GetInt32("id"),
-                new User(r.GetInt32("authorid")),
-                r.GetString("content"),
-                r.GetDateTime("posted_on"),
-                r.GetInt32("post_id")
-            );
-        }
-
         public Comment? GetCommentById(int id)
         {
             EnsureOpen();
@@ -133,25 +108,6 @@ namespace DataLayer.Repos
             );
         }
 
-        public void UpdateComment(Comment comment)
-        {
-            EnsureOpen();
-
-            var cmd = new MySqlCommand(@"
-                UPDATE comment SET
-                authorid=@aid, content=@content, posted_on=@posted, post_id=@pid
-                WHERE id=@id
-            ", conn.Connection);
-
-            cmd.Parameters.AddWithValue("@id", comment.Id);
-            cmd.Parameters.AddWithValue("@aid", comment.User.Id);
-            cmd.Parameters.AddWithValue("@content", comment.Content);
-            cmd.Parameters.AddWithValue("@posted", comment.Posted_on);
-            cmd.Parameters.AddWithValue("@pid", comment.PostId);
-
-            cmd.ExecuteNonQuery();
-        }
-
         public void DeleteComment(Comment comment)
         {
             EnsureOpen();
@@ -169,31 +125,6 @@ namespace DataLayer.Repos
 
             cmd.Parameters.AddWithValue("@id", comment.Id);
             cmd.ExecuteNonQuery();
-        }
-
-        public List<Comment> GetAllComments()
-        {
-            EnsureOpen();
-
-            var cmd = new MySqlCommand(
-                "SELECT * FROM comment",
-                conn.Connection);
-
-            List<Comment> list = new();
-
-            using var r = cmd.ExecuteReader();
-            while (r.Read())
-            {
-                list.Add(new Comment(
-                    r.GetInt32("id"),
-                    new User(r.GetInt32("authorid")),
-                    r.GetString("content"),
-                    r.GetDateTime("posted_on"),
-                    r.GetInt32("post_id")
-                ));
-            }
-
-            return list;
         }
 
         public void AddReply(CommentReply reply)
@@ -312,16 +243,5 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        public bool CheckIfCommentExists(string text)
-        {
-            EnsureOpen();
-
-            var cmd = new MySqlCommand(
-                "SELECT EXISTS(SELECT 1 FROM comment WHERE content=@txt)",
-                conn.Connection);
-
-            cmd.Parameters.AddWithValue("@txt", text);
-            return Convert.ToInt32(cmd.ExecuteScalar()) == 1;
-        }
     }
 }

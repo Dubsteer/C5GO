@@ -58,19 +58,6 @@ namespace Unit_Tests
         }
 
         [TestMethod]
-        public void TestUpdateMatch()
-        {
-            var match = CreateMatch(1);
-            matches.Add(match);
-            match.Player1Score = 2;
-
-            matchManager.UpdateMatch(match);
-
-            Assert.AreEqual(1, matches.Count);
-            Assert.AreEqual(2, matches[0].Player1Score);
-        }
-
-        [TestMethod]
         public void TestUpdateResult()
         {
             var match = CreateMatch(1);

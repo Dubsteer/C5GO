@@ -23,6 +23,11 @@ namespace DataLayer.Repos
                 conn.Open();
         }
 
+        private static bool IsNull(MySqlDataReader reader, string column)
+        {
+            return reader.IsDBNull(reader.GetOrdinal(column));
+        }
+
         public List<Tournament> GetAllTournaments()
         {
             EnsureConnection();
@@ -253,15 +258,15 @@ namespace DataLayer.Repos
             while (r.Read())
             {
                 list.Add(new Player(
-                    r.GetInt32(0),
-                    r.GetString(1),
-                    r.GetString(2),
-                    r.GetInt32(3),
-                    r.GetString(4),
-                    r.GetString(5),
+                    r.GetInt32("id"),
+                    IsNull(r, "first_name") ? string.Empty : r.GetString("first_name"),
+                    IsNull(r, "last_name") ? string.Empty : r.GetString("last_name"),
+                    IsNull(r, "age") ? 0 : r.GetInt32("age"),
+                    IsNull(r, "username") ? string.Empty : r.GetString("username"),
+                    IsNull(r, "email") ? string.Empty : r.GetString("email"),
                     string.Empty,
-                    r.GetString(6),
-                    r.GetBoolean(7)
+                    IsNull(r, "steam_id") ? string.Empty : r.GetString("steam_id"),
+                    !IsNull(r, "is_moderator") && r.GetBoolean("is_moderator")
                 ));
             }
 

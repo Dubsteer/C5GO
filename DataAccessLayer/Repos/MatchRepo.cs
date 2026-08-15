@@ -23,6 +23,11 @@ namespace DataLayer.Repos
                 conn.Open();
         }
 
+        private static bool IsNull(MySqlDataReader reader, string column)
+        {
+            return reader.IsDBNull(reader.GetOrdinal(column));
+        }
+
         public List<Match> GetAllMatches()
         {
             EnsureOpen();
@@ -62,26 +67,26 @@ namespace DataLayer.Repos
                 {
                     var p1 = new Player(new User(
                         r.GetInt32("u1_id"),
-                        r.GetString("u1_first_name"),
-                        r.GetString("u1_last_name"),
-                        r.GetInt32("u1_age"),
-                        r.GetString("u1_username"),
-                        r.GetString("u1_email"),
+                        IsNull(r, "u1_first_name") ? string.Empty : r.GetString("u1_first_name"),
+                        IsNull(r, "u1_last_name") ? string.Empty : r.GetString("u1_last_name"),
+                        IsNull(r, "u1_age") ? 0 : r.GetInt32("u1_age"),
+                        IsNull(r, "u1_username") ? string.Empty : r.GetString("u1_username"),
+                        IsNull(r, "u1_email") ? string.Empty : r.GetString("u1_email"),
                         string.Empty,
-                        r.GetBoolean("u1_is_moderator"),
-                        r.GetString("u1_steam_id")
+                        !IsNull(r, "u1_is_moderator") && r.GetBoolean("u1_is_moderator"),
+                        IsNull(r, "u1_steam_id") ? string.Empty : r.GetString("u1_steam_id")
                     ));
 
                     var p2 = new Player(new User(
                         r.GetInt32("u2_id"),
-                        r.GetString("u2_first_name"),
-                        r.GetString("u2_last_name"),
-                        r.GetInt32("u2_age"),
-                        r.GetString("u2_username"),
-                        r.GetString("u2_email"),
+                        IsNull(r, "u2_first_name") ? string.Empty : r.GetString("u2_first_name"),
+                        IsNull(r, "u2_last_name") ? string.Empty : r.GetString("u2_last_name"),
+                        IsNull(r, "u2_age") ? 0 : r.GetInt32("u2_age"),
+                        IsNull(r, "u2_username") ? string.Empty : r.GetString("u2_username"),
+                        IsNull(r, "u2_email") ? string.Empty : r.GetString("u2_email"),
                         string.Empty,
-                        r.GetBoolean("u2_is_moderator"),
-                        r.GetString("u2_steam_id")
+                        !IsNull(r, "u2_is_moderator") && r.GetBoolean("u2_is_moderator"),
+                        IsNull(r, "u2_steam_id") ? string.Empty : r.GetString("u2_steam_id")
                     ));
 
                     list.Add(new Match(

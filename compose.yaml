@@ -1,0 +1,71 @@
+name: c5go
+
+services:
+  database:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}"
+      MYSQL_DATABASE: "${MYSQL_DATABASE:-c5go}"
+      MYSQL_USER: "${MYSQL_USER:-c5go_app}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping --host=127.0.0.1 --user=root --password=\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    networks:
+      - backend
+
+  website:
+    build:
+      context: .
+      dockerfile: Website/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+        restart: true
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__DefaultConnection: "Server=database;Port=3306;Database=${MYSQL_DATABASE:-c5go};User ID=${MYSQL_USER:-c5go_app};Password=${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env};SslMode=None;AllowPublicKeyRetrieval=True;"
+      AppSettings__BaseUrl: "${APP_BASE_URL:-http://localhost:5063}"
+      AppSettings__AuthUrl: "${APP_AUTH_URL:-http://localhost:5063}"
+      AppSettings__ApiUrl: "${APP_API_URL:-http://localhost:5063}"
+      EmailSettings__SmtpServer: "${EMAIL_SMTP_SERVER:-smtp.gmail.com}"
+      EmailSettings__Port: "${EMAIL_SMTP_PORT:-587}"
+      EmailSettings__SenderName: "${EMAIL_SENDER_NAME:-C5GO Platform}"
+      EmailSettings__SenderEmail: "${EMAIL_SENDER_EMAIL:?Set EMAIL_SENDER_EMAIL in .env}"
+      EmailSettings__Username: "${EMAIL_USERNAME:?Set EMAIL_USERNAME in .env}"
+      EmailSettings__Password: "${EMAIL_PASSWORD:?Set EMAIL_PASSWORD in .env}"
+      Turnstile__SiteKey: "${TURNSTILE_SITE_KEY:?Set TURNSTILE_SITE_KEY in .env}"
+      Turnstile__SecretKey: "${TURNSTILE_SECRET_KEY:?Set TURNSTILE_SECRET_KEY in .env}"
+      PandaScore__ApiKey: "${PANDA_SCORE_API_KEY:-}"
+      Features__CommunityEnabled: "${COMMUNITY_ENABLED:-true}"
+      ImageStorage__RootPath: /var/lib/c5go/uploads
+      DataProtection__KeysPath: /var/lib/c5go/keys
+      AllowedHosts: "${ALLOWED_HOSTS:-localhost;127.0.0.1;[::1];c5g0.com;www.c5g0.com;auth.c5g0.com;api.c5g0.com}"
+    ports:
+      - "127.0.0.1:${C5GO_HTTP_PORT:-5063}:8080"
+    volumes:
+      - c5go_uploads:/var/lib/c5go/uploads
+      - c5go_keys:/var/lib/c5go/keys
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  c5go_uploads:
+  c5go_keys:

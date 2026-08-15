@@ -3,6 +3,9 @@
 C5GO is an ASP.NET Core 10 web platform for CS2 tournaments, teams, matches,
 news and community discussions. MySQL is used for persistent application data.
 
+For a short, security-safe evaluation workflow, see the
+[Docker review guide for the supervisor](docs/professor-docker-guide.md).
+
 ## Run with Docker
 
 Prerequisites:

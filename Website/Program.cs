@@ -36,6 +36,16 @@ builder.Services.Configure<FeatureOptions>(
 builder.Services.Configure<TurnstileOptions>(
     builder.Configuration.GetSection(TurnstileOptions.SectionName));
 
+builder.Services.AddSingleton(sp =>
+{
+    var environment = sp.GetRequiredService<IWebHostEnvironment>();
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    var rootPath = ImageStoragePathResolver.Resolve(
+        environment,
+        configuration[$"{ImageStorageOptions.SectionName}:RootPath"]);
+    return new ImageStoragePaths(rootPath);
+});
+
 if (builder.Environment.IsProduction() && !turnstileConfiguration.IsConfigured)
 {
     throw new InvalidOperationException(
@@ -226,6 +236,7 @@ else
 }
 
 var app = builder.Build();
+var imageStoragePaths = app.Services.GetRequiredService<ImageStoragePaths>();
 
 app.UseForwardedHeaders();
 
@@ -257,29 +268,8 @@ app.Use(async (context, next) =>
     await next();
 });
 
-var postImagesDirectory = Path.Combine(
-    app.Environment.WebRootPath,
-    "Images",
-    "posts");
-Directory.CreateDirectory(postImagesDirectory);
-
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(postImagesDirectory),
-    RequestPath = "/images/posts"
-});
-
-var communityImagesDirectory = Path.Combine(
-    app.Environment.WebRootPath,
-    "Images",
-    "community");
-Directory.CreateDirectory(communityImagesDirectory);
-
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(communityImagesDirectory),
-    RequestPath = "/images/community"
-});
+MapUploadedImages(app, imageStoragePaths, "posts");
+MapUploadedImages(app, imageStoragePaths, "community");
 app.UseStaticFiles();
 app.UseRouting();
 app.UseRateLimiter();
@@ -309,6 +299,21 @@ static RateLimitPartition<string> CreateFixedWindowLimiter(
             Window = window,
             QueueLimit = 0
         });
+}
+
+static void MapUploadedImages(
+    WebApplication app,
+    ImageStoragePaths storagePaths,
+    string folderName)
+{
+    var directory = storagePaths.GetDirectory(folderName);
+    Directory.CreateDirectory(directory);
+
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(directory),
+        RequestPath = $"/images/{folderName}"
+    });
 }
 
 public partial class Program

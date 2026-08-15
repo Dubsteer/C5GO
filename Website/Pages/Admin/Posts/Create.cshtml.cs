@@ -75,7 +75,15 @@ namespace Website.Pages.Admin.Posts
                 User = author
             };
 
-            postManager.AddPost(post);
+            try
+            {
+                postManager.AddPost(post);
+            }
+            catch
+            {
+                imageStorage.Delete(imagePath);
+                throw;
+            }
 
             return RedirectToPage("./Manage");
         }

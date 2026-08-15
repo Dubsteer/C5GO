@@ -33,6 +33,10 @@
             <div class="mb-3">
                 <span class="form-label d-block">Current image</span>
                 <img src="@Model.Post.ImagePath" class="admin-current-image" alt="Current post cover" />
+                <label class="form-check mt-2">
+                    <input asp-for="RemoveImage" class="form-check-input" />
+                    <span class="form-check-label">Remove the current image</span>
+                </label>
             </div>
         }
 

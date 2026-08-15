@@ -1,7 +1,66 @@
 using Microsoft.AspNetCore.Http;
+using Website.Configuration;
 
 namespace Website.Services
 {
+    public static class ImageStoragePathResolver
+    {
+        public static string Resolve(
+            IWebHostEnvironment environment,
+            string? configuredRootPath)
+        {
+            if (string.IsNullOrWhiteSpace(configuredRootPath))
+            {
+                if (environment.IsProduction())
+                {
+                    throw new InvalidOperationException(
+                        $"{ImageStorageOptions.SectionName}:RootPath must be configured in production.");
+                }
+
+                return Path.GetFullPath(Path.Combine(
+                    environment.WebRootPath,
+                    "Images"));
+            }
+
+            var normalizedPath = configuredRootPath.Trim();
+            if (environment.IsProduction() && !Path.IsPathRooted(normalizedPath))
+            {
+                throw new InvalidOperationException(
+                    $"{ImageStorageOptions.SectionName}:RootPath must be an absolute path in production.");
+            }
+
+            return Path.GetFullPath(Path.IsPathRooted(normalizedPath)
+                ? normalizedPath
+                : Path.Combine(environment.ContentRootPath, normalizedPath));
+        }
+    }
+
+    public sealed class ImageStoragePaths
+    {
+        public ImageStoragePaths(string rootDirectory)
+        {
+            if (string.IsNullOrWhiteSpace(rootDirectory))
+                throw new ArgumentException("An image storage root is required.", nameof(rootDirectory));
+
+            RootDirectory = Path.GetFullPath(rootDirectory);
+        }
+
+        public string RootDirectory { get; }
+
+        public string GetDirectory(string folderName)
+        {
+            if (string.IsNullOrWhiteSpace(folderName) ||
+                folderName.Any(character =>
+                    !char.IsLetterOrDigit(character) &&
+                    character is not '-' and not '_'))
+            {
+                throw new ArgumentException("The image folder name is invalid.", nameof(folderName));
+            }
+
+            return Path.Combine(RootDirectory, folderName);
+        }
+    }
+
     public abstract class ImageStorageBase
     {
         public const long MaximumFileSize = 5 * 1024 * 1024;
@@ -10,13 +69,10 @@ namespace Website.Services
         private readonly string publicPath;
 
         protected ImageStorageBase(
-            IWebHostEnvironment environment,
+            ImageStoragePaths storagePaths,
             string folderName)
         {
-            uploadDirectory = Path.Combine(
-                environment.WebRootPath,
-                "Images",
-                folderName);
+            uploadDirectory = storagePaths.GetDirectory(folderName);
             publicPath = $"/images/{folderName}";
         }
 
@@ -106,16 +162,16 @@ namespace Website.Services
 
     public sealed class PostImageStorage : ImageStorageBase
     {
-        public PostImageStorage(IWebHostEnvironment environment)
-            : base(environment, "posts")
+        public PostImageStorage(ImageStoragePaths storagePaths)
+            : base(storagePaths, "posts")
         {
         }
     }
 
     public sealed class CommunityImageStorage : ImageStorageBase
     {
-        public CommunityImageStorage(IWebHostEnvironment environment)
-            : base(environment, "community")
+        public CommunityImageStorage(ImageStoragePaths storagePaths)
+            : base(storagePaths, "community")
         {
         }
     }

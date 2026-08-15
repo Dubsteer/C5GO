@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Website.Configuration;
 using Website.Models;
-using Website.Services;
 
 namespace Website.Pages.Community;
 
@@ -18,16 +17,13 @@ namespace Website.Pages.Community;
 public class DetailsModel : CommunityPageModel
 {
     private readonly CommunityManager communityManager;
-    private readonly CommunityImageStorage imageStorage;
 
     public DetailsModel(
         CommunityManager communityManager,
-        CommunityImageStorage imageStorage,
         IOptions<FeatureOptions> features)
         : base(features)
     {
         this.communityManager = communityManager;
-        this.imageStorage = imageStorage;
     }
 
     [BindProperty(SupportsGet = true)]
@@ -158,7 +154,6 @@ public class DetailsModel : CommunityPageModel
             if (!communityManager.RemoveOwnDiscussion(Id, userId.Value))
                 throw new InvalidOperationException("The discussion could not be removed.");
 
-            imageStorage.Delete(Discussion.ImagePath);
             return RedirectToPage("./Index");
         }
         catch (InvalidOperationException exception)

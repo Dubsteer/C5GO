@@ -33,11 +33,67 @@ namespace Unit_Tests
         {
             var post = CreatePost();
             postManager.AddPost(post);
-            post.Content = "Updated Content";
+            var updatedPost = new Post(
+                post.Id,
+                post.User,
+                "Updated title",
+                "Updated content",
+                post.Posted_on);
 
-            postManager.UpdatePost(post);
+            postManager.UpdatePost(updatedPost);
 
-            Assert.AreEqual("Updated Content", mockPostRepo.GetAllPosts()[0].Content);
+            Assert.AreEqual("Updated title", mockPostRepo.GetAllPosts()[0].Title);
+            Assert.AreEqual("Updated content", mockPostRepo.GetAllPosts()[0].Content);
+        }
+
+        [TestMethod]
+        public void TestCreatePostNormalizesTitleAndContent()
+        {
+            var post = new Post(1, new User(1), "  Test title  ", "  Test content  ", DateTime.Now);
+
+            postManager.AddPost(post);
+
+            Assert.AreEqual("Test title", post.Title);
+            Assert.AreEqual("Test content", post.Content);
+        }
+
+        [TestMethod]
+        public void TestCreatePostRejectsBlankTitle()
+        {
+            var post = new Post(1, new User(1), "   ", "Test content", DateTime.Now);
+
+            Assert.ThrowsExactly<ArgumentException>(() => postManager.AddPost(post));
+            Assert.AreEqual(0, mockPostRepo.GetAllPosts().Count);
+        }
+
+        [TestMethod]
+        public void TestCreatePostRejectsOversizedTitle()
+        {
+            var post = new Post(
+                1,
+                new User(1),
+                new string('a', PostManager.MaxTitleLength + 1),
+                "Test content",
+                DateTime.Now);
+
+            Assert.ThrowsExactly<ArgumentException>(() => postManager.AddPost(post));
+            Assert.AreEqual(0, mockPostRepo.GetAllPosts().Count);
+        }
+
+        [TestMethod]
+        public void TestUpdatePostRejectsBlankContent()
+        {
+            var existingPost = CreatePost();
+            postManager.AddPost(existingPost);
+            var invalidPost = new Post(
+                existingPost.Id,
+                existingPost.User,
+                "Valid title",
+                "   ",
+                existingPost.Posted_on);
+
+            Assert.ThrowsExactly<ArgumentException>(() => postManager.UpdatePost(invalidPost));
+            Assert.AreSame(existingPost, mockPostRepo.GetAllPosts()[0]);
         }
 
         [TestMethod]

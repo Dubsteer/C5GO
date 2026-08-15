@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace LogicLayer.Models
 {
@@ -29,10 +28,6 @@ namespace LogicLayer.Models
 
         public string? SteamId { get; set; }
         public bool ShowSteamProfile { get; set; }
-
-        public int CommentAuthorId { get; set; }
-
-        public IReadOnlyList<Match> Matches { get; private set; } = [];
 
         public bool EmailConfirmed { get; set; }
         public string? EmailToken { get; set; }
@@ -103,30 +98,6 @@ namespace LogicLayer.Models
             Password = password;
             IsAdmin = isAdmin;
             SteamId = steamId;
-        }
-
-        public User(
-            int? id,
-            string firstname,
-            string lastname,
-            int age,
-            string username,
-            string gmail,
-            string password,
-            bool isAdmin,
-            List<Match> matches
-        )
-        {
-            Id = id;
-            Firstname = firstname;
-            Lastname = lastname;
-            Age = age;
-            Username = username;
-            Gmail = gmail;
-            Password = password;
-            IsAdmin = isAdmin;
-            SteamId = null;
-            Matches = matches ?? new List<Match>();
         }
 
         public User(int id)

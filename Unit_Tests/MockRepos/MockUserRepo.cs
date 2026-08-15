@@ -64,11 +64,6 @@ namespace Unit_Tests.MockRepos
         public bool SteamIdExists(string steamId) =>
             Users.Any(u => !string.IsNullOrWhiteSpace(u.SteamId) && u.SteamId == steamId);
 
-        public bool CheckIfUsernameExists(string username, int selfId) =>
-            Users.Any(u =>
-                u.Id != selfId &&
-                string.Equals(u.Username, username, StringComparison.OrdinalIgnoreCase));
-
         public List<User> SearchUser(string term) =>
             Users.Where(user =>
                 user.Username.Contains(term, StringComparison.OrdinalIgnoreCase) ||

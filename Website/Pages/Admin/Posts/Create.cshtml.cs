@@ -28,7 +28,7 @@ namespace Website.Pages.Admin.Posts
 
         [BindProperty]
         [Required]
-        [StringLength(200)]
+        [StringLength(PostManager.MaxTitleLength)]
         public string Title { get; set; } = "";
 
         [BindProperty]
@@ -68,8 +68,8 @@ namespace Website.Pages.Admin.Posts
 
             var post = new Post
             {
-                Title = Title.Trim(),
-                Content = PostContent.Trim(),
+                Title = Title,
+                Content = PostContent,
                 Posted_on = DateTime.UtcNow,
                 ImagePath = imagePath,
                 User = author
@@ -78,6 +78,12 @@ namespace Website.Pages.Admin.Posts
             try
             {
                 postManager.AddPost(post);
+            }
+            catch (ArgumentException exception)
+            {
+                imageStorage.Delete(imagePath);
+                ModelState.AddModelError(string.Empty, exception.Message);
+                return Page();
             }
             catch
             {

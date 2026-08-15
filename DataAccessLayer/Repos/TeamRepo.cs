@@ -23,34 +23,6 @@ namespace DataLayer.Repos
                 conn.Open();
         }
 
-
-        public User? GetUserById(int id)
-        {
-            EnsureOpen();
-
-            var cmd = new MySqlCommand(
-                @"SELECT id, first_name, last_name, username, email, is_moderator, steam_id 
-                  FROM user WHERE id=@id",
-                conn.Connection);
-
-            cmd.Parameters.AddWithValue("@id", id);
-
-            using var r = cmd.ExecuteReader();
-            if (!r.Read()) return null;
-
-            return new User
-            {
-                Id = r.GetInt32("id"),
-                Firstname = r.GetString("first_name"),
-                Lastname = r.GetString("last_name"),
-                Username = r.GetString("username"),
-                Gmail = r.GetString("email"),
-                IsAdmin = r.GetBoolean("is_moderator"),
-                SteamId = r.IsDBNull("steam_id") ? "0" : r.GetString("steam_id")
-            };
-        }
-
-
         public Team? GetTeamById(int id)
         {
             EnsureOpen();
@@ -190,13 +162,6 @@ namespace DataLayer.Repos
         public void CreateTeam(string name, int captainId)
         {
             EnsureOpen();
-
-            var captain = GetUserById(captainId);
-            if (captain == null)
-                throw new Exception("Captain does not exist.");
-
-            if (string.IsNullOrWhiteSpace(captain.SteamId) || captain.SteamId == "0")
-                throw new Exception("Captain must have a SteamID.");
 
             var cmd = new MySqlCommand(
                 @"INSERT INTO team (name, captain_id) VALUES (@n, @c)",
@@ -341,18 +306,5 @@ namespace DataLayer.Repos
             cmd.ExecuteNonQuery();
         }
 
-        public void UpdatePlayerStatus(int teamId, int userId, string newStatus)
-        {
-            EnsureOpen();
-
-            var cmd = new MySqlCommand(
-                @"UPDATE team_player SET status=@s WHERE team_id=@t AND user_id=@u",
-                conn.Connection);
-
-            cmd.Parameters.AddWithValue("@s", newStatus);
-            cmd.Parameters.AddWithValue("@t", teamId);
-            cmd.Parameters.AddWithValue("@u", userId);
-            cmd.ExecuteNonQuery();
-        }
     }
 }

@@ -37,7 +37,7 @@ public class MockTeamRepo : ITeamRepo
 
     public void CreateTeam(string name, int captainId)
     {
-        var captain = GetUserById(captainId)
+        var captain = FindUser(captainId)
             ?? throw new InvalidOperationException("Captain was not found.");
         var team = new Team(Teams.Count + 1, name, captain);
         SeedTeam(team, captain);
@@ -45,15 +45,11 @@ public class MockTeamRepo : ITeamRepo
 
     public void AddPlayerToTeam(int teamId, int userId, string role, string status)
     {
-        var user = GetUserById(userId)
+        var user = FindUser(userId)
             ?? throw new InvalidOperationException("User was not found.");
         if (!membersByTeam.TryGetValue(teamId, out var members))
             membersByTeam[teamId] = members = [];
         members.Add(user);
-    }
-
-    public void UpdatePlayerStatus(int teamId, int userId, string newStatus)
-    {
     }
 
     public void RemovePlayer(int teamId, int userId)
@@ -82,7 +78,7 @@ public class MockTeamRepo : ITeamRepo
     public List<TeamJoinRequest> GetRequestsForUser(int userId) =>
         Requests.Where(request => request.UserId == userId).ToList();
 
-    public User? GetUserById(int userId) => users.FirstOrDefault(user => user.Id == userId);
+    private User? FindUser(int userId) => users.FirstOrDefault(user => user.Id == userId);
 
     public void DeleteTeam(int id)
     {

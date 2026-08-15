@@ -13,10 +13,6 @@ namespace Unit_Tests.MockRepos
             this.players = players;
         }
 
-        public void AddPlayerToTournament(Player player, Tournament tournament)
-        {
-        }
-
         public bool DeletePlayerRole(int userId)
         {
             var existingPlayer = players.Find(p => p.Id == userId);
@@ -33,9 +29,5 @@ namespace Unit_Tests.MockRepos
             return players.Find(p => p.Id == user.Id);
         }
 
-        public void InitializeRole(Player player)
-        {
-            players.Add(player);
-        }
     }
 }

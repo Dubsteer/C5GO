@@ -45,16 +45,6 @@ namespace Website.Pages.Admin.Posts
             if (postFromDb == null)
                 return NotFound();
 
-            if (string.IsNullOrWhiteSpace(Post.Title))
-            {
-                ModelState.AddModelError("Post.Title", "Title is required.");
-            }
-
-            if (string.IsNullOrWhiteSpace(Post.Content))
-            {
-                ModelState.AddModelError("Post.Content", "Content is required.");
-            }
-
             if (!ModelState.IsValid)
             {
                 Post.ImagePath = postFromDb.ImagePath;
@@ -78,13 +68,20 @@ namespace Website.Pages.Admin.Posts
                 }
             }
 
-            postFromDb.Title = Post.Title.Trim();
-            postFromDb.Content = Post.Content.Trim();
+            postFromDb.Title = Post.Title;
+            postFromDb.Content = Post.Content;
             postFromDb.ImagePath = newImagePath ?? (RemoveImage ? null : existingImagePath);
 
             try
             {
                 postManager.UpdatePost(postFromDb);
+            }
+            catch (ArgumentException exception)
+            {
+                imageStorage.Delete(newImagePath);
+                Post.ImagePath = existingImagePath;
+                ModelState.AddModelError(string.Empty, exception.Message);
+                return Page();
             }
             catch
             {

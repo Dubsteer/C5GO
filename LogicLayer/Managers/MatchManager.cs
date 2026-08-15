@@ -17,7 +17,7 @@ namespace LogicLayer.Managers
             this.matchRepo = matchRepo;
         }
 
-        public Match GetMatchById(int id)
+        private Match GetMatchById(int id)
         {
             return GetAllMatches().FirstOrDefault(m => m.Id == id)
                 ?? throw new MatchNotFoundException("Match not found");
@@ -46,11 +46,6 @@ namespace LogicLayer.Managers
         public void RemoveMatch(Match match)
         {
             matchRepo.RemoveMatch(match);
-        }
-
-        public void UpdateMatch(Match match)
-        {
-            matchRepo.UpdateMatch(match);
         }
 
         public void UpdateResult(

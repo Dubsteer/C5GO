@@ -38,20 +38,6 @@ namespace DataLayer.Repos
             return !reader.IsDBNull(column) && reader.GetBoolean(column);
         }
 
-        public void InitializeRole(Player player)
-        {
-            EnsureConnection();
-
-            var cmd = new MySqlCommand(
-                "UPDATE user SET steam_id = @steam_id WHERE id = @id",
-                conn.Connection);
-
-            cmd.Parameters.AddWithValue("@steam_id", player.SteamId);
-            cmd.Parameters.AddWithValue("@id", player.Id);
-
-            cmd.ExecuteNonQuery();
-        }
-
         public List<Player> GetAllPlayers()
         {
             EnsureConnection();
@@ -128,19 +114,6 @@ namespace DataLayer.Repos
             );
 
             return new Player(u);
-        }
-
-        public void AddPlayerToTournament(Player player, Tournament tournament)
-        {
-            EnsureConnection();
-
-            var cmd = new MySqlCommand(
-                "INSERT INTO applications (tournamentId, playerid) VALUES (@tid, @pid)",
-                conn.Connection);
-
-            cmd.Parameters.AddWithValue("@tid", tournament.Id);
-            cmd.Parameters.AddWithValue("@pid", player.Id);
-            cmd.ExecuteNonQuery();
         }
 
         public bool DeletePlayerRole(int userId)

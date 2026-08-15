@@ -13,7 +13,6 @@ namespace LogicLayer.IRepos
         void CreateTeam(string name, int captainId);
         void AddPlayerToTeam(int teamId, int userId, string role, string status);
 
-        void UpdatePlayerStatus(int teamId, int userId, string newStatus);
         void RemovePlayer(int teamId, int userId);
 
         void CreateJoinRequest(int teamId, int userId);
@@ -21,7 +20,6 @@ namespace LogicLayer.IRepos
         List<TeamJoinRequest> GetRequestsForTeam(int teamId);
         List<TeamJoinRequest> GetRequestsForUser(int userId);
 
-        User? GetUserById(int userId);
         void DeleteTeam(int id);
 
     }

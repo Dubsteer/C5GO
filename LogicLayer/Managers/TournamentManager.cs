@@ -177,12 +177,6 @@ namespace LogicLayer.Managers
             UpdateTournamentStatus(tournament);
         }
 
-        public void SetStatus(Tournament t, Status s)
-        {
-            t.Status = s;
-            repo.UpdateTournament(t);
-        }
-
         private void EnsureRosterCanChange(Tournament tournament)
         {
             var hasMatches = tournament.IsTeamTournament

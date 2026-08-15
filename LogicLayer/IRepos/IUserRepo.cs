@@ -20,8 +20,6 @@ namespace LogicLayer.IRepos
         bool UsernameExists(string username);
         bool EmailExists(string email);
         bool SteamIdExists(string steamId);
-        bool CheckIfUsernameExists(string username, int selfId);
-
         List<User> SearchUser(string term);
         User? GetUserByUsername(string username);
     }

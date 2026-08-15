@@ -80,17 +80,6 @@ namespace Unit_Tests
         }
 
         [TestMethod]
-        public void TestSetTournamentStatus()
-        {
-            var tournament = CreateTournament(1, "Tournament 1");
-            tournaments.Add(tournament);
-
-            tournamentManager.SetStatus(tournament, Status.InProgress);
-
-            Assert.AreEqual(Status.InProgress, tournaments[0].Status);
-        }
-
-        [TestMethod]
         public void TestGenerateSoloBracket()
         {
             var players = new List<Player>

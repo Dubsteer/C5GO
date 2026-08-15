@@ -273,6 +273,42 @@ namespace DataLayer.Repos
             return list;
         }
 
+        public bool HasActivePlayerRegistration(int userId)
+        {
+            EnsureConnection();
+
+            var cmd = new MySqlCommand(
+                @"SELECT EXISTS(
+                      SELECT 1
+                      FROM applications a
+                      JOIN tournament t ON t.id = a.tournamentId
+                      WHERE a.playerId = @userId AND t.status_int <> @closed
+                  )",
+                conn.Connection);
+
+            cmd.Parameters.AddWithValue("@userId", userId);
+            cmd.Parameters.AddWithValue("@closed", (int)Status.Closed);
+            return Convert.ToInt32(cmd.ExecuteScalar()) == 1;
+        }
+
+        public bool HasActiveTeamRegistration(int teamId)
+        {
+            EnsureConnection();
+
+            var cmd = new MySqlCommand(
+                @"SELECT EXISTS(
+                      SELECT 1
+                      FROM team_applications ta
+                      JOIN tournament t ON t.id = ta.tournamentId
+                      WHERE ta.teamId = @teamId AND t.status_int <> @closed
+                  )",
+                conn.Connection);
+
+            cmd.Parameters.AddWithValue("@teamId", teamId);
+            cmd.Parameters.AddWithValue("@closed", (int)Status.Closed);
+            return Convert.ToInt32(cmd.ExecuteScalar()) == 1;
+        }
+
         public void AddTeamTournamentApp(int teamId, int tournamentId)
         {
             EnsureConnection();

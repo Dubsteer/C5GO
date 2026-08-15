@@ -170,7 +170,7 @@ namespace Website.Pages.Admin.Users
         }
 
         public bool IsPlayer(User user) =>
-            !string.IsNullOrWhiteSpace(user.SteamId) && user.SteamId != "0";
+            PlayerEligibilityPolicy.HasValidSteamId(user);
 
         public CommunityContributionStats GetContributionStats(User user)
         {

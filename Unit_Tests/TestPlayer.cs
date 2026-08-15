@@ -7,18 +7,22 @@ namespace Unit_Tests
     [TestClass]
     public class TestPlayer
     {
-        private static List<Player> players = null!;
-        private static PlayerManager playerManager = null!;
-
-        [ClassInitialize]
-        public static void TestClassSetup(TestContext _)
-        {
-            players = new List<Player>();
-            playerManager = new PlayerManager(new MockPlayerRepo(players));
-        }
+        private List<Player> players = null!;
+        private List<Tournament> tournaments = null!;
+        private MockTeamRepo teamRepo = null!;
+        private PlayerManager playerManager = null!;
 
         [TestInitialize]
-        public void Setup() => players.Clear();
+        public void Setup()
+        {
+            players = [];
+            tournaments = [];
+            teamRepo = new MockTeamRepo(players);
+            playerManager = new PlayerManager(
+                new MockPlayerRepo(players),
+                teamRepo,
+                new MockTournamentRepo(tournaments));
+        }
 
         [TestMethod]
         public void TestGetAllPlayers()
@@ -57,6 +61,56 @@ namespace Unit_Tests
         {
             Assert.ThrowsExactly<InvalidOperationException>(() =>
                 playerManager.RemovePlayerRole(99));
+        }
+
+        [TestMethod]
+        public void TestCannotRemovePlayerRoleWhileInTeam()
+        {
+            var player = CreatePlayer(1, "dubsteer", "76561198012345678");
+            players.Add(player);
+            teamRepo.SeedTeam(new Team(1, "Team", player), player);
+
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                playerManager.RemovePlayerRole(player.Id!.Value));
+            Assert.HasCount(1, players);
+        }
+
+        [TestMethod]
+        public void TestCannotRemovePlayerRoleDuringActiveTournament()
+        {
+            var player = CreatePlayer(1, "dubsteer", "76561198012345678");
+            players.Add(player);
+            tournaments.Add(new Tournament
+            {
+                Id = 1,
+                Name = "Open Tournament",
+                Description = "Description",
+                Status = LogicLayer.Enums.Status.Open,
+                Players = [player]
+            });
+
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                playerManager.RemovePlayerRole(player.Id!.Value));
+            Assert.HasCount(1, players);
+        }
+
+        [TestMethod]
+        public void TestClosedTournamentHistoryDoesNotBlockRoleRemoval()
+        {
+            var player = CreatePlayer(1, "dubsteer", "76561198012345678");
+            players.Add(player);
+            tournaments.Add(new Tournament
+            {
+                Id = 1,
+                Name = "Closed Tournament",
+                Description = "Description",
+                Status = LogicLayer.Enums.Status.Closed,
+                Players = [player]
+            });
+
+            playerManager.RemovePlayerRole(player.Id!.Value);
+
+            Assert.HasCount(0, players);
         }
 
         private static Player CreatePlayer(int id, string username, string steamId) =>

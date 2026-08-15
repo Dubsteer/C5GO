@@ -157,6 +157,48 @@ namespace Unit_Tests
         }
 
         [TestMethod]
+        public async Task UploadedImagesAreServedFromConfiguredStorageRoot()
+        {
+            var storageRoot = Path.Combine(
+                Path.GetTempPath(),
+                $"c5go-static-image-tests-{Guid.NewGuid():N}");
+            var postsDirectory = Path.Combine(storageRoot, "posts");
+            Directory.CreateDirectory(postsDirectory);
+            var expectedContent = "persistent-image"u8.ToArray();
+            await File.WriteAllBytesAsync(
+                Path.Combine(postsDirectory, "stored.png"),
+                expectedContent);
+
+            try
+            {
+                using var storageFactory = factory.WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((_, configuration) =>
+                        configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                        {
+                            ["ImageStorage:RootPath"] = storageRoot
+                        }));
+                });
+                using var client = storageFactory.CreateClient(new WebApplicationFactoryClientOptions
+                {
+                    AllowAutoRedirect = false,
+                    BaseAddress = new Uri("https://c5g0.com")
+                });
+
+                using var response = await client.GetAsync("/images/posts/stored.png");
+                var actualContent = await response.Content.ReadAsByteArrayAsync();
+
+                Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+                CollectionAssert.AreEqual(expectedContent, actualContent);
+            }
+            finally
+            {
+                if (Directory.Exists(storageRoot))
+                    Directory.Delete(storageRoot, recursive: true);
+            }
+        }
+
+        [TestMethod]
         public async Task MatchHistoryRendersProfessionalAndCommunityResults()
         {
             using var client = CreateClient();

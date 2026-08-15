@@ -26,6 +26,9 @@ namespace Website.Pages.Admin.Posts
         [BindProperty]
         public IFormFile? Image { get; set; }
 
+        [BindProperty]
+        public bool RemoveImage { get; set; }
+
         public IActionResult OnGet(int id)
         {
             var post = postManager.GetPostById(id);
@@ -58,13 +61,14 @@ namespace Website.Pages.Admin.Posts
                 return Page();
             }
 
-            string? imagePath = postFromDb.ImagePath;
+            var existingImagePath = postFromDb.ImagePath;
+            string? newImagePath = null;
 
             if (Image != null)
             {
                 try
                 {
-                    imagePath = await imageStorage.SaveAsync(Image, cancellationToken);
+                    newImagePath = await imageStorage.SaveAsync(Image, cancellationToken);
                 }
                 catch (ImageUploadException exception)
                 {
@@ -76,9 +80,20 @@ namespace Website.Pages.Admin.Posts
 
             postFromDb.Title = Post.Title.Trim();
             postFromDb.Content = Post.Content.Trim();
-            postFromDb.ImagePath = imagePath;
+            postFromDb.ImagePath = newImagePath ?? (RemoveImage ? null : existingImagePath);
 
-            postManager.UpdatePost(postFromDb);
+            try
+            {
+                postManager.UpdatePost(postFromDb);
+            }
+            catch
+            {
+                imageStorage.Delete(newImagePath);
+                throw;
+            }
+
+            if ((RemoveImage || newImagePath != null) && existingImagePath != null)
+                imageStorage.Delete(existingImagePath);
 
             return RedirectToPage("./Manage");
         }

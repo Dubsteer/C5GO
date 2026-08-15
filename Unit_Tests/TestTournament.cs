@@ -10,6 +10,7 @@ namespace Unit_Tests
     {
         private static List<Tournament> tournaments = null!;
         private static List<Match> matches = null!;
+        private static List<TeamMatch> teamMatches = null!;
         private static TournamentManager tournamentManager = null!;
 
         [ClassInitialize]
@@ -17,8 +18,9 @@ namespace Unit_Tests
         {
             tournaments = new List<Tournament>();
             matches = new List<Match>();
+            teamMatches = new List<TeamMatch>();
             var matchManager = new MatchManager(new MockMatchRepo(matches));
-            var teamMatchManager = new TeamMatchManager(new MockTeamMatchRepo());
+            var teamMatchManager = new TeamMatchManager(new MockTeamMatchRepo(teamMatches));
             tournamentManager = new TournamentManager(
                 new MockTournamentRepo(tournaments),
                 matchManager,
@@ -30,6 +32,7 @@ namespace Unit_Tests
         {
             tournaments.Clear();
             matches.Clear();
+            teamMatches.Clear();
         }
 
         [TestMethod]
@@ -96,6 +99,110 @@ namespace Unit_Tests
 
             Assert.AreEqual(2, tournamentManager.GetAllMatchesInTournament(tournament).Count);
             Assert.AreEqual(Status.InProgress, tournament.Status);
+        }
+
+        [TestMethod]
+        public void TestSoloBracketAdvancesThroughFinal()
+        {
+            var tournament = CreateTournament(1, "Solo Cup");
+            tournament.Players.AddRange(Enumerable.Range(1, 8).Select(CreatePlayer));
+            tournaments.Add(tournament);
+
+            tournamentManager.GenerateSoloBracket(tournament.Players, tournament);
+            AssertRound(matches, 1, 4);
+
+            CloseSoloRound(1);
+            tournamentManager.UpdateTournamentStatus(tournament);
+            AssertRound(matches, 2, 2);
+
+            CloseSoloRound(2);
+            tournamentManager.UpdateTournamentStatus(tournament);
+            AssertRound(matches, 3, 1);
+
+            CloseSoloRound(3);
+            tournamentManager.UpdateTournamentStatus(tournament);
+
+            Assert.AreEqual(Status.Closed, tournament.Status);
+            Assert.AreEqual(7, matches.Count);
+        }
+
+        [TestMethod]
+        public void TestSoloPreliminaryRoundPreservesByePlayers()
+        {
+            var tournament = CreateTournament(1, "Six Player Cup");
+            tournament.Players.AddRange(Enumerable.Range(1, 6).Select(CreatePlayer));
+            tournaments.Add(tournament);
+
+            tournamentManager.GenerateSoloBracket(tournament.Players, tournament);
+            var openingIds = matches
+                .SelectMany(match => new[] { match.User1.Id, match.User2.Id })
+                .ToHashSet();
+
+            AssertRound(matches, 1, 2);
+            Assert.AreEqual(4, openingIds.Count);
+
+            CloseSoloRound(1);
+            tournamentManager.UpdateTournamentStatus(tournament);
+
+            var secondRoundIds = matches
+                .Where(match => match.RoundNumber == 2)
+                .SelectMany(match => new[] { match.User1.Id, match.User2.Id })
+                .ToHashSet();
+            var byeIds = tournament.Players
+                .Where(player => !openingIds.Contains(player.Id))
+                .Select(player => player.Id)
+                .ToList();
+
+            AssertRound(matches, 2, 2);
+            Assert.IsTrue(byeIds.All(secondRoundIds.Contains));
+        }
+
+        [TestMethod]
+        public void TestTwelveTeamBracketUsesPreliminaryRoundAndByes()
+        {
+            var tournament = CreateTournament(1, "Team Cup");
+            tournament.IsTeamTournament = true;
+            tournament.TeamSizeRequired = 5;
+            tournament.TeamIds.AddRange(Enumerable.Range(1, 12));
+            tournaments.Add(tournament);
+
+            tournamentManager.GenerateTeamBracket(tournament.TeamIds, tournament);
+            var openingIds = teamMatches
+                .SelectMany(match => new[] { match.Team1Id, match.Team2Id })
+                .ToHashSet();
+
+            AssertRound(teamMatches, 1, 4);
+            Assert.AreEqual(8, openingIds.Count);
+
+            CloseTeamRound(1);
+            tournamentManager.UpdateTournamentStatus(tournament);
+
+            var quarterfinalIds = teamMatches
+                .Where(match => match.RoundNumber == 2)
+                .SelectMany(match => new[] { match.Team1Id, match.Team2Id })
+                .ToHashSet();
+            var byeIds = tournament.TeamIds.Where(teamId => !openingIds.Contains(teamId)).ToList();
+
+            AssertRound(teamMatches, 2, 4);
+            Assert.IsTrue(byeIds.All(quarterfinalIds.Contains));
+        }
+
+        [TestMethod]
+        public void TestCompletedEarlierRoundCannotBeChanged()
+        {
+            var tournament = CreateTournament(1, "Locked Cup");
+            tournament.Players.AddRange(Enumerable.Range(1, 4).Select(CreatePlayer));
+            tournaments.Add(tournament);
+
+            tournamentManager.GenerateSoloBracket(tournament.Players, tournament);
+            CloseSoloRound(1);
+            tournamentManager.UpdateTournamentStatus(tournament);
+
+            var firstMatch = matches.First(match => match.RoundNumber == 1);
+            var manager = new MatchManager(new MockMatchRepo(matches));
+
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                manager.UpdateResult(firstMatch.Id, tournament.Id, 13, 8, Status.Closed, firstMatch.MatchDate));
         }
 
         [TestMethod]
@@ -189,5 +296,43 @@ namespace Unit_Tests
 
         private static Player CreatePlayer(int id) =>
             new Player(id, "Player", id.ToString(), 20, $"player{id}", $"player{id}@test.local", "password", $"steam{id}", false);
+
+        private static void CloseSoloRound(int roundNumber)
+        {
+            foreach (var match in matches.Where(match => match.RoundNumber == roundNumber))
+            {
+                match.Player1Score = 13;
+                match.Player2Score = 8;
+                match.Status = Status.Closed;
+            }
+        }
+
+        private static void CloseTeamRound(int roundNumber)
+        {
+            foreach (var match in teamMatches.Where(match => match.RoundNumber == roundNumber))
+            {
+                match.Team1Score = 13;
+                match.Team2Score = 8;
+                match.Status = Status.Closed;
+            }
+        }
+
+        private static void AssertRound(IEnumerable<Match> bracket, int roundNumber, int expectedCount)
+        {
+            var round = bracket.Where(match => match.RoundNumber == roundNumber).ToList();
+            Assert.AreEqual(expectedCount, round.Count);
+            CollectionAssert.AreEqual(
+                Enumerable.Range(1, expectedCount).ToList(),
+                round.OrderBy(match => match.BracketPosition).Select(match => match.BracketPosition).ToList());
+        }
+
+        private static void AssertRound(IEnumerable<TeamMatch> bracket, int roundNumber, int expectedCount)
+        {
+            var round = bracket.Where(match => match.RoundNumber == roundNumber).ToList();
+            Assert.AreEqual(expectedCount, round.Count);
+            CollectionAssert.AreEqual(
+                Enumerable.Range(1, expectedCount).ToList(),
+                round.OrderBy(match => match.BracketPosition).Select(match => match.BracketPosition).ToList());
+        }
     }
 }

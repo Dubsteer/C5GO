@@ -20,6 +20,8 @@ namespace Unit_Tests.MockRepos
 
         public void AddMatch(Match match)
         {
+            if (match.Id == 0)
+                match.Id = Matches.Count == 0 ? 1 : Matches.Max(existing => existing.Id) + 1;
             Matches.Add(match);
         }
 

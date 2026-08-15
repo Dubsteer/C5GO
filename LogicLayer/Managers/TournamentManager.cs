@@ -125,28 +125,10 @@ namespace LogicLayer.Managers
 
         public void UpdateTournamentStatus(Tournament t)
         {
-            if (!t.IsTeamTournament)
-            {
-                var matches = matchManager.GetMatchesByTournamentId(t.Id);
-
-                if (matches.Count == 0)
-                    t.Status = Status.Open;
-                else if (matches.Any(m => m.Status == Status.Open || m.Status == Status.InProgress))
-                    t.Status = Status.InProgress;
-                else
-                    t.Status = Status.Closed;
-            }
+            if (t.IsTeamTournament)
+                AdvanceTeamBracket(t);
             else
-            {
-                var teamMatches = teamMatchManager.GetTeamMatchesByTournament(t.Id);
-
-                if (teamMatches.Count == 0)
-                    t.Status = Status.Open;
-                else if (teamMatches.Any(m => m.Status == Status.Open || m.Status == Status.InProgress))
-                    t.Status = Status.InProgress;
-                else
-                    t.Status = Status.Closed;
-            }
+                AdvanceSoloBracket(t);
 
             repo.UpdateTournament(t);
         }
@@ -166,7 +148,7 @@ namespace LogicLayer.Managers
             foreach (var match in existing)
                 matchManager.RemoveMatch(match);
 
-            matchManager.GenerateMatches(players, tournament.Id, DateTime.Now, 1);
+            matchManager.GenerateOpeningRound(players, tournament.Id, DateTime.Now);
             UpdateTournamentStatus(tournament);
         }
 
@@ -208,6 +190,104 @@ namespace LogicLayer.Managers
 
             if (string.IsNullOrWhiteSpace(tournament.Description) || tournament.Description.Trim().Length > 300)
                 throw new InvalidOperationException("Description is required and must not exceed 300 characters.");
+        }
+
+        private void AdvanceSoloBracket(Tournament tournament)
+        {
+            var matches = matchManager.GetMatchesByTournamentId(tournament.Id);
+            if (matches.Count == 0)
+            {
+                tournament.Status = Status.Open;
+                return;
+            }
+
+            var currentRoundNumber = matches.Max(match => match.RoundNumber);
+            var currentRound = matches
+                .Where(match => match.RoundNumber == currentRoundNumber)
+                .OrderBy(match => match.BracketPosition)
+                .ToList();
+
+            if (currentRound.Any(match => match.Status != Status.Closed))
+            {
+                tournament.Status = Status.InProgress;
+                return;
+            }
+
+            var winners = currentRound
+                .Select(match => match.Player1Score > match.Player2Score ? match.User1 : match.User2)
+                .ToList();
+
+            if (winners.Count == 1)
+            {
+                tournament.Status = Status.Closed;
+                return;
+            }
+
+            IReadOnlyList<Player> nextRoundPlayers = winners;
+            if (currentRoundNumber == 1)
+            {
+                var openingPlayerIds = currentRound
+                    .SelectMany(match => new[] { match.User1.Id, match.User2.Id })
+                    .ToHashSet();
+                var byes = repo.GetAllPlayersInTournament(tournament.Id)
+                    .Where(player => !openingPlayerIds.Contains(player.Id))
+                    .OrderBy(player => player.Id)
+                    .ToList();
+                nextRoundPlayers = BracketPlanner.CombineWithByes(winners, byes);
+            }
+
+            var nextDate = currentRound.Max(match => match.MatchDate).AddDays(1);
+            matchManager.GenerateRound(nextRoundPlayers, tournament.Id, nextDate, currentRoundNumber + 1);
+            tournament.Status = Status.InProgress;
+        }
+
+        private void AdvanceTeamBracket(Tournament tournament)
+        {
+            var matches = teamMatchManager.GetTeamMatchesByTournament(tournament.Id);
+            if (matches.Count == 0)
+            {
+                tournament.Status = Status.Open;
+                return;
+            }
+
+            var currentRoundNumber = matches.Max(match => match.RoundNumber);
+            var currentRound = matches
+                .Where(match => match.RoundNumber == currentRoundNumber)
+                .OrderBy(match => match.BracketPosition)
+                .ToList();
+
+            if (currentRound.Any(match => match.Status != Status.Closed))
+            {
+                tournament.Status = Status.InProgress;
+                return;
+            }
+
+            var winners = currentRound
+                .Select(match => match.Team1Score > match.Team2Score ? match.Team1Id : match.Team2Id)
+                .ToList();
+
+            if (winners.Count == 1)
+            {
+                tournament.Status = Status.Closed;
+                return;
+            }
+
+            IReadOnlyList<int> nextRoundTeams = winners;
+            if (currentRoundNumber == 1)
+            {
+                var openingTeamIds = currentRound
+                    .SelectMany(match => new[] { match.Team1Id, match.Team2Id })
+                    .ToHashSet();
+                var byes = repo.GetTeamApplications(tournament.Id)
+                    .Where(teamId => !openingTeamIds.Contains(teamId))
+                    .OrderBy(teamId => teamId)
+                    .ToList();
+                nextRoundTeams = BracketPlanner.CombineWithByes(winners, byes);
+            }
+
+            var nextDate = currentRound.Max(match => match.MatchDate).AddDays(1);
+            teamMatchManager.GenerateRound(nextRoundTeams, tournament.Id, nextDate, currentRoundNumber + 1);
+            tournament.Status = Status.InProgress;
         }
 
     }

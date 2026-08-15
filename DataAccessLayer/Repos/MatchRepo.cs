@@ -37,6 +37,8 @@ namespace DataLayer.Repos
                     m.player2Score,
                     m.match_date,
                     m.status_int,
+                    m.round_number,
+                    m.bracket_position,
                     t.name AS tournamentName,
 
                     u1.id AS u1_id, u1.first_name AS u1_first_name,
@@ -90,7 +92,9 @@ namespace DataLayer.Repos
                         r.GetInt32("player1Score"),
                         r.GetInt32("player2Score"),
                         r.GetDateTime("match_date"),
-                        (Status)r.GetInt32("status_int")
+                        (Status)r.GetInt32("status_int"),
+                        r.GetInt32("round_number"),
+                        r.GetInt32("bracket_position")
                     )
                     {
                         TournamentName = r.GetString("tournamentName")
@@ -107,8 +111,8 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(@"
                 INSERT INTO matches
-                (tournamentId, user_id1, user_id2, player1Score, player2Score, match_date, status_int)
-                VALUES (@t,@u1,@u2,@s1,@s2,@d,@st)
+                (tournamentId, user_id1, user_id2, player1Score, player2Score, match_date, status_int, round_number, bracket_position)
+                VALUES (@t,@u1,@u2,@s1,@s2,@d,@st,@round,@position)
             ", conn.Connection);
 
             cmd.Parameters.AddWithValue("@t", match.TournamentId);
@@ -118,6 +122,8 @@ namespace DataLayer.Repos
             cmd.Parameters.AddWithValue("@s2", match.Player2Score);
             cmd.Parameters.AddWithValue("@d", match.MatchDate);
             cmd.Parameters.AddWithValue("@st", (int)match.Status);
+            cmd.Parameters.AddWithValue("@round", match.RoundNumber);
+            cmd.Parameters.AddWithValue("@position", match.BracketPosition);
 
             cmd.ExecuteNonQuery();
         }
@@ -133,7 +139,9 @@ namespace DataLayer.Repos
                     player1Score=@s1,
                     player2Score=@s2,
                     match_date=@d,
-                    status_int=@st
+                    status_int=@st,
+                    round_number=@round,
+                    bracket_position=@position
                 WHERE id=@id
             ", conn.Connection);
 
@@ -144,6 +152,8 @@ namespace DataLayer.Repos
             cmd.Parameters.AddWithValue("@s2", match.Player2Score);
             cmd.Parameters.AddWithValue("@d", match.MatchDate);
             cmd.Parameters.AddWithValue("@st", (int)match.Status);
+            cmd.Parameters.AddWithValue("@round", match.RoundNumber);
+            cmd.Parameters.AddWithValue("@position", match.BracketPosition);
 
             cmd.ExecuteNonQuery();
         }

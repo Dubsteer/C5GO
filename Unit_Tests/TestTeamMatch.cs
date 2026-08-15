@@ -25,6 +25,10 @@ namespace Unit_Tests
 
             Assert.AreEqual(4, matches.Count);
             Assert.IsTrue(matches.All(match => match.TournamentId == 10));
+            Assert.IsTrue(matches.All(match => match.RoundNumber == 1));
+            CollectionAssert.AreEqual(
+                new[] { 1, 2, 3, 4 },
+                matches.OrderBy(match => match.BracketPosition).Select(match => match.BracketPosition).ToArray());
             Assert.AreEqual(8, matches.SelectMany(match => new[] { match.Team1Id, match.Team2Id }).Distinct().Count());
         }
 

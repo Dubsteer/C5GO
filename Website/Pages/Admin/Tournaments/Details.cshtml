@@ -169,8 +169,8 @@
         <div class="admin-panel-heading admin-panel-heading-responsive">
             <div>
                 <span class="admin-section-number">03</span>
-                <h2>Opening-round bracket</h2>
-                <p>Generate pairings, schedule matches and publish results.</p>
+                <h2>Tournament bracket</h2>
+                <p>Generate pairings, complete each round and advance winners to the final.</p>
             </div>
             <form method="post" asp-page-handler="GenerateBracket" asp-route-id="@Model.Tournament.Id"
                   data-confirm="@(Model.HasBracket ? "Regenerate the bracket and permanently remove its current results?" : "Generate random opening-round pairings?")">
@@ -196,87 +196,141 @@
         }
         else if (Model.Tournament.IsTeamTournament)
         {
-            <div class="admin-match-grid">
-                @foreach (var match in Model.TeamMatches)
+            @if (Model.TeamChampion is not null)
+            {
+                <div class="admin-bracket-champion">
+                    <span>Tournament champion</span>
+                    <strong>@Model.TeamChampion.Name</strong>
+                </div>
+            }
+
+            <div class="admin-bracket-rounds">
+                @foreach (var round in Model.TeamMatches.GroupBy(match => match.RoundNumber).OrderBy(round => round.Key))
                 {
-                    <form method="post" asp-page-handler="UpdateTeamMatch" asp-route-id="@Model.Tournament.Id" class="admin-match-card">
-                        <input type="hidden" name="matchId" value="@match.Id" />
-                        <div class="admin-match-title">
-                            <strong>@match.Team1.Name</strong>
-                            <span>vs</span>
-                            <strong>@match.Team2.Name</strong>
+                    <section class="admin-bracket-round">
+                        <div class="admin-bracket-round-heading">
+                            <span>Round @round.Key</span>
+                            <h3>@Model.GetRoundName(round.Key, round.Count())</h3>
                         </div>
-                        <div class="admin-score-row">
-                            <label>
-                                <span>@match.Team1.Name</span>
-                                <input name="score1" type="number" min="0" max="99" value="@match.Team1Score" class="form-control" required />
-                            </label>
-                            <label>
-                                <span>@match.Team2.Name</span>
-                                <input name="score2" type="number" min="0" max="99" value="@match.Team2Score" class="form-control" required />
-                            </label>
+                        <div class="admin-match-grid">
+                            @foreach (var match in round.OrderBy(match => match.BracketPosition))
+                            {
+                                var isLocked = match.RoundNumber < Model.LatestRoundNumber;
+                                <form method="post" asp-page-handler="UpdateTeamMatch" asp-route-id="@Model.Tournament.Id" class="admin-match-card @(isLocked ? "admin-match-card-locked" : string.Empty)">
+                                    <input type="hidden" name="matchId" value="@match.Id" />
+                                    <div class="admin-match-title">
+                                        <strong>@match.Team1.Name</strong>
+                                        <span>vs</span>
+                                        <strong>@match.Team2.Name</strong>
+                                    </div>
+                                    <div class="admin-score-row">
+                                        <label>
+                                            <span>@match.Team1.Name</span>
+                                            <input name="score1" type="number" min="0" max="99" value="@match.Team1Score" class="form-control" required readonly="@isLocked" />
+                                        </label>
+                                        <label>
+                                            <span>@match.Team2.Name</span>
+                                            <input name="score2" type="number" min="0" max="99" value="@match.Team2Score" class="form-control" required readonly="@isLocked" />
+                                        </label>
+                                    </div>
+                                    <div class="admin-match-controls">
+                                        <input name="matchDate" type="datetime-local" value="@match.MatchDate.ToString("yyyy-MM-ddTHH:mm")" class="form-control" required readonly="@isLocked" />
+                                        <select name="matchStatus" class="form-select" disabled="@isLocked">
+                                            @foreach (var status in Enum.GetValues<Status>())
+                                            {
+                                                if (status == match.Status)
+                                                {
+                                                    <option value="@status" selected>@status</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@status">@status</option>
+                                                }
+                                            }
+                                        </select>
+                                        @if (isLocked)
+                                        {
+                                            <span class="admin-round-locked">Completed</span>
+                                        }
+                                        else
+                                        {
+                                            <button type="submit" class="btn btn-primary">Save result</button>
+                                        }
+                                    </div>
+                                </form>
+                            }
                         </div>
-                        <div class="admin-match-controls">
-                            <input name="matchDate" type="datetime-local" value="@match.MatchDate.ToString("yyyy-MM-ddTHH:mm")" class="form-control" required />
-                            <select name="matchStatus" class="form-select">
-                                @foreach (var status in Enum.GetValues<Status>())
-                                {
-                                    if (status == match.Status)
-                                    {
-                                        <option value="@status" selected>@status</option>
-                                    }
-                                    else
-                                    {
-                                        <option value="@status">@status</option>
-                                    }
-                                }
-                            </select>
-                            <button type="submit" class="btn btn-primary">Save result</button>
-                        </div>
-                    </form>
+                    </section>
                 }
             </div>
         }
         else
         {
-            <div class="admin-match-grid">
-                @foreach (var match in Model.SoloMatches)
+            @if (Model.SoloChampion is not null)
+            {
+                <div class="admin-bracket-champion">
+                    <span>Tournament champion</span>
+                    <strong>@Model.SoloChampion.Username</strong>
+                </div>
+            }
+
+            <div class="admin-bracket-rounds">
+                @foreach (var round in Model.SoloMatches.GroupBy(match => match.RoundNumber).OrderBy(round => round.Key))
                 {
-                    <form method="post" asp-page-handler="UpdateSoloMatch" asp-route-id="@Model.Tournament.Id" class="admin-match-card">
-                        <input type="hidden" name="matchId" value="@match.Id" />
-                        <div class="admin-match-title">
-                            <strong>@match.User1.Username</strong>
-                            <span>vs</span>
-                            <strong>@match.User2.Username</strong>
+                    <section class="admin-bracket-round">
+                        <div class="admin-bracket-round-heading">
+                            <span>Round @round.Key</span>
+                            <h3>@Model.GetRoundName(round.Key, round.Count())</h3>
                         </div>
-                        <div class="admin-score-row">
-                            <label>
-                                <span>@match.User1.Username</span>
-                                <input name="score1" type="number" min="0" max="99" value="@match.Player1Score" class="form-control" required />
-                            </label>
-                            <label>
-                                <span>@match.User2.Username</span>
-                                <input name="score2" type="number" min="0" max="99" value="@match.Player2Score" class="form-control" required />
-                            </label>
+                        <div class="admin-match-grid">
+                            @foreach (var match in round.OrderBy(match => match.BracketPosition))
+                            {
+                                var isLocked = match.RoundNumber < Model.LatestRoundNumber;
+                                <form method="post" asp-page-handler="UpdateSoloMatch" asp-route-id="@Model.Tournament.Id" class="admin-match-card @(isLocked ? "admin-match-card-locked" : string.Empty)">
+                                    <input type="hidden" name="matchId" value="@match.Id" />
+                                    <div class="admin-match-title">
+                                        <strong>@match.User1.Username</strong>
+                                        <span>vs</span>
+                                        <strong>@match.User2.Username</strong>
+                                    </div>
+                                    <div class="admin-score-row">
+                                        <label>
+                                            <span>@match.User1.Username</span>
+                                            <input name="score1" type="number" min="0" max="99" value="@match.Player1Score" class="form-control" required readonly="@isLocked" />
+                                        </label>
+                                        <label>
+                                            <span>@match.User2.Username</span>
+                                            <input name="score2" type="number" min="0" max="99" value="@match.Player2Score" class="form-control" required readonly="@isLocked" />
+                                        </label>
+                                    </div>
+                                    <div class="admin-match-controls">
+                                        <input name="matchDate" type="datetime-local" value="@match.MatchDate.ToString("yyyy-MM-ddTHH:mm")" class="form-control" required readonly="@isLocked" />
+                                        <select name="matchStatus" class="form-select" disabled="@isLocked">
+                                            @foreach (var status in Enum.GetValues<Status>())
+                                            {
+                                                if (status == match.Status)
+                                                {
+                                                    <option value="@status" selected>@status</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@status">@status</option>
+                                                }
+                                            }
+                                        </select>
+                                        @if (isLocked)
+                                        {
+                                            <span class="admin-round-locked">Completed</span>
+                                        }
+                                        else
+                                        {
+                                            <button type="submit" class="btn btn-primary">Save result</button>
+                                        }
+                                    </div>
+                                </form>
+                            }
                         </div>
-                        <div class="admin-match-controls">
-                            <input name="matchDate" type="datetime-local" value="@match.MatchDate.ToString("yyyy-MM-ddTHH:mm")" class="form-control" required />
-                            <select name="matchStatus" class="form-select">
-                                @foreach (var status in Enum.GetValues<Status>())
-                                {
-                                    if (status == match.Status)
-                                    {
-                                        <option value="@status" selected>@status</option>
-                                    }
-                                    else
-                                    {
-                                        <option value="@status">@status</option>
-                                    }
-                                }
-                            </select>
-                            <button type="submit" class="btn btn-primary">Save result</button>
-                        </div>
-                    </form>
+                    </section>
                 }
             </div>
         }

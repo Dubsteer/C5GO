@@ -61,6 +61,9 @@ namespace LogicLayer.Managers
             if (match.TournamentId != tournamentId)
                 throw new InvalidOperationException("Match does not belong to this tournament.");
 
+            if (GetMatchesByTournamentId(tournamentId).Any(candidate => candidate.RoundNumber > match.RoundNumber))
+                throw new InvalidOperationException("A completed bracket round cannot be changed after the next round starts.");
+
             ValidateResult(player1Score, player2Score, status, matchDate);
 
             match.Player1Score = player1Score;
@@ -98,7 +101,41 @@ namespace LogicLayer.Managers
                 .ToList();
         }
 
-        public void GenerateMatches(List<Player> players, int tournamentId, DateTime startDate, int rounds)
+        public void GenerateOpeningRound(List<Player> players, int tournamentId, DateTime startDate)
+        {
+            ValidateRoundParticipants(players);
+
+            var shuffled = BracketPlanner.Shuffle(players);
+            var openingCount = BracketPlanner.GetOpeningParticipantCount(shuffled.Count);
+            GenerateRound(shuffled.Take(openingCount).ToList(), tournamentId, startDate, 1);
+        }
+
+        public void GenerateRound(
+            IReadOnlyList<Player> players,
+            int tournamentId,
+            DateTime matchDate,
+            int roundNumber)
+        {
+            ValidateRoundParticipants(players);
+            ArgumentOutOfRangeException.ThrowIfLessThan(roundNumber, 1);
+
+            for (var index = 0; index < players.Count; index += 2)
+            {
+                AddMatch(new Match(
+                    0,
+                    tournamentId,
+                    players[index],
+                    players[index + 1],
+                    0,
+                    0,
+                    matchDate,
+                    Status.Open,
+                    roundNumber,
+                    index / 2 + 1));
+            }
+        }
+
+        private static void ValidateRoundParticipants(IReadOnlyList<Player>? players)
         {
             if (players == null || players.Count < 2)
                 throw new InvalidOperationException("At least two players are required to generate a bracket.");
@@ -112,29 +149,6 @@ namespace LogicLayer.Managers
                 throw new InvalidOperationException("Bracket players must be unique and have valid accounts.");
             }
 
-            ArgumentOutOfRangeException.ThrowIfLessThan(rounds, 1);
-
-            var rnd = new Random();
-            var shuffled = players.OrderBy(x => rnd.Next()).ToList();
-
-            for (int round = 0; round < rounds; round++)
-            {
-                for (int i = 0; i < shuffled.Count - 1; i += 2)
-                {
-                    var match = new Match(
-                        0,
-                        tournamentId,
-                        shuffled[i],
-                        shuffled[i + 1],
-                        0,
-                        0,
-                        startDate.AddDays(round),
-                        Status.Open
-                    );
-
-                    AddMatch(match);
-                }
-            }
         }
 
         private static void ValidateResult(int score1, int score2, Status status, DateTime matchDate)

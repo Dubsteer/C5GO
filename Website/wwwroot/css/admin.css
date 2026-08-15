@@ -533,11 +533,72 @@ a.admin-action-card:hover {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.admin-bracket-rounds {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.admin-bracket-round {
+    padding: 1rem;
+    border: 1px solid #283443;
+    border-radius: 12px;
+    background: #0d141c;
+}
+
+.admin-bracket-round-heading {
+    margin-bottom: 0.85rem;
+}
+
+.admin-bracket-round-heading span,
+.admin-bracket-champion span {
+    color: #7f8d9d;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.admin-bracket-round-heading h3 {
+    margin: 0.2rem 0 0;
+    color: #dce8f5;
+    font-size: 1.05rem;
+}
+
+.admin-bracket-champion {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid #d3a72f;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(211, 167, 47, 0.16), rgba(16, 23, 32, 0.95));
+}
+
+.admin-bracket-champion strong {
+    color: #ffe08a;
+    font-size: 1.05rem;
+}
+
 .admin-match-card {
     padding: 1rem;
     border: 1px solid #2f3a47;
     border-radius: 11px;
     background: #101720;
+}
+
+.admin-match-card-locked {
+    border-color: #26303b;
+    opacity: 0.74;
+}
+
+.admin-round-locked {
+    align-self: center;
+    padding: 0.45rem 0.7rem;
+    color: #93a2b2;
+    font-size: 0.78rem;
+    font-weight: 700;
 }
 
 .admin-match-title {

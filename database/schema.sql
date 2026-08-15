@@ -146,6 +146,8 @@ CREATE TABLE matches (
     player2Score INT NOT NULL DEFAULT 0,
     match_date DATETIME NOT NULL,
     status_int INT NOT NULL DEFAULT 0,
+    round_number INT NOT NULL DEFAULT 1,
+    bracket_position INT NOT NULL DEFAULT 1,
     CONSTRAINT pk_matches PRIMARY KEY (id),
     CONSTRAINT fk_matches_tournament FOREIGN KEY (tournamentId)
         REFERENCES tournament (id) ON DELETE CASCADE,
@@ -157,7 +159,10 @@ CREATE TABLE matches (
     CONSTRAINT chk_matches_distinct_players CHECK (user_id1 <> user_id2),
     CONSTRAINT chk_matches_scores CHECK (
         player1Score BETWEEN 0 AND 99 AND player2Score BETWEEN 0 AND 99
-    )
+    ),
+    CONSTRAINT chk_matches_round CHECK (round_number >= 1),
+    CONSTRAINT chk_matches_position CHECK (bracket_position >= 1),
+    INDEX idx_matches_bracket (tournamentId, round_number, bracket_position)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE team_matches (
@@ -169,6 +174,8 @@ CREATE TABLE team_matches (
     team2_score INT NOT NULL DEFAULT 0,
     match_date DATETIME NOT NULL,
     status_int INT NOT NULL DEFAULT 0,
+    round_number INT NOT NULL DEFAULT 1,
+    bracket_position INT NOT NULL DEFAULT 1,
     CONSTRAINT pk_team_matches PRIMARY KEY (id),
     CONSTRAINT fk_team_matches_tournament FOREIGN KEY (tournamentId)
         REFERENCES tournament (id) ON DELETE CASCADE,
@@ -180,7 +187,10 @@ CREATE TABLE team_matches (
     CONSTRAINT chk_team_matches_distinct_teams CHECK (team_id1 <> team_id2),
     CONSTRAINT chk_team_matches_scores CHECK (
         team1_score BETWEEN 0 AND 99 AND team2_score BETWEEN 0 AND 99
-    )
+    ),
+    CONSTRAINT chk_team_matches_round CHECK (round_number >= 1),
+    CONSTRAINT chk_team_matches_position CHECK (bracket_position >= 1),
+    INDEX idx_team_matches_bracket (tournamentId, round_number, bracket_position)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE notification (

@@ -8,7 +8,7 @@ namespace Website.Pages.Matches
 {
     public class HistoryModel : PageModel
     {
-        private const int ProfessionalMatchLimit = 20;
+        private const int ProfessionalMatchLimit = 50;
         private const int CommunityMatchLimit = 12;
 
         private readonly IExternalMatchProvider externalMatchProvider;

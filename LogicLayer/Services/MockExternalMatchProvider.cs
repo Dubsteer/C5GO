@@ -167,7 +167,8 @@ namespace LogicLayer.Services
                     Status = "Finished",
                     Score = "2 - 1",
                     WinnerName = "Vitality",
-                    StartTimeUtc = DateTime.UtcNow.AddDays(-1)
+                    StartTimeUtc = DateTime.UtcNow.AddHours(-5),
+                    EndTimeUtc = DateTime.UtcNow.AddHours(-3)
                 },
                 new()
                 {
@@ -178,7 +179,8 @@ namespace LogicLayer.Services
                     Status = "Finished",
                     Score = "",
                     WinnerName = "MOUZ",
-                    StartTimeUtc = DateTime.UtcNow.AddDays(-2)
+                    StartTimeUtc = DateTime.UtcNow.AddHours(-14),
+                    EndTimeUtc = DateTime.UtcNow.AddHours(-12)
                 }
             };
 

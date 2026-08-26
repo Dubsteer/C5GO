@@ -8,7 +8,7 @@
     <header class="page-header history-page-header">
         <div>
             <h1 id="historyTitle" class="matches-title">Match history</h1>
-            <p class="page-subtitle ms-0">Recent professional results and completed C5GO tournament matches.</p>
+            <p class="page-subtitle ms-0">Professional results from the last 24 hours and completed C5GO tournament matches.</p>
         </div>
         <nav class="matches-view-switch" aria-label="Match views">
             <a asp-page="/Matches/Index">Live &amp; upcoming</a>
@@ -20,14 +20,14 @@
         <div class="history-section-heading">
             <div>
                 <span class="history-eyebrow">PandaScore</span>
-                <h2 id="professionalHistoryTitle">Professional results</h2>
+                <h2 id="professionalHistoryTitle">Professional results · last 24 hours</h2>
             </div>
-            <span class="history-count">@Model.ProfessionalMatches.Count matches</span>
+            <span class="history-count">@Model.ProfessionalMatches.Count matches · refreshes every 5 min</span>
         </div>
 
         @if (!Model.ProfessionalMatches.Any())
         {
-            <div class="empty-state"><strong>No professional results available</strong><span>Try again later when PandaScore is available.</span></div>
+            <div class="empty-state"><strong>No completed professional matches in the last 24 hours</strong><span>The list refreshes automatically while this page is open.</span></div>
         }
         else
         {
@@ -42,7 +42,10 @@
                         </div>
                         @if (!string.IsNullOrWhiteSpace(match.Score))
                         {
-                            <div class="score">@match.Score</div>
+                            <div class="score professional-result">
+                                <strong>@match.Score</strong>
+                                <span>Winner: @match.WinnerName</span>
+                            </div>
                         }
                         else if (!string.IsNullOrWhiteSpace(match.WinnerName))
                         {
@@ -60,7 +63,7 @@
                     </div>
                     <div class="match-meta">
                         <span>@match.EventName</span>
-                        <span class="badge-finished">@(match.StartTimeUtc?.ToLocalTime().ToString("dd.MM.yyyy") ?? "Finished")</span>
+                        <span class="badge-finished">@((match.EndTimeUtc ?? match.StartTimeUtc)?.ToLocalTime().ToString("dd.MM.yyyy HH:mm") ?? "Finished")</span>
                     </div>
                 </a>
             }
@@ -139,3 +142,7 @@
         }
     </section>
 </section>
+
+@section Scripts {
+    <script src="~/js/match-history.js" asp-append-version="true"></script>
+}

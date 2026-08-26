@@ -8,6 +8,9 @@ namespace Unit_Tests
     [TestClass]
     public class TestPandaScoreMatchProvider
     {
+        private static readonly TimeProvider TestTimeProvider = new FixedTimeProvider(
+            new DateTimeOffset(2026, 8, 9, 12, 0, 0, TimeSpan.Zero));
+
         [TestMethod]
         public async Task GetTodayMatchesAsync_ReturnsRunningAndUpcomingMatches()
         {
@@ -28,7 +31,7 @@ namespace Unit_Tests
                 BaseAddress = new Uri("https://api.pandascore.co")
             };
             using var cache = new MemoryCache(new MemoryCacheOptions());
-            var provider = new PandaScoreMatchProvider(client, cache);
+            var provider = new PandaScoreMatchProvider(client, cache, TestTimeProvider);
 
             var matches = await provider.GetTodayMatchesAsync();
 
@@ -61,7 +64,7 @@ namespace Unit_Tests
                 BaseAddress = new Uri("https://api.pandascore.co")
             };
             using var cache = new MemoryCache(new MemoryCacheOptions());
-            var provider = new PandaScoreMatchProvider(client, cache);
+            var provider = new PandaScoreMatchProvider(client, cache, TestTimeProvider);
 
             var match = await provider.GetMatchDetailsAsync("42");
 
@@ -90,7 +93,7 @@ namespace Unit_Tests
                 BaseAddress = new Uri("https://api.pandascore.co")
             };
             using var cache = new MemoryCache(new MemoryCacheOptions());
-            var provider = new PandaScoreMatchProvider(client, cache);
+            var provider = new PandaScoreMatchProvider(client, cache, TestTimeProvider);
 
             var firstResult = await provider.GetRecentMatchesAsync(10);
             var secondResult = await provider.GetRecentMatchesAsync(10);
@@ -102,8 +105,8 @@ namespace Unit_Tests
             Assert.AreEqual("Spirit", firstResult[0].WinnerName);
             Assert.AreEqual(firstResult[0].Id, secondResult[0].Id);
             StringAssert.Contains(requestedUri, "/csgo/matches/past");
-            StringAssert.Contains(requestedUri, "sort=-begin_at");
-            StringAssert.Contains(requestedUri, "page[size]=10");
+            StringAssert.Contains(requestedUri, "sort=-end_at");
+            StringAssert.Contains(requestedUri, "page[size]=100");
         }
 
         [TestMethod]
@@ -116,13 +119,48 @@ namespace Unit_Tests
                 BaseAddress = new Uri("https://api.pandascore.co")
             };
             using var cache = new MemoryCache(new MemoryCacheOptions());
-            var provider = new PandaScoreMatchProvider(client, cache);
+            var provider = new PandaScoreMatchProvider(client, cache, TestTimeProvider);
 
             var matches = await provider.GetRecentMatchesAsync();
 
             Assert.AreEqual(1, matches.Count);
             Assert.AreEqual("", matches[0].Score);
             Assert.AreEqual("Spirit", matches[0].WinnerName);
+        }
+
+        [TestMethod]
+        public async Task GetRecentMatchesAsync_ExcludesMatchesOlderThanTwentyFourHours()
+        {
+            var handler = new StubHttpMessageHandler(_ => JsonResponse(PastMatchOutsideWindowJson));
+
+            using var client = new HttpClient(handler)
+            {
+                BaseAddress = new Uri("https://api.pandascore.co")
+            };
+            using var cache = new MemoryCache(new MemoryCacheOptions());
+            var provider = new PandaScoreMatchProvider(client, cache, TestTimeProvider);
+
+            var matches = await provider.GetRecentMatchesAsync();
+
+            Assert.AreEqual(0, matches.Count);
+        }
+
+        [TestMethod]
+        public async Task GetRecentMatchesAsync_InfersWinnerFromScoreWhenWinnerIdIsMissing()
+        {
+            var handler = new StubHttpMessageHandler(_ => JsonResponse(PastMatchWithoutWinnerIdJson));
+
+            using var client = new HttpClient(handler)
+            {
+                BaseAddress = new Uri("https://api.pandascore.co")
+            };
+            using var cache = new MemoryCache(new MemoryCacheOptions());
+            var provider = new PandaScoreMatchProvider(client, cache, TestTimeProvider);
+
+            var matches = await provider.GetRecentMatchesAsync();
+
+            Assert.AreEqual(1, matches.Count);
+            Assert.AreEqual("Vitality", matches[0].WinnerName);
         }
 
         [TestMethod]
@@ -140,7 +178,7 @@ namespace Unit_Tests
                 BaseAddress = new Uri("https://api.pandascore.co")
             };
             using var cache = new MemoryCache(new MemoryCacheOptions());
-            var provider = new PandaScoreMatchProvider(client, cache);
+            var provider = new PandaScoreMatchProvider(client, cache, TestTimeProvider);
 
             var match = await provider.GetMatchDetailsAsync("43", preferPast: true);
 
@@ -225,6 +263,7 @@ namespace Unit_Tests
                 "id": 43,
                 "status": "finished",
                 "begin_at": "2026-08-08T18:00:00Z",
+                "end_at": "2026-08-08T20:00:00Z",
                 "winner_id": 50,
                 "opponents": [
                   { "opponent": { "id": 50, "name": "Spirit" } },
@@ -245,7 +284,8 @@ namespace Unit_Tests
               {
                 "id": 44,
                 "status": "finished",
-                "begin_at": "2026-08-07T18:00:00Z",
+                "begin_at": "2026-08-09T08:00:00Z",
+                "end_at": "2026-08-09T10:00:00Z",
                 "winner_id": 50,
                 "opponents": [
                   { "opponent": { "id": 50, "name": "Spirit" } },
@@ -257,5 +297,53 @@ namespace Unit_Tests
               }
             ]
             """;
+
+        private const string PastMatchOutsideWindowJson = """
+            [
+              {
+                "id": 45,
+                "status": "finished",
+                "begin_at": "2026-08-07T08:00:00Z",
+                "end_at": "2026-08-07T10:00:00Z",
+                "winner_id": 50,
+                "opponents": [
+                  { "opponent": { "id": 50, "name": "Spirit" } },
+                  { "opponent": { "id": 60, "name": "Vitality" } }
+                ],
+                "league": { "name": "IEM Cologne" },
+                "results": [
+                  { "team_id": 50, "score": 2 },
+                  { "team_id": 60, "score": 1 }
+                ],
+                "streams_list": []
+              }
+            ]
+            """;
+
+        private const string PastMatchWithoutWinnerIdJson = """
+            [
+              {
+                "id": 46,
+                "status": "finished",
+                "begin_at": "2026-08-09T08:00:00Z",
+                "end_at": "2026-08-09T10:00:00Z",
+                "opponents": [
+                  { "opponent": { "id": 50, "name": "Spirit" } },
+                  { "opponent": { "id": 60, "name": "Vitality" } }
+                ],
+                "league": { "name": "IEM Cologne" },
+                "results": [
+                  { "team_id": 50, "score": 0 },
+                  { "team_id": 60, "score": 2 }
+                ],
+                "streams_list": []
+              }
+            ]
+            """;
+
+        private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
+        {
+            public override DateTimeOffset GetUtcNow() => utcNow;
+        }
     }
 }

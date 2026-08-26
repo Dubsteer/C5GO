@@ -167,9 +167,9 @@ builder.Services.AddMemoryCache();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    options.AddPolicy("login", context => CreateFixedWindowLimiter(context, 10, TimeSpan.FromMinutes(5)));
-    options.AddPolicy("register", context => CreateFixedWindowLimiter(context, 5, TimeSpan.FromHours(1)));
-    options.AddPolicy("password-reset", context => CreateFixedWindowLimiter(context, 5, TimeSpan.FromMinutes(15)));
+    options.AddPolicy("login", context => CreateFormSubmissionLimiter(context, 10, TimeSpan.FromMinutes(5)));
+    options.AddPolicy("register", context => CreateFormSubmissionLimiter(context, 5, TimeSpan.FromHours(1)));
+    options.AddPolicy("password-reset", context => CreateFormSubmissionLimiter(context, 5, TimeSpan.FromMinutes(15)));
     options.AddPolicy("community", context => CreateFixedWindowLimiter(context, 120, TimeSpan.FromMinutes(1)));
 });
 
@@ -208,6 +208,7 @@ builder.Services.AddScoped<TeamMatchManager>();
 builder.Services.AddScoped<NotificationManager>();
 builder.Services.AddScoped<RoleManager>();
 builder.Services.AddScoped<CommunityManager>();
+builder.Services.AddSingleton(TimeProvider.System);
 
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<PostImageStorage>();
@@ -283,6 +284,16 @@ app.MapRazorPages();
 app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 
 app.Run();
+
+static RateLimitPartition<string> CreateFormSubmissionLimiter(
+    HttpContext context,
+    int permitLimit,
+    TimeSpan window)
+{
+    return HttpMethods.IsPost(context.Request.Method)
+        ? CreateFixedWindowLimiter(context, permitLimit, window)
+        : RateLimitPartition.GetNoLimiter("public-form-page");
+}
 
 static RateLimitPartition<string> CreateFixedWindowLimiter(
     HttpContext context,

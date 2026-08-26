@@ -87,6 +87,8 @@ namespace LogicLayer.Managers
 
         public void CreateUser(User user)
         {
+            ApplyBirthDate(user);
+
             if (userRepo.UsernameExists(user.Username))
                 throw new UsernameAlreadyInUseException();
 
@@ -141,6 +143,8 @@ namespace LogicLayer.Managers
         {
             if (user.Id is not int userId)
                 throw new InvalidOperationException("The user account is invalid.");
+
+            ApplyBirthDate(user);
 
             var all = userRepo.GetAllUsers();
 
@@ -223,5 +227,22 @@ namespace LogicLayer.Managers
             return userRepo.SearchUser(term);
         }
 
+        private static void ApplyBirthDate(User user)
+        {
+            if (!user.Birthday.HasValue)
+                return;
+
+            var birthday = user.Birthday.Value.Date;
+            if (!BirthDatePolicy.TryCalculateAllowedAge(
+                    birthday,
+                    DateTime.UtcNow.Date,
+                    out var age))
+            {
+                throw new InvalidBirthDateException();
+            }
+
+            user.Birthday = birthday;
+            user.Age = age;
+        }
     }
 }

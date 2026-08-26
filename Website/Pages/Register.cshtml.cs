@@ -34,6 +34,12 @@ namespace Website.Pages
         }
 
         public string TurnstileSiteKey => turnstileService.SiteKey;
+        public string OldestAllowedBirthDate => BirthDatePolicy
+            .GetOldestAllowedBirthDate(DateTime.UtcNow.Date)
+            .ToString("yyyy-MM-dd");
+        public string YoungestAllowedBirthDate => BirthDatePolicy
+            .GetYoungestAllowedBirthDate(DateTime.UtcNow.Date)
+            .ToString("yyyy-MM-dd");
 
         public IActionResult OnGet()
         {
@@ -61,15 +67,20 @@ namespace Website.Pages
                 return Page();
             }
 
+            var birthday = FullUserFormModel.Birthday!.Value.Date;
+            var age = BirthDatePolicy.CalculateAge(birthday, DateTime.UtcNow.Date);
             var user = new User(
                 FullUserFormModel.Firstname,
                 FullUserFormModel.Lastname,
-                FullUserFormModel.Age.GetValueOrDefault(),
+                age,
                 FullUserFormModel.Username,
                 FullUserFormModel.Gmail,
                 FullUserFormModel.Password,
                 false
-            );
+            )
+            {
+                Birthday = birthday
+            };
 
             try
             {
@@ -96,6 +107,14 @@ namespace Website.Pages
                 ModelState.AddModelError(
                     "FullUserFormModel.Gmail",
                     "This email is already registered."
+                );
+                return Page();
+            }
+            catch (InvalidBirthDateException exception)
+            {
+                ModelState.AddModelError(
+                    "FullUserFormModel.Birthday",
+                    exception.Message
                 );
                 return Page();
             }

@@ -124,6 +124,41 @@ namespace Unit_Tests
         [DataRow("/Login")]
         [DataRow("/Register")]
         [DataRow("/ForgotPassword")]
+        public async Task PublicFormPagesAreNotRateLimitedWhenOpenedRepeatedly(string path)
+        {
+            using var rateLimitFactory = factory.WithWebHostBuilder(_ => { });
+            using var client = rateLimitFactory.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                AllowAutoRedirect = false,
+                BaseAddress = new Uri("https://c5g0.com")
+            });
+
+            for (var attempt = 0; attempt < 15; attempt++)
+            {
+                using var response = await client.GetAsync(path);
+
+                Assert.AreEqual(HttpStatusCode.OK, response.StatusCode, $"{path}, attempt {attempt + 1}");
+            }
+        }
+
+        [TestMethod]
+        public async Task RegistrationUsesBirthDatePickerWithMinimumAgeLimit()
+        {
+            using var client = CreateClient();
+            using var response = await client.GetAsync("/Register");
+            var html = await response.Content.ReadAsStringAsync();
+
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            StringAssert.Contains(html, "name=\"FullUserFormModel.Birthday\"");
+            StringAssert.Contains(html, "type=\"date\"");
+            StringAssert.Contains(html, $"max=\"{DateTime.UtcNow.Date.AddYears(-14):yyyy-MM-dd}\"");
+            StringAssert.Contains(html, "You must be at least 14 years old.");
+        }
+
+        [TestMethod]
+        [DataRow("/Login")]
+        [DataRow("/Register")]
+        [DataRow("/ForgotPassword")]
         [DataRow("/RegisterSuccess")]
         [DataRow("/ForgotPasswordConfirmation")]
         [DataRow("/ResetPasswordConfirmation")]
@@ -147,6 +182,7 @@ namespace Unit_Tests
         [DataRow("/lib/jquery-validation/dist/jquery.validate.min.js")]
         [DataRow("/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js")]
         [DataRow("/js/community.js")]
+        [DataRow("/js/match-history.js")]
         public async Task RequiredStaticAssetsAreAvailable(string path)
         {
             using var client = CreateClient();
@@ -206,9 +242,10 @@ namespace Unit_Tests
             var html = await response.Content.ReadAsStringAsync();
 
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            StringAssert.Contains(html, "Professional results");
+            StringAssert.Contains(html, "Professional results · last 24 hours");
             StringAssert.Contains(html, "Vitality");
-            StringAssert.Contains(html, "Winner");
+            StringAssert.Contains(html, "Winner: Vitality");
+            StringAssert.Contains(html, "match-history.js");
             StringAssert.Contains(html, "solo-player-one");
             StringAssert.Contains(html, "Team Alpha");
             StringAssert.Contains(html, "C5GO Championship");

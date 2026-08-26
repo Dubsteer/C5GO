@@ -11,6 +11,9 @@ namespace LogicLayer.Dtos
         [JsonPropertyName("begin_at")]
         public DateTime? BeginAt { get; set; }
 
+        [JsonPropertyName("end_at")]
+        public DateTime? EndAt { get; set; }
+
         [JsonPropertyName("match_type")]
         public string? MatchType { get; set; }
 

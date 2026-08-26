@@ -3,6 +3,7 @@ using LogicLayer.Exceptions;
 using LogicLayer.FormModels;
 using LogicLayer.Managers;
 using LogicLayer.Models;
+using LogicLayer.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -30,6 +31,12 @@ namespace Website.Pages
         public EditProfileFormModel Form { get; set; } = new();
 
         public bool CanManageSteamId { get; private set; }
+        public string OldestAllowedBirthDate => BirthDatePolicy
+            .GetOldestAllowedBirthDate(DateTime.UtcNow.Date)
+            .ToString("yyyy-MM-dd");
+        public string YoungestAllowedBirthDate => BirthDatePolicy
+            .GetYoungestAllowedBirthDate(DateTime.UtcNow.Date)
+            .ToString("yyyy-MM-dd");
 
         public IActionResult OnGet()
         {
@@ -42,7 +49,7 @@ namespace Website.Pages
             {
                 Firstname = user.Firstname,
                 Lastname = user.Lastname,
-                Age = user.Age,
+                Birthday = user.Birthday,
                 Username = user.Username,
                 Email = user.Gmail,
                 SteamProfile = user.SteamId is null or "0" ? null : user.SteamId,
@@ -83,19 +90,24 @@ namespace Website.Pages
                     : Form.SteamProfile
                 : null;
 
+            var birthday = Form.Birthday!.Value.Date;
+            var age = BirthDatePolicy.CalculateAge(birthday, DateTime.UtcNow.Date);
             var updatedUser = new User(
                 existingUser.Id,
                 Form.Firstname.Trim(),
                 Form.Lastname.Trim(),
-                Form.Age.GetValueOrDefault(),
+                age,
                 Form.Username.Trim(),
                 Form.Email.Trim(),
                 passwordHash,
                 existingUser.IsAdmin,
-                requestedSteamProfile);
-            updatedUser.ShowSteamProfile = CanManageSteamId &&
-                                           Form.ShowSteamProfile &&
-                                           !string.IsNullOrWhiteSpace(requestedSteamProfile);
+                requestedSteamProfile)
+            {
+                Birthday = birthday,
+                ShowSteamProfile = CanManageSteamId &&
+                                   Form.ShowSteamProfile &&
+                                   !string.IsNullOrWhiteSpace(requestedSteamProfile)
+            };
 
             try
             {
@@ -109,6 +121,11 @@ namespace Website.Pages
             catch (EmailAlreadyInUseException)
             {
                 ModelState.AddModelError("Form.Email", "This email is already registered.");
+                return Page();
+            }
+            catch (InvalidBirthDateException exception)
+            {
+                ModelState.AddModelError("Form.Birthday", exception.Message);
                 return Page();
             }
             catch (InvalidSteamIdException exception)

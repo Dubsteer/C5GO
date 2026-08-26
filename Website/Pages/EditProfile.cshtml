@@ -22,9 +22,15 @@
                 <span asp-validation-for="Form.Lastname" class="field-error"></span>
             </div>
             <div>
-                <label asp-for="Form.Age" class="profile-label">Age</label>
-                <input asp-for="Form.Age" class="form-control" type="number" inputmode="numeric" />
-                <span asp-validation-for="Form.Age" class="field-error"></span>
+                <label asp-for="Form.Birthday" class="profile-label">Date of birth</label>
+                <input asp-for="Form.Birthday"
+                       class="form-control"
+                       type="date"
+                       min="@Model.OldestAllowedBirthDate"
+                       max="@Model.YoungestAllowedBirthDate"
+                       autocomplete="bday" />
+                <span class="form-hint">Your age is calculated from this date.</span>
+                <span asp-validation-for="Form.Birthday" class="field-error"></span>
             </div>
             <div>
                 <label asp-for="Form.Username" class="profile-label">Username</label>

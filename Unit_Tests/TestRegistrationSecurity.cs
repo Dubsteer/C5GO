@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Text;
 using LogicLayer.FormModels;
+using LogicLayer.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Website.Configuration;
@@ -31,6 +32,39 @@ namespace Unit_Tests
 
             Assert.IsFalse(results.Any(result =>
                 result.MemberNames.Contains(nameof(FullUserFormModel.ConfirmPassword))));
+        }
+
+        [TestMethod]
+        public void RegistrationRejectsUserYoungerThanFourteen()
+        {
+            var form = CreateValidForm();
+            form.Birthday = DateTime.UtcNow.Date.AddYears(-14).AddDays(1);
+
+            var results = Validate(form);
+
+            Assert.IsTrue(results.Any(result =>
+                result.MemberNames.Contains(nameof(FullUserFormModel.Birthday))));
+        }
+
+        [TestMethod]
+        public void RegistrationAcceptsUserOnFourteenthBirthday()
+        {
+            var form = CreateValidForm();
+            form.Birthday = DateTime.UtcNow.Date.AddYears(-14);
+
+            var results = Validate(form);
+
+            Assert.IsFalse(results.Any(result =>
+                result.MemberNames.Contains(nameof(FullUserFormModel.Birthday))));
+        }
+
+        [TestMethod]
+        public void AgeCalculationUsesTheExactBirthday()
+        {
+            var today = new DateTime(2026, 8, 16);
+
+            Assert.AreEqual(14, BirthDatePolicy.CalculateAge(new DateTime(2012, 8, 16), today));
+            Assert.AreEqual(13, BirthDatePolicy.CalculateAge(new DateTime(2012, 8, 17), today));
         }
 
         [TestMethod]
@@ -90,7 +124,7 @@ namespace Unit_Tests
             {
                 Firstname = "Test",
                 Lastname = "User",
-                Age = 20,
+                Birthday = DateTime.UtcNow.Date.AddYears(-20),
                 Username = "test-user",
                 Gmail = "test@example.com",
                 Password = "secure-password",

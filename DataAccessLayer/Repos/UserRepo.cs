@@ -49,17 +49,19 @@ namespace DataLayer.Repos
 
             var cmd = new MySqlCommand(@"
                 INSERT INTO user
-                (first_name, last_name, age, username, email, password, is_moderator, steam_id,
+                (first_name, last_name, birthday, age, username, email, password, is_moderator, steam_id,
                  show_steam_profile,
                  email_confirmed, email_token, token_created_at)
                 VALUES
-                (@FIRST_NAME, @LAST_NAME, @AGE, @USERNAME, @EMAIL, @PASSWORD, @IS_MODERATOR, @STEAM_ID,
+                (@FIRST_NAME, @LAST_NAME, @BIRTHDAY, @AGE, @USERNAME, @EMAIL, @PASSWORD, @IS_MODERATOR, @STEAM_ID,
                  @SHOW_STEAM_PROFILE,
                  @EMAIL_CONFIRMED, @EMAIL_TOKEN, @TOKEN_CREATED_AT)
             ", conn.Connection);
 
             cmd.Parameters.AddWithValue("@FIRST_NAME", user.Firstname ?? "");
             cmd.Parameters.AddWithValue("@LAST_NAME", user.Lastname ?? "");
+            cmd.Parameters.AddWithValue("@BIRTHDAY",
+                user.Birthday.HasValue ? user.Birthday.Value.Date : (object)DBNull.Value);
             cmd.Parameters.AddWithValue("@AGE", user.Age > 0 ? user.Age : (object)DBNull.Value);
             cmd.Parameters.AddWithValue("@USERNAME", user.Username);
             cmd.Parameters.AddWithValue("@EMAIL", user.Gmail);
@@ -167,6 +169,7 @@ namespace DataLayer.Repos
                 UPDATE user SET
                     first_name = @FIRST_NAME,
                     last_name = @LAST_NAME,
+                    birthday = @BIRTHDAY,
                     age = @AGE,
                     username = @USERNAME,
                     email = @EMAIL,
@@ -180,6 +183,8 @@ namespace DataLayer.Repos
             cmd.Parameters.AddWithValue("@ID", user.Id);
             cmd.Parameters.AddWithValue("@FIRST_NAME", user.Firstname ?? "");
             cmd.Parameters.AddWithValue("@LAST_NAME", user.Lastname ?? "");
+            cmd.Parameters.AddWithValue("@BIRTHDAY",
+                user.Birthday.HasValue ? user.Birthday.Value.Date : (object)DBNull.Value);
             cmd.Parameters.AddWithValue("@AGE", user.Age > 0 ? user.Age : (object)DBNull.Value);
             cmd.Parameters.AddWithValue("@USERNAME", user.Username);
             cmd.Parameters.AddWithValue("@EMAIL", user.Gmail);

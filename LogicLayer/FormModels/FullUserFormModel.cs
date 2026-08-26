@@ -15,10 +15,11 @@ namespace LogicLayer.FormModels
         [StringLength(35, ErrorMessage = "Last name must not exceed {1} characters")]
         public string Lastname { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Age is required")]
-        [DisplayName("Age")]
-        [Range(14, 106, ErrorMessage = "Age must be between 14 and 106")]
-        public int? Age { get; set; }
+        [Required(ErrorMessage = "Date of birth is required")]
+        [DisplayName("Date of birth")]
+        [DataType(DataType.Date)]
+        [AllowedBirthDate]
+        public DateTime? Birthday { get; set; }
 
         [Required(ErrorMessage = "Username is required")]
         [StringLength(30, ErrorMessage = "Username must not exceed {1} characters")]
@@ -37,24 +38,5 @@ namespace LogicLayer.FormModels
         [DisplayName("Confirm password")]
         [Compare(nameof(Password), ErrorMessage = "Passwords do not match")]
         public string ConfirmPassword { get; set; } = string.Empty;
-
-        public FullUserFormModel() { }
-
-        public FullUserFormModel(
-            string firstname,
-            string lastname,
-            int age,
-            string username,
-            string gmail,
-            string password)
-        {
-            Firstname = firstname;
-            Lastname = lastname;
-            Age = age;
-            Username = username;
-            Gmail = gmail;
-            Password = password;
-            ConfirmPassword = password;
-        }
     }
 }

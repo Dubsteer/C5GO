@@ -13,14 +13,20 @@ namespace LogicLayer.Services
 
         private static readonly TimeSpan CurrentMatchesCacheDuration = TimeSpan.FromSeconds(30);
         private static readonly TimeSpan RecentMatchesCacheDuration = TimeSpan.FromMinutes(5);
+        private static readonly TimeSpan RecentMatchWindow = TimeSpan.FromHours(24);
 
         private readonly HttpClient httpClient;
         private readonly IMemoryCache cache;
+        private readonly TimeProvider timeProvider;
 
-        public PandaScoreMatchProvider(HttpClient httpClient, IMemoryCache cache)
+        public PandaScoreMatchProvider(
+            HttpClient httpClient,
+            IMemoryCache cache,
+            TimeProvider timeProvider)
         {
             this.httpClient = httpClient;
             this.cache = cache;
+            this.timeProvider = timeProvider;
         }
 
         public async Task<List<ExternalMatchDto>> GetTodayMatchesAsync()
@@ -47,8 +53,25 @@ namespace LogicLayer.Services
                 {
                     entry.AbsoluteExpirationRelativeToNow = RecentMatchesCacheDuration;
                     var matches = await GetMatchesAsync(
-                        $"/csgo/matches/past?sort=-begin_at&page[size]={limit}");
-                    return matches.Select(Map).ToList();
+                        "/csgo/matches/past?sort=-end_at&page[size]=100");
+                    var now = timeProvider.GetUtcNow().UtcDateTime;
+                    var cutoff = now - RecentMatchWindow;
+
+                    return matches
+                        .Where(match => string.Equals(
+                            match.Status,
+                            "finished",
+                            StringComparison.OrdinalIgnoreCase))
+                        .Where(match =>
+                        {
+                            var completedAt = match.EndAt ?? match.BeginAt;
+                            return completedAt >= cutoff && completedAt <= now;
+                        })
+                        .OrderByDescending(match => match.EndAt ?? match.BeginAt)
+                        .Select(Map)
+                        .Where(match => !string.IsNullOrWhiteSpace(match.WinnerName))
+                        .Take(limit)
+                        .ToList();
                 });
 
             return cachedMatches ?? [];
@@ -144,6 +167,7 @@ namespace LogicLayer.Services
                 EventName = m.League?.Name ?? "Unknown",
 
                 StartTimeUtc = m.BeginAt,
+                EndTimeUtc = m.EndAt,
 
                 Status = NormalizeStatus(m.Status),
 
@@ -154,15 +178,30 @@ namespace LogicLayer.Services
 
         private static string GetWinnerName(PandaMatch match)
         {
-            return match.Opponents
+            var declaredWinner = match.Opponents
                 .Select(wrapper => wrapper.Opponent)
                 .FirstOrDefault(opponent => opponent?.Id == match.WinnerId)
                 ?.Name ?? "";
+
+            if (!string.IsNullOrWhiteSpace(declaredWinner))
+                return declaredWinner;
+
+            var team1 = match.Opponents.ElementAtOrDefault(0)?.Opponent;
+            var team2 = match.Opponents.ElementAtOrDefault(1)?.Opponent;
+            var result1 = match.Results?.FirstOrDefault(result => result.TeamId == team1?.Id);
+            var result2 = match.Results?.FirstOrDefault(result => result.TeamId == team2?.Id);
+
+            if (result1 == null || result2 == null || result1.Score == result2.Score)
+                return "";
+
+            return result1.Score > result2.Score
+                ? team1?.Name ?? ""
+                : team2?.Name ?? "";
         }
 
         private static string NormalizeStatus(string? status)
         {
-            return status switch
+            return status?.ToLowerInvariant() switch
             {
                 "running" => "Live",
                 "not_started" => "Upcoming",
@@ -186,7 +225,7 @@ namespace LogicLayer.Services
 
         private static string BuildScore(PandaMatch m)
         {
-            if (m.Status == "not_started")
+            if (string.Equals(m.Status, "not_started", StringComparison.OrdinalIgnoreCase))
                 return "";
 
             if (m.Results == null || m.Results.Count == 0)
@@ -204,7 +243,9 @@ namespace LogicLayer.Services
             var s1 = result1.Score;
             var s2 = result2.Score;
 
-            if (m.Status == "finished" && s1 == 0 && s2 == 0)
+            if (string.Equals(m.Status, "finished", StringComparison.OrdinalIgnoreCase) &&
+                s1 == 0 &&
+                s2 == 0)
                 return "";
 
             return $"{s1} - {s2}";

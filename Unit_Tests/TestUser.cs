@@ -52,6 +52,19 @@ namespace Unit_Tests
         }
 
         [TestMethod]
+        public void TestUpdateUserRejectsDuplicateUsername()
+        {
+            var firstUser = CreateUser(1, "first", "first@test.local");
+            var secondUser = CreateUser(2, "second", "second@test.local");
+            userManager.CreateUser(firstUser);
+            userManager.CreateUser(secondUser);
+            secondUser.Username = "FIRST";
+
+            Assert.ThrowsExactly<UsernameAlreadyInUseException>(() =>
+                userManager.UpdateUser(secondUser));
+        }
+
+        [TestMethod]
         public void TestUpdateUserNormalizesSteamProfileUrl()
         {
             const string steamId = "76561198012345678";

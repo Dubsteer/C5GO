@@ -12,9 +12,10 @@ namespace LogicLayer.FormModels
         [StringLength(35, ErrorMessage = "Last name must not exceed {1} characters")]
         public string Lastname { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Age is required")]
-        [Range(14, 106, ErrorMessage = "Age must be between 14 and 106")]
-        public int? Age { get; set; }
+        [Required(ErrorMessage = "Date of birth is required")]
+        [DataType(DataType.Date)]
+        [AllowedBirthDate]
+        public DateTime? Birthday { get; set; }
 
         [Required(ErrorMessage = "Username is required")]
         [StringLength(30, ErrorMessage = "Username must not exceed {1} characters")]

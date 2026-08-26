@@ -24,9 +24,15 @@
             </div>
 
             <div class="auth-field">
-                <label asp-for="FullUserFormModel.Age">Age</label>
-                <input asp-for="FullUserFormModel.Age" class="auth-input" type="number" inputmode="numeric" />
-                <span asp-validation-for="FullUserFormModel.Age" class="field-error"></span>
+                <label asp-for="FullUserFormModel.Birthday">Date of birth</label>
+                <input asp-for="FullUserFormModel.Birthday"
+                       class="auth-input"
+                       type="date"
+                       min="@Model.OldestAllowedBirthDate"
+                       max="@Model.YoungestAllowedBirthDate"
+                       autocomplete="bday" />
+                <span class="form-hint">You must be at least 14 years old.</span>
+                <span asp-validation-for="FullUserFormModel.Birthday" class="field-error"></span>
             </div>
 
             <div class="auth-field">

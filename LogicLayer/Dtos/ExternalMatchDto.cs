@@ -13,6 +13,7 @@ namespace LogicLayer.Dtos
         public string EventName { get; set; } = "";
 
         public DateTime? StartTimeUtc { get; set; }
+        public DateTime? EndTimeUtc { get; set; }
 
         public string Status { get; set; } = "";
 

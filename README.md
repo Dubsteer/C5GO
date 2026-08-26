@@ -45,6 +45,10 @@ docker compose down
 images and data-protection keys in named Docker volumes. The schema is imported
 automatically only when a new empty database volume is created.
 
+The supervisor package uses `compose.professor.yaml` in addition to the base
+configuration. This imports sanitized demonstration data into a new database
+volume without changing the normal development or production setup.
+
 An existing database volume created before the full tournament bracket feature
 can be upgraded without deleting data:
 

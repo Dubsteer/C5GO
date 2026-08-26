@@ -1,0 +1,4 @@
+services:
+  database:
+    volumes:
+      - ./database/demo-data.sql:/docker-entrypoint-initdb.d/002-demo-data.sql:ro

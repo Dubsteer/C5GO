@@ -103,11 +103,11 @@
 }
 
 .admin-action-grid {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
 }
 
 .admin-action-card {
-    min-height: 250px;
+    min-height: 0;
     padding: 1.5rem;
     color: #edf2f7;
     text-decoration: none;
@@ -128,7 +128,7 @@ a.admin-action-card:hover {
 }
 
 .admin-action-card p {
-    min-height: 72px;
+    min-height: 0;
     color: #aeb9c6;
 }
 
@@ -143,6 +143,7 @@ a.admin-action-card:hover {
 
 .admin-breadcrumb {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.55rem;
     margin-bottom: 1.25rem;
     color: #7f8b99;
@@ -172,7 +173,7 @@ a.admin-action-card:hover {
 }
 
 .admin-table-wrap {
-    overflow: hidden;
+    overflow-x: auto;
 }
 
 .admin-table {
@@ -191,6 +192,7 @@ a.admin-action-card:hover {
 }
 
 .admin-table th {
+    white-space: nowrap;
     color: #8d99a8;
     font-size: 0.75rem;
     letter-spacing: 0.08em;
@@ -223,7 +225,23 @@ a.admin-action-card:hover {
     font-size: 0.85rem;
 }
 
+.admin-user-link {
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    color: #ffffff;
+    font-weight: 750;
+    text-decoration: none;
+}
+
+.admin-user-link:hover,
+.admin-user-link:focus-visible {
+    color: #99f6e4;
+    text-decoration: underline;
+}
+
 .admin-badge {
+    white-space: nowrap;
     display: inline-flex;
     align-items: center;
     margin: 0.2rem 0.2rem 0 0;
@@ -336,6 +354,7 @@ a.admin-action-card:hover {
 
 .admin-tournament-card,
 .admin-panel {
+    min-width: 0;
     border: 1px solid #303946;
     background: #151b23;
     border-radius: 14px;
@@ -344,7 +363,7 @@ a.admin-action-card:hover {
 .admin-tournament-card {
     display: flex;
     flex-direction: column;
-    min-height: 280px;
+    min-height: 0;
     padding: 1.35rem;
 }
 
@@ -438,6 +457,7 @@ a.admin-action-card:hover {
 }
 
 .admin-panel-heading {
+    flex-wrap: wrap;
     justify-content: space-between;
     margin-bottom: 1.25rem;
 }
@@ -505,6 +525,7 @@ a.admin-action-card:hover {
 
 .admin-roster-item {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
@@ -566,6 +587,7 @@ a.admin-action-card:hover {
 
 .admin-bracket-champion {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
@@ -614,11 +636,13 @@ a.admin-action-card:hover {
 }
 
 .admin-score-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     margin-bottom: 0.75rem;
 }
 
 .admin-score-row label {
-    flex: 1;
+    min-width: 0;
 }
 
 .admin-score-row label > span {
@@ -648,9 +672,8 @@ a.admin-action-card:hover {
 }
 
 @media (max-width: 900px) {
-    .admin-stat-grid,
-    .admin-action-grid {
-        grid-template-columns: 1fr;
+    .admin-stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .admin-action-card {
@@ -673,11 +696,27 @@ a.admin-action-card:hover {
     .admin-tournament-grid,
     .admin-workspace-grid,
     .admin-match-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 
 @media (max-width: 640px) {
+    .admin-filter-bar .form-control,
+    .admin-filter-bar .form-select {
+        flex-basis: auto;
+    }
+
+    .admin-form-card,
+    .admin-panel,
+    .admin-tournament-card {
+        padding: 1rem;
+    }
+
+    .admin-bracket-round,
+    .admin-match-card {
+        padding: 0.75rem;
+    }
+
     .admin-page-header-row,
     .admin-search,
     .admin-filter-bar,
@@ -693,13 +732,11 @@ a.admin-action-card:hover {
     }
 }
 .admin-role-form {
-    min-width: 170px;
+    min-width: 0;
+    width: 170px;
+    max-width: 100%;
     display: grid;
     gap: 0.4rem;
-}
-
-.admin-role-form .form-control {
-    min-width: 150px;
 }
 
 .admin-community-stats {
@@ -713,4 +750,100 @@ a.admin-action-card:hover {
 .admin-community-stats .admin-badge {
     width: fit-content;
     margin-top: 0.15rem;
+}
+
+/* Admin pages use the same control and card geometry as the public site. */
+.admin-shell .form-control,
+.admin-shell .form-select,
+.admin-shell .btn,
+.admin-role-form,
+.admin-filter-bar {
+    border-radius: var(--site-radius-control);
+}
+
+.admin-stat-card,
+.admin-action-card,
+.admin-table-wrap,
+.admin-empty-state,
+.admin-form-card,
+.admin-panel,
+.admin-tournament-card,
+.admin-match-card,
+.admin-bracket-round {
+    border-radius: var(--site-radius);
+}
+
+.admin-dashboard-header {
+    border-radius: var(--site-radius-feature);
+}
+
+@media (max-width: 1199.98px) {
+    .admin-table-stacked,
+    .admin-table-stacked tbody {
+        display: block;
+    }
+
+    .admin-table-stacked thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    .admin-table-stacked tbody tr {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: 0.5rem;
+        border-bottom: 1px solid #445365;
+    }
+
+    .admin-table-stacked tbody tr:last-child {
+        border-bottom: 0;
+    }
+
+    .admin-table-stacked td {
+        display: block;
+        min-width: 0;
+        padding: 0.65rem;
+        border: 0;
+    }
+
+    .admin-table-stacked td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 0.3rem;
+        color: #9cabbc;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+    }
+
+    .admin-table-stacked td:first-child,
+    .admin-table-stacked td:last-child {
+        grid-column: 1 / -1;
+    }
+
+    .admin-table-stacked .admin-row-actions {
+        justify-content: flex-start;
+        align-items: end;
+    }
+
+    .admin-table-stacked .admin-role-form {
+        flex: 1 1 170px;
+    }
+
+    .admin-table-stacked .admin-community-stats {
+        min-width: 0;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .admin-table-stacked tbody tr,
+    .admin-stat-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }

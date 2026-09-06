@@ -39,17 +39,18 @@
 
     <div class="community-toolbar">
         <p><strong>@Model.Discussions.TotalCount</strong> discussions</p>
-        <form method="get" class="community-sort-form">
+        <form method="get" class="community-sort-form" data-community-sort-form>
             @if (Model.CategoryId.HasValue)
             {
                 <input type="hidden" name="categoryId" value="@Model.CategoryId" />
             }
             <label for="community-sort">Sort by</label>
-            <select id="community-sort" name="sort" class="form-select" onchange="this.form.submit()">
+            <select id="community-sort" name="sort" class="form-select" data-community-sort>
                 <option value="@CommunitySort.Active" selected="@(Model.Sort == CommunitySort.Active)">Active</option>
                 <option value="@CommunitySort.Newest" selected="@(Model.Sort == CommunitySort.Newest)">Newest</option>
                 <option value="@CommunitySort.Top" selected="@(Model.Sort == CommunitySort.Top)">Top voted</option>
             </select>
+            <button type="submit" class="btn btn-outline-light community-sort-submit">Apply</button>
         </form>
     </div>
 
@@ -82,7 +83,7 @@
                                 <span class="discussion-pin">Pinned</span>
                             }
                             <span>Posted by @discussion.Author?.Username</span>
-                            <time datetime="@discussion.CreatedAt.ToString("O")">@discussion.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</time>
+                            <time datetime="@discussion.CreatedAt.ToString("O")" data-local-time="datetime">@discussion.CreatedAt.ToString("dd MMM yyyy, HH:mm") UTC</time>
                         </div>
                         <h2>
                             <a asp-page="./Details" asp-route-id="@discussion.Id">@discussion.Title</a>
@@ -125,17 +126,31 @@
         @if (Model.Discussions.TotalPages > 1)
         {
             <nav class="community-pagination" aria-label="Discussion pages">
-                <a asp-page="./Index"
-                   asp-route-categoryId="@Model.CategoryId"
-                   asp-route-sort="@Model.Sort"
-                   asp-route-pageNumber="@(Model.PageNumber - 1)"
-                   class="btn btn-outline-light @(Model.PageNumber <= 1 ? "disabled" : string.Empty)">Previous</a>
+                @if (Model.PageNumber <= 1)
+                {
+                    <span class="btn btn-outline-light disabled" aria-disabled="true">Previous</span>
+                }
+                else
+                {
+                    <a asp-page="./Index"
+                       asp-route-categoryId="@Model.CategoryId"
+                       asp-route-sort="@Model.Sort"
+                       asp-route-pageNumber="@(Model.PageNumber - 1)"
+                       class="btn btn-outline-light">Previous</a>
+                }
                 <span>Page @Model.PageNumber of @Model.Discussions.TotalPages</span>
-                <a asp-page="./Index"
-                   asp-route-categoryId="@Model.CategoryId"
-                   asp-route-sort="@Model.Sort"
-                   asp-route-pageNumber="@(Model.PageNumber + 1)"
-                   class="btn btn-outline-light @(Model.PageNumber >= Model.Discussions.TotalPages ? "disabled" : string.Empty)">Next</a>
+                @if (Model.PageNumber >= Model.Discussions.TotalPages)
+                {
+                    <span class="btn btn-outline-light disabled" aria-disabled="true">Next</span>
+                }
+                else
+                {
+                    <a asp-page="./Index"
+                       asp-route-categoryId="@Model.CategoryId"
+                       asp-route-sort="@Model.Sort"
+                       asp-route-pageNumber="@(Model.PageNumber + 1)"
+                       class="btn btn-outline-light">Next</a>
+                }
             </nav>
         }
     }

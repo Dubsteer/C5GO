@@ -39,7 +39,7 @@ else
                 </div>
                 <div class="player-history-meta">
                     <a asp-page="/Tournaments/Details" asp-route-id="@match.TournamentId">@tournamentName</a>
-                    <time datetime="@match.MatchDate.ToString("O")">@match.MatchDate.ToString("dd.MM.yyyy")</time>
+                    <time datetime="@match.MatchDate.ToString("O")" data-local-time="date">@match.MatchDate.ToString("dd MMM yyyy") UTC</time>
                 </div>
             </article>
         }

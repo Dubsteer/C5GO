@@ -25,16 +25,24 @@
     else
     {
         <div class="table-responsive admin-table-wrap">
-            <table class="table admin-table align-middle">
-                <thead><tr><th>News item</th><th>Author</th><th>Published</th><th>Image</th><th class="text-end">Actions</th></tr></thead>
-                <tbody>
+            <table class="table admin-table admin-table-stacked align-middle" role="table" aria-label="News management">
+                <thead role="rowgroup">
+                    <tr role="row">
+                        <th scope="col" role="columnheader">News item</th>
+                        <th scope="col" role="columnheader">Author</th>
+                        <th scope="col" role="columnheader">Published</th>
+                        <th scope="col" role="columnheader">Image</th>
+                        <th scope="col" role="columnheader" class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody role="rowgroup">
                     @foreach (var post in Model.Posts)
                     {
-                        <tr>
-                            <td><strong>@post.Title</strong></td>
-                            <td>@post.User.Username</td>
-                            <td>@post.Posted_on.ToString("dd.MM.yyyy HH:mm")</td>
-                            <td>
+                        <tr role="row">
+                            <td role="cell" data-label="News item"><strong>@post.Title</strong></td>
+                            <td role="cell" data-label="Author">@post.User.Username</td>
+                            <td role="cell" data-label="Published"><time datetime="@post.Posted_on.ToString("O")" data-local-time="datetime">@post.Posted_on.ToString("dd MMM yyyy, HH:mm") UTC</time></td>
+                            <td role="cell" data-label="Image">
                                 @if (!string.IsNullOrEmpty(post.ImagePath))
                                 {
                                     <img src="@post.ImagePath" class="admin-post-image" alt="" />
@@ -44,7 +52,7 @@
                                     <span class="admin-badge">No image</span>
                                 }
                             </td>
-                            <td>
+                            <td role="cell" data-label="Actions">
                                 <div class="admin-row-actions">
                                     <a asp-page="/Admin/Posts/Edit" asp-route-id="@post.Id" class="btn btn-sm btn-primary">Edit</a>
                                     <a asp-page="/Admin/Posts/Delete" asp-route-id="@post.Id" class="btn btn-sm btn-outline-danger">Delete</a>

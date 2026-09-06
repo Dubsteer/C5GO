@@ -159,7 +159,7 @@ namespace LogicLayer.Managers
             foreach (var match in existing)
                 matchManager.RemoveMatch(match);
 
-            matchManager.GenerateOpeningRound(players, tournament.Id, DateTime.Now);
+            matchManager.GenerateOpeningRound(players, tournament.Id, DateTime.UtcNow);
             UpdateTournamentStatus(tournament);
         }
 

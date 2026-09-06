@@ -116,7 +116,7 @@ namespace LogicLayer.Managers
 
             var shuffled = BracketPlanner.Shuffle(uniqueTeamIds);
             var openingCount = BracketPlanner.GetOpeningParticipantCount(shuffled.Count);
-            GenerateRound(shuffled.Take(openingCount).ToList(), tournamentId, DateTime.Now, 1);
+            GenerateRound(shuffled.Take(openingCount).ToList(), tournamentId, DateTime.UtcNow, 1);
         }
 
         public void GenerateRound(

@@ -51,7 +51,7 @@
                 <span class="profile-label">Steam profile</span>
                 <div class="profile-value">Not connected</div>
             </div>
-            @if (!Model.PageUser.IsAdmin)
+            @if (Model.CanManageSteamId)
             {
                 <a asp-page="/EditProfile" asp-fragment="steam-profile" class="btn btn-success">
                     @(Model.NeedsSteamUpdate ? "Update Steam ID" : "Add Steam ID")

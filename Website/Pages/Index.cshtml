@@ -53,7 +53,7 @@
                 <div class="news-feature-content">
                     <div class="news-meta">
                         <span class="news-label">Featured</span>
-                        <time datetime="@featuredPost.Posted_on.ToString("O")">
+                        <time datetime="@featuredPost.Posted_on.ToString("O")" data-local-time="date">
                             @featuredPost.Posted_on.ToString("dd MMM yyyy")
                         </time>
                     </div>
@@ -94,7 +94,7 @@
                                     }
 
                                     <div class="news-card-content">
-                                        <time datetime="@post.Posted_on.ToString("O")">
+                                        <time datetime="@post.Posted_on.ToString("O")" data-local-time="date">
                                             @post.Posted_on.ToString("dd MMM yyyy")
                                         </time>
                                         <h3>@Model.TruncateString(title, 70)</h3>

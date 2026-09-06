@@ -58,7 +58,7 @@ namespace Website.Pages.Posts
                     0,
                     CurrentUser,
                     NewComment.CommentText,
-                    DateTime.Now,
+                    DateTime.UtcNow,
                     Id));
             }
             catch (ArgumentException exception)
@@ -86,7 +86,7 @@ namespace Website.Pages.Posts
                 commentManager.AddReply(new CommentReply(
                     0,
                     NewReply.ReplyText,
-                    DateTime.Now,
+                    DateTime.UtcNow,
                     parentComment.Id,
                     CurrentUser));
             }

@@ -114,6 +114,7 @@ namespace Unit_Tests
 
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode, path);
             StringAssert.Contains(html, "cf-turnstile");
+            StringAssert.Contains(html, "data-size=\"compact\"");
             StringAssert.Contains(html, "1x00000000000000000000AA");
             StringAssert.Contains(
                 html,
@@ -183,6 +184,7 @@ namespace Unit_Tests
         [DataRow("/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js")]
         [DataRow("/js/community.js")]
         [DataRow("/js/match-history.js")]
+        [DataRow("/js/site.js")]
         public async Task RequiredStaticAssetsAreAvailable(string path)
         {
             using var client = CreateClient();
@@ -334,6 +336,10 @@ namespace Unit_Tests
             Assert.IsFalse(html.Contains(
                 "Private notification for another user.",
                 StringComparison.Ordinal));
+
+            using var countResponse = await client.GetAsync("/Notifications?handler=UnreadCount");
+            Assert.AreEqual(HttpStatusCode.OK, countResponse.StatusCode);
+            StringAssert.Contains(await countResponse.Content.ReadAsStringAsync(), "\"unreadCount\":1");
         }
 
         [TestMethod]
@@ -370,10 +376,12 @@ namespace Unit_Tests
                 "<ul class=\"navbar-nav mx-auto",
                 StringComparison.Ordinal);
             var accountNavigationStart = html.IndexOf(
-                "<ul class=\"navbar-nav ms-lg-auto",
+                "<ul class=\"navbar-nav ms-xl-auto",
                 StringComparison.Ordinal);
 
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            StringAssert.Contains(html, "navbar-expand-xl");
+            StringAssert.Contains(html, "name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"");
             Assert.IsTrue(primaryNavigationStart >= 0);
             Assert.IsTrue(accountNavigationStart > primaryNavigationStart);
 
@@ -395,13 +403,74 @@ namespace Unit_Tests
         }
 
         [TestMethod]
+        [DataRow("/Admin/Users", "User,Email,Account,Player,Actions", "Delete account")]
+        [DataRow("/Admin/Posts/Manage", "News item,Author,Published,Image,Actions", "Edit")]
+        public async Task ResponsiveAdminTablesKeepLabelsAndActions(
+            string path, string labels, string action)
+        {
+            var user = new LogicLayer.Models.User(2)
+            {
+                Username = "member",
+                Gmail = "member@example.test",
+                EmailConfirmed = true
+            };
+            var posts = new MockPostRepo();
+            posts.CreatePost(new Post(1, user, "Tournament update", "News content", DateTime.UtcNow));
+            using var adminFactory = factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureAppConfiguration((_, configuration) =>
+                    configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                    {
+                        ["Features:CommunityEnabled"] = "false"
+                    }));
+                builder.ConfigureTestServices(services =>
+                {
+                    services.RemoveAll<IUserRepo>();
+                    services.AddSingleton<IUserRepo>(new MockUserRepo([user]));
+                    services.RemoveAll<IPostRepo>();
+                    services.AddSingleton<IPostRepo>(posts);
+                    services.RemoveAll<INotificationRepo>();
+                    services.AddSingleton<INotificationRepo>(new MockNotificationRepo());
+                    services.AddAuthentication(options =>
+                    {
+                        options.DefaultAuthenticateScheme = AdminTestAuthenticationHandler.SchemeName;
+                        options.DefaultChallengeScheme = AdminTestAuthenticationHandler.SchemeName;
+                    }).AddScheme<AuthenticationSchemeOptions, AdminTestAuthenticationHandler>(
+                        AdminTestAuthenticationHandler.SchemeName, _ => { });
+                });
+            });
+            using var client = adminFactory.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                AllowAutoRedirect = false,
+                BaseAddress = new Uri("https://c5g0.com")
+            });
+
+            using var response = await client.GetAsync(path);
+            var html = await response.Content.ReadAsStringAsync();
+
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            StringAssert.Contains(html, "admin-table-stacked");
+            StringAssert.Contains(html, "role=\"table\"");
+            foreach (var label in labels.Split(','))
+            {
+                StringAssert.Contains(html, $">{label}</th>");
+                StringAssert.Contains(html, $"role=\"cell\" data-label=\"{label}\"");
+            }
+            Assert.AreEqual(labels.Split(',').Length, CountOccurrences(html, "role=\"columnheader\""));
+            StringAssert.Contains(html, action);
+            StringAssert.Contains(html, "__RequestVerificationToken");
+            if (path == "/Admin/Users")
+                StringAssert.Contains(html, "href=\"/UserProfile/2\"");
+        }
+
+        [TestMethod]
         public async Task DisabledCommunityIsNotPubliclyExposed()
         {
             using var client = CreateClient();
             using var response = await client.GetAsync("/Community");
 
-            Assert.AreEqual(HttpStatusCode.Redirect, response.StatusCode);
-            Assert.AreEqual("/errors/404", response.Headers.Location?.OriginalString);
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+            StringAssert.Contains(await response.Content.ReadAsStringAsync(), "Page not found");
         }
 
         [TestMethod]
@@ -446,6 +515,10 @@ namespace Unit_Tests
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             StringAssert.Contains(html, "Useful community discussion");
             StringAssert.Contains(html, "Log in to post");
+            StringAssert.Contains(html, "data-community-sort");
+            StringAssert.Contains(html, ">Apply</button>");
+            StringAssert.Contains(html, "data-local-time=\"datetime\"");
+            Assert.IsFalse(html.Contains("onchange=", StringComparison.OrdinalIgnoreCase));
         }
 
         [TestMethod]
@@ -614,13 +687,13 @@ namespace Unit_Tests
         }
 
         [TestMethod]
-        public async Task UnknownPageRedirectsToCustomNotFoundPage()
+        public async Task UnknownPageReturnsCustomNotFoundPageWithCorrectStatus()
         {
             using var client = CreateClient();
             using var response = await client.GetAsync("/page-that-does-not-exist");
 
-            Assert.AreEqual(HttpStatusCode.Redirect, response.StatusCode);
-            Assert.AreEqual("/errors/404", response.Headers.Location?.OriginalString);
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+            StringAssert.Contains(await response.Content.ReadAsStringAsync(), "Page not found");
         }
 
         private HttpClient CreateClient()

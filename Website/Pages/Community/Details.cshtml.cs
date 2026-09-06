@@ -51,6 +51,14 @@ public class DetailsModel : CommunityPageModel
         return LoadData() ? Page() : NotFound();
     }
 
+    public IActionResult OnGetComments()
+    {
+        if (!LoadData())
+            return NotFound(new { message = "Discussion was not found." });
+
+        return CreateCommentsPartial();
+    }
+
     public IActionResult OnPostVoteDiscussion(sbyte value)
     {
         if (!LoadData())
@@ -273,16 +281,22 @@ public class DetailsModel : CommunityPageModel
         if (!IsAjaxRequest())
             return RedirectToPage(new { id = Id });
 
-        Comments = communityManager.GetComments(Id, CurrentUserId);
-        var viewData = new ViewDataDictionary<CommunityCommentsViewModel>(
-            ViewData,
-            CreateCommentsViewModel());
-
         Response.Headers["X-Community-Message"] = successMessage;
+        return CreateCommentsPartial();
+    }
+
+    private PartialViewResult CreateCommentsPartial()
+    {
+        Comments = communityManager.GetComments(Id, CurrentUserId);
+        Response.Headers["X-Discussion-Score"] = Discussion.Score.ToString();
+        Response.Headers["X-Comment-Count"] = Discussion.CommentCount.ToString();
+
         return new PartialViewResult
         {
             ViewName = "_Comments",
-            ViewData = viewData,
+            ViewData = new ViewDataDictionary<CommunityCommentsViewModel>(
+                ViewData,
+                CreateCommentsViewModel()),
             TempData = TempData
         };
     }

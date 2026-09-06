@@ -34,6 +34,13 @@ public class IndexModel : PageModel
         return Page();
     }
 
+    public IActionResult OnGetUnreadCount()
+    {
+        return TryGetUserId(out var userId)
+            ? new JsonResult(new { unreadCount = notificationManager.GetUnreadCount(userId) })
+            : Challenge();
+    }
+
     public IActionResult OnPostMarkAllRead(bool unreadOnly = false)
     {
         if (!TryGetUserId(out var userId))

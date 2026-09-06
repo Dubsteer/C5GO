@@ -58,8 +58,8 @@
                         <span class="notification-row-state" aria-hidden="true"></span>
                         <span class="notification-row-content">
                             <strong>@notification.Message</strong>
-                            <time datetime="@notification.CreatedAt.ToString("O")">
-                                @notification.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                            <time datetime="@notification.CreatedAt.ToString("O")" data-local-time="datetime">
+                                @notification.CreatedAt.ToString("dd MMM yyyy, HH:mm") UTC
                             </time>
                         </span>
                         <span class="notification-row-status">

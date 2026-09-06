@@ -26,7 +26,7 @@
                         <div class="comment-bubble">
                             <header class="comment-header">
                                 <a class="comment-author" asp-page="/UserProfile" asp-route-id="@comment.User.Id">@commentAuthor</a>
-                                <time class="comment-time" datetime="@comment.Posted_on.ToString("O")">
+                                <time class="comment-time" datetime="@comment.Posted_on.ToString("O")" data-local-time="datetime">
                                     @comment.Posted_on.ToString("dd.MM.yyyy. HH:mm")
                                 </time>
                             </header>

@@ -58,7 +58,14 @@
                 }
                 else if (Model.Match.Status == "Upcoming")
                 {
-                    <span class="upcoming-badge">@(Model.Match.StartTimeUtc.HasValue ? Model.Match.StartTimeUtc.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm") : "Time TBD")</span>
+                    @if (Model.Match.StartTimeUtc.HasValue)
+                    {
+                        <time class="upcoming-badge" datetime="@Model.Match.StartTimeUtc.Value.ToString("O")" data-local-time="datetime">@Model.Match.StartTimeUtc.Value.ToString("dd MMM yyyy, HH:mm") UTC</time>
+                    }
+                    else
+                    {
+                        <span class="upcoming-badge">Time TBD</span>
+                    }
                 }
                 else
                 {

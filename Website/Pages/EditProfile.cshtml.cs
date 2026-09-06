@@ -44,7 +44,7 @@ namespace Website.Pages
             if (user == null)
                 return Challenge();
 
-            CanManageSteamId = !user.IsAdmin;
+            CanManageSteamId = !User.IsInRole("Admin") && !User.IsInRole("Owner");
             Form = new EditProfileFormModel
             {
                 Firstname = user.Firstname,
@@ -65,7 +65,7 @@ namespace Website.Pages
             if (existingUser == null)
                 return Challenge();
 
-            CanManageSteamId = !existingUser.IsAdmin;
+            CanManageSteamId = !User.IsInRole("Admin") && !User.IsInRole("Owner");
             if (!ModelState.IsValid)
                 return Page();
 

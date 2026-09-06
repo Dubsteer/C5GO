@@ -42,7 +42,7 @@
                             <span class="discussion-category-label">@report.Reason</span>
                             <h2>@report.TargetTitle</h2>
                         </div>
-                        <time datetime="@report.CreatedAt.ToString("O")">@report.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</time>
+                        <time datetime="@report.CreatedAt.ToString("O")" data-local-time="datetime">@report.CreatedAt.ToString("dd MMM yyyy, HH:mm") UTC</time>
                     </div>
                     <p>Reported by <strong>@report.ReporterUsername</strong></p>
                     @if (!string.IsNullOrWhiteSpace(report.TargetPreview))

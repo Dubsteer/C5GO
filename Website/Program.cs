@@ -275,7 +275,7 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseRateLimiter();
 
-app.UseStatusCodePagesWithRedirects("/errors/{0}");
+app.UseStatusCodePagesWithReExecute("/errors/{0}");
 
 app.UseAuthentication();
 app.UseAuthorization();

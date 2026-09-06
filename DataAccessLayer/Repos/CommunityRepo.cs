@@ -92,9 +92,9 @@ public class CommunityRepo : ICommunityRepo
         EnsureConnection();
         var orderBy = sort switch
         {
-            CommunitySort.Top => "score DESC, d.created_at DESC",
-            CommunitySort.Active => "last_activity DESC",
-            _ => "d.created_at DESC"
+            CommunitySort.Top => "score DESC, d.created_at DESC, d.id DESC",
+            CommunitySort.Active => "last_activity DESC, d.id DESC",
+            _ => "d.created_at DESC, d.id DESC"
         };
 
         var categoryFilter = categoryId.HasValue

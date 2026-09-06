@@ -1,12 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
-    document.addEventListener("submit", (event) => {
-        const form = event.target;
-        if (form instanceof HTMLFormElement &&
-            form.dataset.confirm &&
-            !form.closest("[data-community-details]") &&
-            !window.confirm(form.dataset.confirm)) {
-            event.preventDefault();
-        }
+    document.querySelectorAll("[data-community-sort]").forEach((select) => {
+        select.addEventListener("change", () => select.form?.requestSubmit());
     });
 
     const details = document.querySelector("[data-community-details]");
@@ -16,6 +10,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const status = details.querySelector("[data-community-status]");
     const commentsSection = details.querySelector("[data-community-comments]");
+
+    const replaceComments = (html) => {
+        const template = document.createElement("template");
+        template.innerHTML = html.trim();
+        const replacement = template.content.querySelector("[data-community-comment-list]");
+        const current = commentsSection?.querySelector("[data-community-comment-list]");
+        if (!replacement || !current) {
+            throw new Error("Comments could not be refreshed. Reload the page and try again.");
+        }
+
+        current.replaceWith(replacement);
+        window.c5g0LocalizeTimes?.(replacement);
+    };
+
+    const applyDiscussionSummary = (response) => {
+        const score = response.headers.get("X-Discussion-Score");
+        const countValue = response.headers.get("X-Comment-Count");
+        if (score !== null) {
+            details.querySelector("[data-discussion-score]").textContent = score;
+        }
+        if (countValue !== null) {
+            const count = Number.parseInt(countValue, 10);
+            details.querySelector("[data-discussion-comment-count]").textContent =
+                `${count} ${count === 1 ? "comment" : "comments"}`;
+        }
+    };
 
     const setStatus = (message, isError = false) => {
         if (!status) {
@@ -71,11 +91,6 @@ document.addEventListener("DOMContentLoaded", () => {
     details.addEventListener("submit", async (event) => {
         const form = event.target;
         if (!(form instanceof HTMLFormElement)) {
-            return;
-        }
-
-        if (form.dataset.confirm && !window.confirm(form.dataset.confirm)) {
-            event.preventDefault();
             return;
         }
 
@@ -164,16 +179,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 throw new Error(await readError(response, "The comment could not be saved."));
             }
 
-            const html = await response.text();
-            const template = document.createElement("template");
-            template.innerHTML = html.trim();
-            const replacement = template.content.querySelector("[data-community-comment-list]");
-            const current = commentsSection?.querySelector("[data-community-comment-list]");
-            if (!replacement || !current) {
-                throw new Error("Comments could not be refreshed. Reload the page and try again.");
-            }
-
-            current.replaceWith(replacement);
+            replaceComments(await response.text());
+            applyDiscussionSummary(response);
             form.reset();
             if (form.classList.contains("community-reply-form")) {
                 form.hidden = true;
@@ -185,4 +192,30 @@ document.addEventListener("DOMContentLoaded", () => {
             submitButton?.removeAttribute("disabled");
         }
     });
+
+    const refreshComments = async () => {
+        if (document.visibilityState !== "visible" ||
+            commentsSection?.querySelector("textarea:focus, input:focus, select:focus")) {
+            return;
+        }
+
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.set("handler", "Comments");
+            const response = await fetch(url, {
+                credentials: "same-origin",
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            });
+            if (!response.ok) {
+                return;
+            }
+
+            replaceComments(await response.text());
+            applyDiscussionSummary(response);
+        } catch {
+            // A temporary refresh failure must not interrupt reading or writing.
+        }
+    };
+
+    window.setInterval(refreshComments, 30 * 1000);
 });

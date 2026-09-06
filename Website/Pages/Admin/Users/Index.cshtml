@@ -54,21 +54,21 @@
     else
     {
         <div class="table-responsive admin-table-wrap">
-            <table class="table admin-table align-middle">
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Email</th>
-                        <th>Account</th>
-                        <th>Player</th>
+            <table class="table admin-table admin-table-stacked align-middle" role="table" aria-label="Registered users">
+                <thead role="rowgroup">
+                    <tr role="row">
+                        <th scope="col" role="columnheader">User</th>
+                        <th scope="col" role="columnheader">Email</th>
+                        <th scope="col" role="columnheader">Account</th>
+                        <th scope="col" role="columnheader">Player</th>
                         @if (Model.CommunityRolesEnabled)
                         {
-                            <th>Community</th>
+                            <th scope="col" role="columnheader">Community</th>
                         }
-                        <th class="text-end">Actions</th>
+                        <th scope="col" role="columnheader" class="text-end">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody role="rowgroup">
                     @foreach (var user in Model.Users)
                     {
                         var isCurrentAccount = user.Id == Model.CurrentAdminId;
@@ -77,12 +77,12 @@
                         var highestRole = roles.Max();
                         var contributionStats = Model.GetContributionStats(user);
 
-                        <tr>
-                            <td>
-                                <strong>@user.Username</strong>
+                        <tr role="row">
+                            <td role="cell" data-label="User">
+                                <a asp-page="/UserProfile" asp-route-id="@user.Id" class="admin-user-link">@user.Username</a>
                                 <span class="admin-secondary-text">@user.Firstname @user.Lastname</span>
                             </td>
-                            <td>
+                            <td role="cell" data-label="Email">
                                 <span>@user.Gmail</span>
                                 @if (user.EmailConfirmed)
                                 {
@@ -93,7 +93,7 @@
                                     <span class="admin-badge admin-badge-warning">Pending</span>
                                 }
                             </td>
-                            <td>
+                            <td role="cell" data-label="Account">
                                 @foreach (var role in roles.OrderDescending())
                                 {
                                     <span class="admin-badge @(role >= PlatformRole.Admin ? "admin-badge-admin" : role == PlatformRole.Moderator ? "admin-badge-success" : string.Empty)">@role</span>
@@ -103,14 +103,14 @@
                                     <span class="admin-badge">You</span>
                                 }
                             </td>
-                            <td>
+                            <td role="cell" data-label="Player">
                                 <span class="admin-badge @(isPlayer ? "admin-badge-success" : "")">
                                     @(isPlayer ? "Active" : "No profile")
                                 </span>
                             </td>
                             @if (Model.CommunityRolesEnabled)
                             {
-                                <td>
+                                <td role="cell" data-label="Community">
                                     <div class="admin-community-stats">
                                         <span title="Published discussions">@contributionStats.DiscussionCount discussions</span>
                                         <span title="Published comments and replies">@contributionStats.CommentCount comments</span>
@@ -130,7 +130,7 @@
                                     </div>
                                 </td>
                             }
-                            <td>
+                            <td role="cell" data-label="Actions">
                                 <div class="admin-row-actions">
                                     @if (Model.CommunityRolesEnabled && !isCurrentAccount)
                                     {

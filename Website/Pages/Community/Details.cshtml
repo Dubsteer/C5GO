@@ -2,7 +2,7 @@
 @model Website.Pages.Community.DetailsModel
 @using LogicLayer.Enums
 @{
-    ViewData["Title"] = Model.Discussion.Title;
+    ViewData["Title"] = "Community";
     var isAuthor = Model.CurrentUserId == Model.Discussion.AuthorId;
 }
 
@@ -33,7 +33,7 @@
                 <h1>@Model.Discussion.Title</h1>
                 <p class="discussion-byline">
                     Posted by <strong>@Model.Discussion.Author?.Username</strong>
-                    <time datetime="@Model.Discussion.CreatedAt.ToString("O")">@Model.Discussion.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</time>
+                    <time datetime="@Model.Discussion.CreatedAt.ToString("O")" data-local-time="datetime">@Model.Discussion.CreatedAt.ToString("dd MMM yyyy, HH:mm") UTC</time>
                     @if (Model.Discussion.UpdatedAt.HasValue)
                     {
                         <span>· edited</span>
@@ -92,11 +92,11 @@
         <div class="discussion-actions">
             <form method="post" asp-page-handler="VoteDiscussion" class="vote-control" data-community-vote>
                 <input asp-for="Id" type="hidden" />
-                <button type="submit" name="value" value="1" class="vote-button @(Model.Discussion.CurrentUserVote == 1 ? "is-active" : string.Empty)" aria-label="Upvote discussion">▲</button>
-                <strong data-vote-score>@Model.Discussion.Score</strong>
-                <button type="submit" name="value" value="-1" class="vote-button @(Model.Discussion.CurrentUserVote == -1 ? "is-active" : string.Empty)" aria-label="Downvote discussion">▼</button>
+                <button type="submit" name="value" value="1" class="vote-button vote-up @(Model.Discussion.CurrentUserVote == 1 ? "is-active" : string.Empty)" aria-label="Upvote discussion">▲</button>
+                <strong data-vote-score data-discussion-score>@Model.Discussion.Score</strong>
+                <button type="submit" name="value" value="-1" class="vote-button vote-down @(Model.Discussion.CurrentUserVote == -1 ? "is-active" : string.Empty)" aria-label="Downvote discussion">▼</button>
             </form>
-            <span>@Model.Discussion.CommentCount @(Model.Discussion.CommentCount == 1 ? "comment" : "comments")</span>
+            <span data-discussion-comment-count>@Model.Discussion.CommentCount @(Model.Discussion.CommentCount == 1 ? "comment" : "comments")</span>
             @if (User.Identity?.IsAuthenticated == true && !isAuthor)
             {
                 <button type="button" class="community-text-button" data-report-toggle="discussion-report">Report</button>

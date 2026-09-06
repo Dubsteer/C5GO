@@ -14,7 +14,7 @@
         <div class="alert alert-success" role="status">@successMessage</div>
     }
 
-    <header class="d-flex justify-content-between align-items-start gap-3 mb-4">
+    <header class="responsive-heading align-items-start mb-4">
         <div>
             <a asp-page="/Teams/Teams" class="back-link">&larr; Back to teams</a>
             <h1 id="teamTitle" class="mt-2 mb-0">@Model.Team.Name</h1>
@@ -23,7 +23,7 @@
     </header>
 
     <section aria-labelledby="membersTitle">
-        <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+        <div class="responsive-heading mb-3">
             <h2 id="membersTitle" class="section-heading mb-0">Members</h2>
             @if (Model.IsCaptain)
             {
@@ -74,7 +74,7 @@
     <hr class="section-divider" />
 
     <section aria-labelledby="teamHistoryTitle">
-        <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+        <div class="responsive-heading mb-3">
             <h2 id="teamHistoryTitle" class="section-heading mb-0">Recent match history</h2>
             <a asp-page="/Matches/History" asp-fragment="teamHistoryTitle" class="back-link">View all results</a>
         </div>
@@ -109,7 +109,7 @@
                         </div>
                         <div class="player-history-meta">
                             <a asp-page="/Tournaments/Details" asp-route-id="@match.TournamentId">@tournamentName</a>
-                            <time datetime="@match.MatchDate.ToString("O")">@match.MatchDate.ToString("dd.MM.yyyy")</time>
+                            <time datetime="@match.MatchDate.ToString("O")" data-local-time="date">@match.MatchDate.ToString("dd MMM yyyy") UTC</time>
                         </div>
                     </article>
                 }

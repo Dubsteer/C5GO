@@ -1,7 +1,7 @@
 @page "{id:int}"
 @model Website.Pages.Posts.PostModel
 @{
-    ViewData["Title"] = Model.Post.Title;
+    ViewData["Title"] = "News";
     var postAuthor = string.IsNullOrWhiteSpace(Model.Post.User.Username)
         ? "C5GO team"
         : Model.Post.User.Username;
@@ -13,7 +13,7 @@
     <header class="thread-header">
         <div class="post-meta">
             <span class="post-category">News</span>
-            <time datetime="@Model.Post.Posted_on.ToString("O")">
+            <time datetime="@Model.Post.Posted_on.ToString("O")" data-local-time="date">
                 @Model.Post.Posted_on.ToString("dd MMM yyyy")
             </time>
             <span aria-hidden="true">&bull;</span>

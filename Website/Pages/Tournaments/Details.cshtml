@@ -73,7 +73,7 @@
                                             <div class="d-flex justify-content-between gap-3"><span>@teamTwo</span><span class="score">@match.Team2Score</span></div>
                                         </div>
                                         <div class="match-meta">
-                                            <time datetime="@match.MatchDate.ToString("O")">@match.MatchDate.ToString("dd.MM.yyyy HH:mm")</time>
+                                            <time datetime="@match.MatchDate.ToString("O")" data-local-time="datetime">@match.MatchDate.ToString("dd MMM yyyy, HH:mm") UTC</time>
                                             <span>@match.Status</span>
                                         </div>
                                     </div>
@@ -122,7 +122,7 @@
                                             <div class="d-flex justify-content-between gap-3"><span>@match.User2.Username</span><span class="score">@match.Player2Score</span></div>
                                         </div>
                                         <div class="match-meta">
-                                            <time datetime="@match.MatchDate.ToString("O")">@match.MatchDate.ToString("dd.MM.yyyy HH:mm")</time>
+                                            <time datetime="@match.MatchDate.ToString("O")" data-local-time="datetime">@match.MatchDate.ToString("dd MMM yyyy, HH:mm") UTC</time>
                                             <span>@match.Status</span>
                                         </div>
                                     </div>

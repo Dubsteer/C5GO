@@ -2,7 +2,7 @@
 @using LogicLayer.Enums
 @model Website.Pages.Admin.Tournaments.DetailsModel
 @{
-    ViewData["Title"] = $"Manage {Model.Tournament.Name}";
+    ViewData["Title"] = "Tournament management";
 }
 
 <section class="admin-shell">
@@ -234,7 +234,7 @@
                                         </label>
                                     </div>
                                     <div class="admin-match-controls">
-                                        <input name="matchDate" type="datetime-local" value="@match.MatchDate.ToString("yyyy-MM-ddTHH:mm")" class="form-control" required readonly="@isLocked" />
+                                        <input name="matchDate" type="datetime-local" value="@match.MatchDate.ToString("yyyy-MM-ddTHH:mm")" class="form-control" data-utc-datetime-input required readonly="@isLocked" />
                                         <select name="matchStatus" class="form-select" disabled="@isLocked">
                                             @foreach (var status in Enum.GetValues<Status>())
                                             {
@@ -304,7 +304,7 @@
                                         </label>
                                     </div>
                                     <div class="admin-match-controls">
-                                        <input name="matchDate" type="datetime-local" value="@match.MatchDate.ToString("yyyy-MM-ddTHH:mm")" class="form-control" required readonly="@isLocked" />
+                                        <input name="matchDate" type="datetime-local" value="@match.MatchDate.ToString("yyyy-MM-ddTHH:mm")" class="form-control" data-utc-datetime-input required readonly="@isLocked" />
                                         <select name="matchStatus" class="form-select" disabled="@isLocked">
                                             @foreach (var status in Enum.GetValues<Status>())
                                             {

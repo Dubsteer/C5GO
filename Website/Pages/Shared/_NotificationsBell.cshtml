@@ -23,30 +23,30 @@
     }
 }
 
-<div class="dropdown nav-notification">
+<div class="dropdown nav-notification"
+     data-notification-live
+     data-count-url="@Url.Page("/Notifications/Index", "UnreadCount")">
     <button class="position-relative notification-trigger"
             id="notifDropdown"
             type="button"
             data-bs-toggle="dropdown"
             aria-expanded="false"
-            aria-label="Notifications@(unread > 0 ? $", {unread} unread" : string.Empty)">
+            aria-label="Notifications@(unread > 0 ? $", {unread} unread" : string.Empty)"
+            data-notification-trigger>
         <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
             <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
         </svg>
-        @if (unread > 0)
-        {
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                @(unread > 99 ? "99+" : unread.ToString())
-                <span class="visually-hidden">unread notifications</span>
-            </span>
-        }
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger @(unread == 0 ? "d-none" : string.Empty)" data-notification-badge>
+            <span data-notification-count>@(unread > 99 ? "99+" : unread.ToString())</span>
+            <span class="visually-hidden" data-notification-count-label>unread notifications</span>
+        </span>
     </button>
 
     <div class="dropdown-menu dropdown-menu-end notification-menu" aria-labelledby="notifDropdown">
         <header class="notification-menu-header">
             <div>
                 <strong>Notifications</strong>
-                <span>@(unread == 0 ? "You're all caught up" : $"{unread} unread")</span>
+                <span data-notification-summary>@(unread == 0 ? "You're all caught up" : $"{unread} unread")</span>
             </div>
             @if (unread > 0)
             {
@@ -81,8 +81,8 @@
                             <span class="notification-state-dot" aria-hidden="true"></span>
                             <span class="notification-preview-copy">
                                 <strong>@notification.Message</strong>
-                                <time datetime="@notification.CreatedAt.ToString("O")">
-                                    @notification.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                                <time datetime="@notification.CreatedAt.ToString("O")" data-local-time="datetime">
+                                    @notification.CreatedAt.ToString("dd MMM yyyy, HH:mm") UTC
                                 </time>
                             </span>
                         </button>

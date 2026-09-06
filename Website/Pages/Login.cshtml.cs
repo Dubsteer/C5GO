@@ -28,6 +28,9 @@ namespace Website.Pages
         [BindProperty]
         public LoginFormModel LoginFormModel { get; set; } = new();
 
+        [BindProperty(SupportsGet = true)]
+        public string? ReturnUrl { get; set; }
+
         public IActionResult OnGet()
         {
             if (User.Identity?.IsAuthenticated == true)
@@ -71,7 +74,9 @@ namespace Website.Pages
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(identity));
 
-            return RedirectToPage("Index");
+            return !string.IsNullOrWhiteSpace(ReturnUrl) && Url.IsLocalUrl(ReturnUrl)
+                ? LocalRedirect(ReturnUrl)
+                : RedirectToPage("Index");
         }
     }
 }

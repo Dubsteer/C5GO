@@ -79,10 +79,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         event.preventDefault();
 
-        if (form.dataset.confirmMessage && !window.confirm(form.dataset.confirmMessage)) {
-            return;
-        }
-
         const expandedComments = new Set(
             Array.from(section.querySelectorAll("[data-reply-toggle][aria-expanded=\"true\"]"))
                 .map((button) => button.dataset.commentId)

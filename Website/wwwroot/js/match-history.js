@@ -1,5 +1,5 @@
 (() => {
-    const refreshIntervalMs = 5 * 60 * 1000;
+    const refreshIntervalMs = 60 * 1000;
     const loadedAt = Date.now();
 
     const refreshIfVisible = () => {

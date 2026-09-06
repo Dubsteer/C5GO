@@ -32,7 +32,7 @@
 <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
 
-    <nav class="navbar navbar-expand-lg custom-navbar" aria-label="Main navigation">
+    <nav class="navbar navbar-expand-xl custom-navbar" aria-label="Main navigation">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" asp-page="/Index" aria-label="C5G0 home">
                 <img src="~/Images/C5G0_logo.png" class="nav-logo" alt="" />
@@ -49,7 +49,7 @@
             </button>
 
             <div class="collapse navbar-collapse" id="mainNavbar">
-                <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                <ul class="navbar-nav mx-auto mb-2 mb-xl-0">
                     <li class="nav-item">
                         <a class="nav-link @(currentPage.StartsWith("/Tournaments", StringComparison.OrdinalIgnoreCase) ? "nav-active" : string.Empty)"
                            asp-page="/Tournaments">Tournaments</a>
@@ -75,7 +75,7 @@
                     }
                 </ul>
 
-                <ul class="navbar-nav ms-lg-auto align-items-lg-center nav-account-list">
+                <ul class="navbar-nav ms-xl-auto align-items-xl-center nav-account-list">
                     @if (isAuthenticated)
                     {
                         <li class="nav-item nav-account-shell">
@@ -164,14 +164,16 @@
         &copy; @DateTime.UtcNow.Year Designed by Vladimir Stijepovic
     </footer>
 
-    <div id="loginOverlay" class="login-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="loginOverlayTitle">
-        <div class="login-modal">
-            <h2 id="loginOverlayTitle">Login required</h2>
-            <p>You must be logged in to perform this action.</p>
-            <a asp-page="/Login" class="btn btn-primary w-100">Login</a>
-            <button type="button" class="btn btn-secondary w-100 mt-2" data-close-login-modal>Cancel</button>
+    <dialog id="confirmDialog" class="confirm-dialog" aria-labelledby="confirmDialogTitle">
+        <div class="confirm-dialog-panel">
+            <h2 id="confirmDialogTitle">Confirm action</h2>
+            <p data-confirm-dialog-message></p>
+            <div class="confirm-dialog-actions">
+                <button type="button" class="btn btn-outline-light" data-confirm-dialog-cancel>Cancel</button>
+                <button type="button" class="btn btn-danger" data-confirm-dialog-accept>Confirm</button>
+            </div>
         </div>
-    </div>
+    </dialog>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

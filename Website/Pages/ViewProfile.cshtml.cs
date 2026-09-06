@@ -31,6 +31,7 @@ namespace Website.Pages
         public PlayerMatchHistoryViewModel MatchHistory { get; private set; } = new();
         public bool RequireSteam { get; private set; }
         public bool NeedsSteamUpdate { get; private set; }
+        public bool CanManageSteamId { get; private set; }
         public string? SteamProfileUrl { get; private set; }
 
         public IActionResult OnGet()
@@ -44,6 +45,7 @@ namespace Website.Pages
                 return Challenge();
 
             PageUser = user;
+            CanManageSteamId = !User.IsInRole("Admin") && !User.IsInRole("Owner");
             Player = playerManager.GetPlayer(user);
             Matches = Player != null
                 ? matchManager.GetPastMatches(user)

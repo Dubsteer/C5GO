@@ -63,7 +63,14 @@
                     </div>
                     <div class="match-meta">
                         <span>@match.EventName</span>
-                        <span class="badge-finished">@((match.EndTimeUtc ?? match.StartTimeUtc)?.ToLocalTime().ToString("dd.MM.yyyy HH:mm") ?? "Finished")</span>
+                        @if ((match.EndTimeUtc ?? match.StartTimeUtc) is DateTime completedAt)
+                        {
+                            <time class="badge-finished" datetime="@completedAt.ToString("O")" data-local-time="datetime">@completedAt.ToString("dd MMM yyyy, HH:mm") UTC</time>
+                        }
+                        else
+                        {
+                            <span class="badge-finished">Finished</span>
+                        }
                     </div>
                 </a>
             }
@@ -98,7 +105,7 @@
                         </div>
                         <div class="local-history-meta">
                             <a asp-page="/Tournaments/Details" asp-route-id="@match.TournamentId">@tournamentName</a>
-                            <time datetime="@match.MatchDate.ToString("O")">@match.MatchDate.ToString("dd.MM.yyyy HH:mm")</time>
+                            <time datetime="@match.MatchDate.ToString("O")" data-local-time="datetime">@match.MatchDate.ToString("dd MMM yyyy, HH:mm") UTC</time>
                         </div>
                     </article>
                 }
@@ -134,7 +141,7 @@
                         </div>
                         <div class="local-history-meta">
                             <a asp-page="/Tournaments/Details" asp-route-id="@match.TournamentId">@tournamentName</a>
-                            <time datetime="@match.MatchDate.ToString("O")">@match.MatchDate.ToString("dd.MM.yyyy HH:mm")</time>
+                            <time datetime="@match.MatchDate.ToString("O")" data-local-time="datetime">@match.MatchDate.ToString("dd MMM yyyy, HH:mm") UTC</time>
                         </div>
                     </article>
                 }
